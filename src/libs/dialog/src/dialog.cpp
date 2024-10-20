@@ -45,7 +45,7 @@ inline void SetVerticesForSquare(XI_TEX_VERTEX *pV, FRECT uv, float left, float 
 
     pV[3].pos.x = right;
     pV[3].pos.y = bottom;
-    pV[2].pos.z = 1.f;
+    pV[3].pos.z = 1.f;
     pV[3].rhw = 0.5f;
     pV[3].color = 0xFFFFFFFF;
     pV[3].u = uv.right;
