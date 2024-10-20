@@ -1148,7 +1148,7 @@ namespace {
 std::optional<storm::Data> parseNumber(const std::string &input)
 {
     if (input.find_first_not_of("0123456789.-") == std::string::npos) {
-        if (input.contains('.') ) {
+        if (input.find('.') != std::string::npos) {
             char *end = nullptr;
             double result = std::strtod(input.c_str(), &end);
             if (end != input.c_str() + input.length() ) {
