@@ -22,6 +22,7 @@ namespace
 CorePrivate *core_private;
 
 constexpr char defaultLoggerName[] = "system";
+constexpr const char *DEFAULT_WINDOW_TITLE = "Storm Engine";
 bool isRunning = false;
 bool bActive = true;
 bool bSoundInBackground = false;
@@ -238,7 +239,11 @@ int main(int argc, char *argv[])
 
     std::shared_ptr<storm::OSWindow> window =
         storm::OSWindow::Create(width, height, preferred_display, fullscreen, show_borders);
-    window->SetTitle("Beyond New Horizons");
+
+    char title[256]{};
+    ini->ReadString(nullptr, "title", title, sizeof(title), DEFAULT_WINDOW_TITLE);
+    window->SetTitle(title);
+
     window->Subscribe(HandleWindowEvent);
     window->Show();
     core_private->SetWindow(window);
