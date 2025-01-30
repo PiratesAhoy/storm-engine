@@ -238,7 +238,19 @@ int main(int argc, char *argv[])
 
     std::shared_ptr<storm::OSWindow> window =
         storm::OSWindow::Create(width, height, preferred_display, fullscreen, show_borders);
-    window->SetTitle("Beyond New Horizons");
+    
+    char default_title[] = "Beyond New Horizons";
+    char title[256];
+    auto res = ini->ReadString(nullptr, "title", title, sizeof(title), "");
+    if (res)
+    {
+        window->SetTitle(title);
+    }
+    else
+    {
+        window->SetTitle(default_title);
+    }
+
     window->Subscribe(HandleWindowEvent);
     window->Show();
     core_private->SetWindow(window);
