@@ -295,14 +295,14 @@ int SoundService::GetAliasIndexByName(const char *szAliasName)
     return -1;
 }
 
-TSD_ID SoundService::SoundPlay(const std::string_view &name, eSoundType _type, eVolumeType _volumeType,
-                               bool _simpleCache /* = false*/, bool _looped /* = false*/, bool _cached /* = false*/,
-                               int32_t _time /* = 0*/, const CVECTOR *_startPosition /* = 0*/,
-                               float _minDistance /* = -1.0f*/, float _maxDistance /* = -1.0f*/,
-                               int32_t _loopPauseTime /* = 0*/, float _volume, /* = 1.0f*/
-                               int32_t _prior)
+TSD_ID SoundService::SoundPlay(const std::string_view &name, const SoundPlayOptions &options)
 {
     auto FileName = std::string(name);
+
+    int32_t _prior = options.priority;
+    auto _minDistance = options.minDistance;
+    auto _maxDistance = options.maxDistance;
+    float _volume = options.volume;
 
     // aliases don`t contain `\`
     if (name.find_first_of('\\') == std::string::npos)
@@ -327,7 +327,7 @@ TSD_ID SoundService::SoundPlay(const std::string_view &name, eSoundType _type, e
         }
     }
 
-    std::string SoundName = "resource\\sounds\\";
+    std::string SoundName = DEFAULT_SOUND_DIRECTORY;
     SoundName += FileName;
     SoundName = fio->ConvertPathResource(SoundName.c_str());
 
@@ -335,13 +335,13 @@ TSD_ID SoundService::SoundPlay(const std::string_view &name, eSoundType _type, e
     uint16_t SoundIdx = 0;
 
     TSD_ID id;
-    if (_type == MP3_STEREO)
+    if (options.type == MP3_STEREO)
     {
         // play streamed immediately, without caching and always in 0 slot ...
         try
         {
             uint32_t dwMode = FMOD_LOOP_OFF;
-            if (_looped)
+            if (options.looped)
                 dwMode = FMOD_LOOP_NORMAL;
             const auto status = CHECKFMODERR(
                 system->createStream(SoundName.c_str(), FMOD_CREATESAMPLE | FMOD_2D | dwMode, nullptr, &sound));
@@ -368,7 +368,7 @@ TSD_ID SoundService::SoundPlay(const std::string_view &name, eSoundType _type, e
 
         if (OGG_sound[OldMusicIdx])
         {
-            SoundStop(OldMusicIdx + 1, _time);
+            SoundStop(OldMusicIdx + 1, options.fadeInTime);
         }
 
         SoundIdx = MusicIdx;
@@ -376,12 +376,12 @@ TSD_ID SoundService::SoundPlay(const std::string_view &name, eSoundType _type, e
         OGG_sound[SoundIdx] = sound;
         PlayingSounds[SoundIdx].fFaderNeedVolume = _volume * fMusicVolume;
         PlayingSounds[SoundIdx].fFaderCurrentVolume = 0.0f;
-        PlayingSounds[SoundIdx].fFaderDeltaInSec = (_volume * fMusicVolume) / (_time * 0.001f);
+        PlayingSounds[SoundIdx].fFaderDeltaInSec = (_volume * fMusicVolume) / (options.fadeInTime * 0.001f);
     }
     else
     {
         // For all other sounds, take from the cache
-        const auto CacheIdx = GetFromCache(SoundName.c_str(), _type);
+        const auto CacheIdx = GetFromCache(SoundName.c_str(), options.type);
         if (CacheIdx < 0)
         {
             return 0;
@@ -398,7 +398,7 @@ TSD_ID SoundService::SoundPlay(const std::string_view &name, eSoundType _type, e
     }
 
     //--------
-    PlayingSounds[SoundIdx].type = _volumeType;
+    PlayingSounds[SoundIdx].type = options.volumeType;
     PlayingSounds[SoundIdx].fSoundVolume = _volume;
 
     // start to play the sound, but paused ...
@@ -425,29 +425,23 @@ TSD_ID SoundService::SoundPlay(const std::string_view &name, eSoundType _type, e
     PlayingSounds[SoundIdx].channel->setPriority(_prior);
 
     // Adjust parameters for 3D channel ...
-    if (_type == PCM_3D)
+    if (options.type == PCM_3D)
     {
-        // If necessary, set the parameters by default ...
-        if (_minDistance < 0.0f)
-            _minDistance = 0.0f;
-        if (_maxDistance < 0.0f)
-            _maxDistance = 0.0f;
-
-        CHECKFMODERR(PlayingSounds[SoundIdx].channel->set3DMinMaxDistance(_minDistance * DISTANCEFACTOR,
-                                                                          _maxDistance * DISTANCEFACTOR));
+        CHECKFMODERR(PlayingSounds[SoundIdx].channel->set3DMinMaxDistance(_minDistance.value_or(0.f) * DISTANCEFACTOR,
+                                                                          _maxDistance.value_or(0.f) * DISTANCEFACTOR));
 
         FMOD_VECTOR vVelocity = {0.0f, 0.0f, 0.0f};
         FMOD_VECTOR vPosition{};
-        if (_startPosition != nullptr)
+        if (options.startPosition)
         {
-            vPosition.x = _startPosition->x;
-            vPosition.y = _startPosition->y;
-            vPosition.z = _startPosition->z;
+            vPosition.x = options.startPosition->x;
+            vPosition.y = options.startPosition->y;
+            vPosition.z = options.startPosition->z;
         }
         CHECKFMODERR(PlayingSounds[SoundIdx].channel->set3DAttributes(&vPosition, &vVelocity));
     }
 
-    switch (_volumeType)
+    switch (options.volumeType)
     {
     case VOLUME_FX:
         _volume *= fFXVolume;
@@ -463,7 +457,7 @@ TSD_ID SoundService::SoundPlay(const std::string_view &name, eSoundType _type, e
         break;
     }
 
-    if (_time <= 0)
+    if (options.fadeInTime <= 0)
     {
         CHECKFMODERR(PlayingSounds[SoundIdx].channel->setVolume(_volume));
     }
@@ -475,10 +469,10 @@ TSD_ID SoundService::SoundPlay(const std::string_view &name, eSoundType _type, e
     CHECKFMODERR(PlayingSounds[SoundIdx].channel->setPitch(fPitch));
 
     PlayingSounds[SoundIdx].Name = std::move(SoundName);
-    PlayingSounds[SoundIdx].sound_type = _type;
+    PlayingSounds[SoundIdx].sound_type = options.type;
 
     // If not just caching ... then unpause ...
-    if (!_simpleCache)
+    if (!options.simpleCache)
     {
         CHECKFMODERR(PlayingSounds[SoundIdx].channel->setPaused(false));
     }
@@ -489,9 +483,22 @@ TSD_ID SoundService::SoundPlay(const std::string_view &name, eSoundType _type, e
 
     PlayingSounds[SoundIdx].bFree = false;
     // set the looping ..
-    if (_looped)
+    if (options.looped)
     {
         CHECKFMODERR(PlayingSounds[SoundIdx].channel->setMode(FMOD_LOOP_NORMAL));
+        if (options.loopStart || options.loopEnd)
+        {
+            unsigned int loopEnd = options.loopEnd.value_or(0);
+            if (!options.loopEnd)
+            {
+                FMOD::Sound* current_sound = nullptr;
+                CHECKFMODERR(PlayingSounds[SoundIdx].channel->getCurrentSound(&current_sound));
+                unsigned int sound_length = 0;
+                CHECKFMODERR(current_sound->getLength(&sound_length, FMOD_TIMEUNIT_PCM));
+                loopEnd = options.loopEnd.value_or(sound_length);
+            }
+            CHECKFMODERR(PlayingSounds[SoundIdx].channel->setLoopPoints(options.loopStart.value_or(0), FMOD_TIMEUNIT_PCM, loopEnd, FMOD_TIMEUNIT_PCM));
+        }
     }
     else
     {
@@ -514,6 +521,30 @@ TSD_ID SoundService::SoundPlay(const std::string_view &name, eSoundType _type, e
     // Returning the sound ID ...
 
     return id;
+}
+
+TSD_ID SoundService::SoundPlay(const std::string_view &name, eSoundType _type, eVolumeType _volumeType,
+                               bool _simpleCache /* = false*/, bool _looped /* = false*/, bool _cached /* = false*/,
+                               int32_t _time /* = 0*/, const CVECTOR *_startPosition /* = 0*/,
+                               float _minDistance /* = -1.0f*/, float _maxDistance /* = -1.0f*/,
+                               int32_t _loopPauseTime /* = 0*/, float _volume, /* = 1.0f*/
+                               int32_t _prior)
+{
+    SoundPlayOptions options {
+        .type = _type,
+        .volumeType = _volumeType,
+        .startPosition = *_startPosition,
+        .minDistance = _minDistance,
+        .maxDistance = _maxDistance,
+        .volume = _volume,
+        .fadeInTime = _time,
+        .loopPauseTime = _loopPauseTime,
+        .priority = _prior,
+        .simpleCache = _simpleCache,
+        .looped = _looped,
+        .cached = _cached,
+    };
+    return SoundPlay(name, options);
 }
 
 void SoundService::SoundSet3DParam(TSD_ID _id, eSoundMessage _message, const void *_op)
