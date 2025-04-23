@@ -55,10 +55,11 @@ jobs:
 #        configurePreset: default
 #        buildPreset: '${{ matrix.configuration }}'
     - name: Upload artifact
-      uses: actions/upload-artifact@v3
+      uses: actions/upload-artifact@v4
       with:
         name: storm-engine.${{ matrix.configuration }}
         path: build/default/${{ matrix.configuration }}
+        include-hidden-files: true
     - name: Setup Node.js
       uses: actions/setup-node@v2
       with:
