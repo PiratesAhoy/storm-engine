@@ -39,7 +39,7 @@ class StormEngine(ConanFile):
         if self.options.steam:
             self.requires("steamworks/1.5.1@storm/prebuilt")
         if self.options.conan_sdl:
-            self.requires("sdl/2.0.18")
+            self.requires("sdl/2.26.5")
 
     generators = "cmake_multi"
 
