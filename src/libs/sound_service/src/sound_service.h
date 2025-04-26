@@ -213,6 +213,8 @@ class SoundService : public VSoundService
 
     void SetActiveWithFade(bool active) override;
 
+    void ShowEditor(bool &active) override;
+
     void DebugDraw();
     void DebugPrint3D(const CVECTOR &pos3D, float rad, int32_t line, float alpha, uint32_t color, float scale,
                       const char *format, ...) const;

@@ -2,9 +2,9 @@
 
 #include <thread>
 
+#include "file_service.h"
 #include "matrix.h"
 #include "rands.h"
-#include "file_service.h"
 #include "vma.hpp"
 #include <fmod_errors.h>
 
@@ -14,6 +14,7 @@
 #include "debug_entity.h"
 #include "math3d/color.h"
 #include "math_inlines.h"
+#include "storm/editor/storm_imgui.hpp"
 
 CREATE_SERVICE(SoundService)
 
@@ -80,7 +81,8 @@ bool SoundService::Init()
 
     rs = static_cast<VDX9RENDER *>(core.GetService("DX9RENDER"));
 
-    if (rs == nullptr) {
+    if (rs == nullptr)
+    {
         return false;
     }
 
@@ -498,6 +500,7 @@ TSD_ID SoundService::SoundPlay(const std::string_view &name, const SoundPlayOpti
                 loopEnd = options.loopEnd.value_or(sound_length);
             }
             CHECKFMODERR(PlayingSounds[SoundIdx].channel->setLoopPoints(options.loopStart.value_or(0), FMOD_TIMEUNIT_PCM, loopEnd, FMOD_TIMEUNIT_PCM));
+            CHECKFMODERR(PlayingSounds[SoundIdx].channel->setLoopCount(3));
         }
     }
     else
@@ -862,7 +865,8 @@ void SoundService::SetActiveWithFade(const bool active)
         return;
     }
 
-    if (system == nullptr) {
+    if (system == nullptr)
+    {
         return;
     }
 
@@ -1141,6 +1145,103 @@ void SoundService::CreateEntityIfNeed()
         auto *pDebugEntity = static_cast<SoundVisualisationEntity *>(core.GetEntityPointer(Debugentid_t));
         pDebugEntity->SetMasterSoundService(this);
         pDebugEntity->Wakeup();
+    }
+}
+
+void SoundService::ShowEditor(bool &active)
+{
+    if (ImGui::Begin("Sound service", &active, 0))
+    {
+        FMOD_CPU_USAGE usage;
+        system->getCPUUsage(&usage);
+        float fTotal =
+            usage.dsp + usage.stream + usage.geometry + usage.update + usage.convolution1 + usage.convolution1;
+
+        int CurrentAlloc, PeakAlloc;
+        FMOD::Memory_GetStats(&CurrentAlloc, &PeakAlloc);
+
+        ImGui::TextFmt("CPU Usage {:.2f} Mem: {:.2f} Kb, MemPeak {:.2f} Kb, Cached {} sounds", fTotal,
+                       CurrentAlloc / 1024.0f, PeakAlloc / 1024.0f, SoundCache.size());
+
+        FMOD_VECTOR lpos{};
+        FMOD_VECTOR lvel{};
+        FMOD_VECTOR lforward{};
+        FMOD_VECTOR lup{};
+        system->get3DListenerAttributes(0, &lpos, &lvel, &lforward, &lup);
+        ImGui::TextFmt("position  {:.2f}, {:.2f}, {:.2f}, forward {:.2f}, {:.2f}, {:.2f}, up {:.2f}, {:.2f}, {:.2f}",
+                       lpos.x, lpos.y, lpos.z, lforward.x, lforward.y, lforward.z, lup.x, lup.y, lup.z);
+
+        auto text = std::format("There are currently {} sound aliases", Aliases.size());
+        ImGui::Text(text.c_str());
+
+        constexpr auto invalid_selection = std::numeric_limits<uint16_t>::max();
+        static entid_t selected_sound = invalid_selection;
+
+        ImGui::Text("Active Sounds");
+        if (ImGui::BeginTable("Active sounds", 2,
+                              ImGuiTableFlags_SizingFixedFit | ImGuiTableFlags_Resizable | ImGuiTableFlags_Reorderable))
+        {
+            ImGui::TableSetupColumn("ID", ImGuiTableColumnFlags_WidthFixed);
+            ImGui::TableSetupColumn("Volume", ImGuiTableColumnFlags_WidthStretch);
+
+            ImGui::TableHeadersRow();
+
+            for (uint16_t i = 0; i < numActiveSounds; i++)
+            {
+                const auto& sound = PlayingSounds[i];
+                if (sound.bFree)
+                {
+                    if (selected_sound == i)
+                    {
+                        selected_sound = invalid_selection;
+                    }
+                    continue;
+                }
+                ImGui::TableNextRow();
+                ImGui::TableNextColumn();
+
+                if (ImGui::Selectable(sound.Name.c_str(), i == selected_sound,
+                                      ImGuiSelectableFlags_SpanAllColumns))
+                {
+                    selected_sound = i;
+                }
+                ImGui::TableNextColumn();
+                ImGui::TextFmt("{}", sound.fSoundVolume);
+            }
+
+            ImGui::EndTable();
+        }
+
+        static entid_t selected_alias = invalid_selection;
+        ImGui::Text("Aliases");
+        if (ImGui::BeginTable("Sound Aliases", 3,
+                              ImGuiTableFlags_SizingFixedFit | ImGuiTableFlags_Resizable | ImGuiTableFlags_Reorderable))
+        {
+            ImGui::TableSetupColumn("ID", ImGuiTableColumnFlags_WidthFixed);
+            ImGui::TableSetupColumn("Volume", ImGuiTableColumnFlags_WidthStretch);
+            ImGui::TableSetupColumn("Entries", ImGuiTableColumnFlags_WidthStretch);
+
+            ImGui::TableHeadersRow();
+
+            std::ranges::for_each(Aliases, [&](const tAlias &alias) {
+                ImGui::TableNextRow();
+                ImGui::TableNextColumn();
+
+                if (ImGui::Selectable(alias.Name.c_str(), alias.dwNameHash == selected_alias,
+                                      ImGuiSelectableFlags_SpanAllColumns))
+                {
+                    selected_alias = alias.dwNameHash;
+                }
+                ImGui::TableNextColumn();
+                ImGui::TextFmt("{}", alias.fVolume);
+                ImGui::TableNextColumn();
+                ImGui::TextFmt("{}", alias.soundFiles.size());
+            });
+
+            ImGui::EndTable();
+        }
+
+        ImGui::End();
     }
 }
 

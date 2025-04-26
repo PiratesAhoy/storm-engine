@@ -60,6 +60,11 @@ class ProbabilityTable
         return table_.empty();
     }
 
+    [[nodiscard]] size_t size() const
+    {
+        return table_.size();
+    }
+
   private:
     mutable RandProvider provider_;
     Resolution weight_sum_{0.0f};

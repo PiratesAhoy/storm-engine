@@ -70,6 +70,8 @@ using tSoundStatistics = struct
 class VSoundService : public SERVICE
 {
   public:
+    constexpr static std::string_view ServiceName = "SoundService";
+
     bool Init() override = 0;
     uint32_t RunSection() override = 0;
     void RunStart() override = 0;
@@ -136,6 +138,8 @@ class VSoundService : public SERVICE
     virtual void LoadAliasFile(const char *_filename) = 0;
 
     virtual void SetActiveWithFade(bool active) = 0;
+
+    virtual void ShowEditor(bool &active) = 0;
 
     tSoundStatistics soundStatistics;
 };

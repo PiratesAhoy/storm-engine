@@ -63,7 +63,13 @@ class Core
     // write message to system log file
     virtual void Trace(const char *Format, ...) = 0;
     // return service object pointer;
-    virtual void *GetService(const char *service_name) = 0;
+    virtual void *GetService(std::string_view service_name) = 0;
+
+    template<typename T>
+    T* GetServiceX()
+    {
+        return static_cast<T*>(GetService(T::ServiceName));
+    }
 
     virtual ATTRIBUTES *Entity_GetAttributeClass(entid_t id_PTR, const char *name) = 0;
     virtual const char *Entity_GetAttribute(entid_t id_PTR, const char *name) = 0;
