@@ -21,6 +21,7 @@ class StormEngine(ConanFile):
     "imgui/1.90-docking",
     "cli11/2.3.2",
     "ms-gsl/4.1.0",
+    "openal-soft/1.23.1",
     # gitlab.com/piratesahoy
     "directx/9.0@piratesahoy+storm-engine/stable", "fmod/2.02.05@piratesahoy+storm-engine/stable"]
     # aux dependencies (e.g. for tests)
