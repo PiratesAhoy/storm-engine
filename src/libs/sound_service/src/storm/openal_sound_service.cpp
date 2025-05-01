@@ -1,5 +1,7 @@
 #include "openal_sound_service.hpp"
 
+#include "wav_loader.hpp"
+
 #include <spdlog/spdlog.h>
 #include <vma.hpp>
 
@@ -43,7 +45,8 @@ T ErrorHandler(T result, const std::string_view &file, size_t line, const std::s
 }
 
 #define CHECK_AL_ERROR(expr) ErrorHandler(expr, __FILE__, __LINE__, __func__, #expr)
-#define CHECK_AL_ERROR_VOID(expr) ErrorHandler(true, __FILE__, __LINE__, __func__, #expr)
+#define CHECK_AL_ERROR_VOID(expr) expr; ErrorHandler(true, __FILE__, __LINE__, __func__, #expr)
+
 } // namespace
 
 namespace storm
@@ -57,7 +60,7 @@ OpenAlSoundService::~OpenAlSoundService()
         CHECK_AL_ERROR_VOID(alDeleteBuffers(BUFFER_COUNT, buffers_.data()));
     }
 
-    CHECK_AL_ERROR(alcMakeContextCurrent(nullptr));
+    // CHECK_AL_ERROR(alcMakeContextCurrent(nullptr));
     if (context_)
     {
         alcDestroyContext(context_);
@@ -91,7 +94,22 @@ void OpenAlSoundService::RunStart()
 }
 TSD_ID OpenAlSoundService::SoundPlay(const std::string_view &name, const SoundPlayOptions &options)
 {
-    __debugbreak();
+    AudioResource audio = WavLoader().LoadFromFile(fmt::format("resource/sounds/{}", name));
+    const auto &sampleData = audio.GetSampleData();
+    CHECK_AL_ERROR_VOID(alBufferData(buffers_[0], AL_FORMAT_STEREO16, sampleData.data(), sampleData.size_bytes(), audio.GetSampleRate()));
+
+    ALuint sources[1]{};
+    CHECK_AL_ERROR_VOID(alGenSources(1, sources));
+
+    CHECK_AL_ERROR_VOID(alSourcef(sources[0], AL_GAIN, options.volume));
+    CHECK_AL_ERROR_VOID(alSourcei(sources[0], AL_LOOPING, options.looped));
+
+    CHECK_AL_ERROR_VOID(alSourceQueueBuffers(sources[0], 1, buffers_.data()));
+    CHECK_AL_ERROR_VOID(alSourcePlay(sources[0]));
+
+    ALint source_state{};
+    CHECK_AL_ERROR_VOID(alGetSourcei(sources[0], AL_SOURCE_STATE, &source_state));
+
     return {};
 }
 TSD_ID OpenAlSoundService::SoundPlay(const std::string_view &name, eSoundType _type, eVolumeType _volumeType,
@@ -99,8 +117,21 @@ TSD_ID OpenAlSoundService::SoundPlay(const std::string_view &name, eSoundType _t
                                      const CVECTOR *_startPosition, float _minDistance, float _maxDistance,
                                      int32_t _loopPauseTime, float _volume, int32_t _prior)
 {
-    __debugbreak();
-    return {};
+    SoundPlayOptions options {
+        .type = _type,
+        .volumeType = _volumeType,
+        .startPosition = *_startPosition,
+        .minDistance = _minDistance,
+        .maxDistance = _maxDistance,
+        .volume = _volume,
+        .fadeInTime = _time,
+        .loopPauseTime = _loopPauseTime,
+        .priority = _prior,
+        .simpleCache = _simpleCache,
+        .looped = _looped,
+        .cached = _cached,
+    };
+    return SoundPlay(name, options);
 }
 TSD_ID OpenAlSoundService::SoundDuplicate(TSD_ID _sourceID)
 {
@@ -190,7 +221,7 @@ void OpenAlSoundService::LoadAliasFile(const char *_filename)
 }
 void OpenAlSoundService::SetActiveWithFade(bool active)
 {
-    __debugbreak();
+    // __debugbreak();
 }
 void OpenAlSoundService::ShowEditor(bool &active)
 {
