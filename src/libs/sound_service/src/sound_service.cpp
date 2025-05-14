@@ -533,10 +533,15 @@ TSD_ID SoundService::SoundPlay(const std::string_view &name, eSoundType _type, e
                                int32_t _loopPauseTime /* = 0*/, float _volume, /* = 1.0f*/
                                int32_t _prior)
 {
+    std::optional<CVECTOR> startPosition;
+    if (_startPosition)
+    {
+        startPosition = *_startPosition;
+    }
     SoundPlayOptions options {
         .type = _type,
         .volumeType = _volumeType,
-        .startPosition = *_startPosition,
+        .startPosition = startPosition,
         .minDistance = _minDistance,
         .maxDistance = _maxDistance,
         .volume = _volume,
