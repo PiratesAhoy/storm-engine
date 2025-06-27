@@ -18,6 +18,8 @@ public:
 
     uint64_t ProcessMessage(MESSAGE &msg) override;
 
+    static Scene& GetDefaultScene();
+
   private:
     entid_t activeCamera_ = invalid_entity;
 };

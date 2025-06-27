@@ -1,4 +1,4 @@
-#ifdef WIN32
+#ifdef _WIN32
 #include "seh_extractor.hpp"
 
 #include <exception>

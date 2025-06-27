@@ -18,6 +18,8 @@
 #include "sea_base.h"
 #include "shared/messages.h"
 
+#include <storm/renderer/scene.hpp>
+
 //#define CAMERA_VIEW_TEST_ENABLE
 #define CAMERA_VIEW_TEST_R 3
 #define CAMERA_VIEW_TEST_ANG 30
@@ -88,6 +90,10 @@ bool LocationCamera::Init()
 
     // core.LayerCreate("realize", true, false);
     core.SetLayerType(REALIZE, layer_type_t::realize);
+
+    if (core.GetTargetEngineVersion() <= storm::ENGINE_VERSION::TO_EACH_HIS_OWN) {
+        storm::Scene::GetDefaultScene().SetActiveCamera(this);
+    }
 
     // The sea
     sea = core.GetEntityId("sea");

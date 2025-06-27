@@ -133,6 +133,7 @@ class SEA final : public SEA_BASE
     float fAnimSpeed1, fAnimSpeed2;
     float fPosShift;
     float fFrenel;
+    float seaHeightOffset_{};
 
     bool bStop;
 

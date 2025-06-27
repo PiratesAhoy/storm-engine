@@ -68,7 +68,6 @@ foreach(effect_file ${glob_techniques})
 #    message("${CMAKE_CURRENT_SOURCE_DIR}/src/${effect_file} -> ${CMAKE_CURRENT_BINARY_DIR}/bin/resource/${effect_file}")
     add_custom_command(
             OUTPUT ${CMAKE_CURRENT_BINARY_DIR}/bin/resource/${effect_file}
-            POST_BUILD
             COMMAND ${CMAKE_COMMAND} -E copy_if_different ${CMAKE_CURRENT_SOURCE_DIR}/src/${effect_file}
             ${CMAKE_CURRENT_BINARY_DIR}/bin/resource/${effect_file}
             DEPENDS ${CMAKE_CURRENT_SOURCE_DIR}/src/${effect_file}

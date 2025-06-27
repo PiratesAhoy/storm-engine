@@ -1143,6 +1143,100 @@ bool IFS::Reload()
     return LoadFile(FileName);
 }
 
+namespace {
+
+std::optional<storm::Data> parseNumber(const std::string &input)
+{
+    if (input.find_first_not_of("0123456789.-") == std::string::npos) {
+        if (input.find('.') != std::string::npos) {
+            char *end = nullptr;
+            double result = std::strtod(input.c_str(), &end);
+            if (end != input.c_str() + input.length() ) {
+                return {};
+            }
+            return result;
+        }
+        else {
+            char *end = nullptr;
+            auto result = std::strtoll(input.c_str(), &end, 10);
+            if (end != input.c_str() + input.length() ) {
+                return {};
+            }
+            return result;
+        }
+    }
+    return {};
+}
+
+std::optional<storm::Data> parseList(const std::string_view &input)
+{
+    auto result = storm::Data::array();
+    size_t count = 0;
+    size_t start = 0;
+    size_t offset = start;
+    while (offset < input.length() ) {
+        if (input.at(offset) == ',') {
+            auto section = std::string(input.substr(start, offset - start) );
+            auto value = parseNumber(section);
+            if (!value) {
+                value = section;
+            }
+            result.push_back(*value);
+            ++count;
+            ++offset;
+            start = offset;
+        }
+        else {
+            ++offset;
+        }
+    }
+    if (count > 0) {
+        auto section = std::string(input.substr(start, offset - start) );
+        auto value = parseNumber(section);
+        if (!value) {
+            value = section;
+        }
+        result.push_back(*value);
+        return result;
+    }
+    else {
+        return {};
+    }
+}
+
+storm::Data parseValue(const std::string &str)
+{
+    std::string_view view = str;
+
+    // Remove trailing comments
+    auto comment_start = view.find_first_of(';');
+    if (comment_start != std::string::npos) {
+        view = view.substr(0, comment_start);
+    }
+
+    comment_start = view.find("//");
+    if (comment_start != std::string::npos) {
+        view = view.substr(0, comment_start);
+    }
+
+    auto value_end = view.find_last_not_of(" \t");
+    if (value_end != std::string::npos) {
+        view = view.substr(0, value_end + 1);
+    }
+
+    std::optional<storm::Data> result;
+    result = parseList(view);
+    if (!result) {
+        result = parseNumber(std::string(view) );
+    }
+    if (!result) {
+        result = view;
+    }
+    return *result;
+}
+
+} // namespace
+
 storm::Data IFS::ToData()
 {
     storm::Data result;
@@ -1174,7 +1268,8 @@ storm::Data IFS::ToData()
             {
                 if (node->GetValue() != nullptr)
                 {
-                    section.emplace(node->GetName(), std::string(node->GetValue()));
+                    const auto str = std::string(node->GetValue());
+                    section.emplace(node->GetName(), parseValue(str) );
                 }
             }
             node = node->GetRightNode();

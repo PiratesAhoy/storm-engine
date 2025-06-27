@@ -56,6 +56,7 @@ class SKY : public Entity
     // string        sSkyDir;
     std::vector<std::string> aSkyDirArray;
     uint32_t dwSkyColor;
+    CVECTOR skyOffset_{};
     float fSkySpeedRotate, fSkySize, fAngleY, fSkyAngle;
     std::string sTechSky = "Sky";
     std::string sTechSkyBlend = "SkyBlend";
@@ -88,4 +89,6 @@ class SKY : public Entity
     void UpdateTimeFactor();
 
     uint32_t GetPixelColor(IDirect3DTexture9 *pTex, float fu, float fv) const;
+
+    void ShowEditor() override;
 };

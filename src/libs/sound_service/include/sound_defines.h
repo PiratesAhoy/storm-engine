@@ -27,7 +27,7 @@ extern int32_t lg[100];
 #define LOOP_DISABLED -54321
 
 #define ALIAS_DIRECTORY "resource\\ini\\aliases\\"
-#define DEFAULT_SOUND_DIRECTORY "resource\\sounds\\"
+constexpr auto DEFAULT_SOUND_DIRECTORY = "resource\\sounds\\";
 #define SOUND_SECTION_NAME "sound"
 #define SOUND_PATH_NAME "sound path"
 #define ALIAS_INI "resource\\ini\\sound_alias.ini"

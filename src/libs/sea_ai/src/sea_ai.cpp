@@ -150,7 +150,8 @@ uint64_t SEA_AI::ProcessMessage(MESSAGE &message)
         auto *pAIShip = AIShip::FindShip(pCharacter);
         if (!pAIShip)
         {
-            core.Trace("SeaAI err: SetSailState, can't find ship for character = %s", static_cast<const char*>(pCharacter->GetAttribute("id")));
+            core.Trace("SeaAI err: SetSailState, can't find ship for character = %s",
+                       static_cast<const char *>(pCharacter->GetAttribute("id")));
             return 0;
         }
         core.Send_Message(pAIShip->GetShipEID(), "lf", MSG_SHIP_SET_SAIL_STATE, fSailState);
@@ -340,7 +341,7 @@ uint64_t SEA_AI::ProcessMessage(MESSAGE &message)
     }
     break;
         // boal 08.08.06 method of recounting guns on the ship <--
-    case AI_MESSAGE_SEASAVE: //TODO: check these two
+    case AI_MESSAGE_SEASAVE: // TODO: check these two
     {
         char str[256]{};
         Save(str);
@@ -420,15 +421,23 @@ uint32_t SEA_AI::AttributeChanged(ATTRIBUTES *pAttribute)
     return 0;
 }
 
-void SEA_AI::AddShip(entid_t eidShip, ATTRIBUTES *pCharacter, ATTRIBUTES *pAShip)
+void SEA_AI::AddShip(entid_t eidShip, gsl::not_null<ATTRIBUTES*> pCharacter, gsl::not_null<ATTRIBUTES*> pAShip)
 {
-    Assert(pCharacter && pAShip);
     auto *pG = pCharacter->FindAClass(pCharacter, "SeaAI.Group");
-    Assert(pG);
+
+    if (pG == nullptr)
+    {
+        core.Trace("SEA_AI: Failed to add ship, missing 'SeaAI.Group' attribute");
+        return;
+    }
 
     // search group
     const char *pGName = pG->GetAttribute("Name");
-    Assert(pGName);
+    if (pGName == nullptr)
+    {
+        core.Trace("SEA_AI: Failed to add ship, missing 'SeaAI.Group.Name' attribute");
+        return;
+    }
 
     AIGroup::FindOrCreateGroup(pGName)->AddShip(eidShip, pCharacter, pAShip);
 }

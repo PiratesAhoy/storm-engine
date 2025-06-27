@@ -48,7 +48,12 @@ void Scene::ProcessStage(Stage stage, uint32_t delta)
 
 Scene &Scene::SetActiveCamera(Camera *camera)
 {
-    activeCamera_ = camera->GetId();
+    if (camera == nullptr) {
+        activeCamera_ = invalid_entity;
+    }
+    else {
+        activeCamera_ = camera->GetId();
+    }
     return *this;
 }
 
@@ -70,6 +75,17 @@ uint64_t Scene::ProcessMessage(MESSAGE &msg)
     }
 
     return 0;
+}
+
+Scene &Scene::GetDefaultScene()
+{
+    entid_t scene_id = core.GetEntityId("Scene");
+    if (scene_id == invalid_entity) {
+        scene_id = core.CreateEntity("Scene");
+        core.AddToLayer(EXECUTE, scene_id, 0);
+        core.AddToLayer(SEA_EXECUTE, scene_id, 0);
+    }
+    return *dynamic_cast<Scene*>(core.GetEntityPointerSafe(scene_id) );
 }
 
 } // namespace storm

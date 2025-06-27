@@ -7,7 +7,9 @@
 
 #include <fstream>
 
+#include "v_sound_service.h"
 #include "string_compare.hpp"
+
 #include <SDL2/SDL.h>
 
 Core &core = core_internal;
@@ -123,6 +125,12 @@ void CoreImpl::Init()
     storm::editor::EngineEditor::RegisterEditorTool("Entities", [this] (bool &active) {
         entity_manager_.ShowEditor(active);
     });
+
+    storm::editor::EngineEditor::RegisterEditorTool("Sound Service", [this] (bool &active) {
+        auto* sound_service = GetServiceX<VSoundService>();
+        sound_service->ShowEditor(active);
+    });
+
     storm::editor::EngineEditor::RegisterEditorTool("Scripting", [this] (bool &active) {
         Compiler->ShowEditor(active);
     });
@@ -302,6 +310,7 @@ void CoreImpl::ProcessEngineIniFile()
     }
 
     loadCompatibilitySettings(*engine_ini);
+    determineScreenSize(*engine_ini);
 
     res = engine_ini->ReadString(nullptr, "run", String, sizeof(String), "");
     if (res)
@@ -312,7 +321,7 @@ void CoreImpl::ProcessEngineIniFile()
             throw std::runtime_error("fail to run program");
 
         // Script version test
-        if (targetVersion_ >= storm::ENGINE_VERSION::LATEST)
+        if (targetVersion_ == storm::ENGINE_VERSION::TO_EACH_HIS_OWN)
         {
             int32_t iScriptVersion = 0xFFFFFFFF;
             auto *pVScriptVersion = static_cast<VDATA *>(core_internal.GetScriptVariable("iScriptVersion"));
@@ -483,7 +492,7 @@ void CoreImpl::ReleaseServices()
     Controls = nullptr;
 }
 
-VMA *CoreImpl::FindVMA(const char *class_name)
+VMA *CoreImpl::FindVMA(const std::string_view class_name)
 {
     const int32_t hash = MakeHashValue(class_name);
     for (auto *const c : __STORM_CLASSES_REGISTRY)
@@ -502,7 +511,7 @@ VMA *CoreImpl::FindVMA(int32_t hash)
     return nullptr;
 }
 
-void *CoreImpl::GetService(const char *service_name)
+void *CoreImpl::GetService(const std::string_view service_name)
 {
     auto *pClass = FindVMA(service_name);
     if (pClass == nullptr)
@@ -807,13 +816,12 @@ void CoreImpl::AppState(bool state)
         Controls->AppState(state);
 }
 
-uint32_t CoreImpl::MakeHashValue(const char *string)
+uint32_t CoreImpl::MakeHashValue(const std::string_view string)
 {
     uint32_t hval = 0;
 
-    while (*string != 0)
+    for (char v : string)
     {
-        char v = *string++;
         if ('A' <= v && v <= 'Z')
             v += 'a' - 'A';
 
@@ -946,15 +954,7 @@ storm::ENGINE_VERSION CoreImpl::GetTargetEngineVersion() const noexcept
 
 ScreenSize CoreImpl::GetScreenSize() const noexcept
 {
-    switch (targetVersion_)
-    {
-    case storm::ENGINE_VERSION::PIRATES_OF_THE_CARIBBEAN: {
-        return {640, 480};
-    }
-    default: {
-        return {800, 600};
-    }
-    }
+    return screenSize_;
 }
 
 void CoreImpl::stopFrameProcessing()
@@ -1066,4 +1066,17 @@ void CoreImpl::loadCompatibilitySettings(INIFILE &inifile)
         spdlog::warn("Unknown target version '{}' in engine compatibility settings", target_engine_version);
         targetVersion_ = ENGINE_VERSION::LATEST;
     }
+}
+
+void CoreImpl::determineScreenSize(INIFILE &inifile)
+{
+    if (targetVersion_ <= storm::ENGINE_VERSION::PIRATES_OF_THE_CARIBBEAN) {
+        screenSize_ = {640, 480};
+    }
+    else {
+        screenSize_ = {800, 600};
+    }
+
+    screenSize_.width = inifile.GetInt("interface", "screen_width", screenSize_.width);
+    screenSize_.height = inifile.GetInt("interface", "screen_height", screenSize_.height);
 }

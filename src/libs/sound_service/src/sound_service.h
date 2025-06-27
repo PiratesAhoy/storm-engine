@@ -181,6 +181,7 @@ class SoundService : public VSoundService
     void RunStart() override;
     void RunEnd() override;
 
+    TSD_ID SoundPlay(const std::string_view &name, const SoundPlayOptions &options) override;
     TSD_ID SoundPlay(const std::string_view &name, eSoundType _type, eVolumeType _volumeType, bool _simpleCache = false,
                      bool _looped = false, bool _cached = false, int32_t _time = 0,
                      const CVECTOR *_startPosition = nullptr, float _minDistance = -1.0f, float _maxDistance = -1.0f,
@@ -211,6 +212,8 @@ class SoundService : public VSoundService
     void SetEnabled(bool _enabled) override;
 
     void SetActiveWithFade(bool active) override;
+
+    void ShowEditor(bool &active) override;
 
     void DebugDraw();
     void DebugPrint3D(const CVECTOR &pos3D, float rad, int32_t line, float alpha, uint32_t color, float scale,

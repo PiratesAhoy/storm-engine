@@ -7,7 +7,7 @@
 
 #include <array>
 
-#ifdef WIN32
+#ifdef _WIN32
 #include <Windows.h>
 #include <imgui_impl_dx9.h>
 #endif WIN32
@@ -45,7 +45,7 @@ EngineEditor::EngineEditor(SDL_Window *window, IDirect3DDevice9 *device)
     io.ConfigFlags |= ImGuiConfigFlags_DockingEnable;
 
     ImGui_ImplSDL2_InitForD3D(window);
-#ifdef WIN32
+#ifdef _WIN32
     ImGui_ImplDX9_Init(device);
 #endif WIN32
 }
@@ -61,7 +61,7 @@ void EngineEditor::StartFrame()
     impl_->isFocused_ = io.WantCaptureKeyboard;
     core.GetWindow()->ShowCursor(impl_->isFocused_);
 
-#ifdef WIN32
+#ifdef _WIN32
     ImGui_ImplDX9_NewFrame();
 #endif WIN32
     ImGui_ImplSDL2_NewFrame();
@@ -107,7 +107,7 @@ void EngineEditor::StartFrame()
 void EngineEditor::EndFrame()
 {
     ImGui::Render();
-#ifdef WIN32
+#ifdef _WIN32
     ImGui_ImplDX9_RenderDrawData(ImGui::GetDrawData());
 #endif WIN32
 }

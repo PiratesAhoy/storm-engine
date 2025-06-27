@@ -4,6 +4,8 @@
 #include "attributes.h"
 #include "math_inlines.h"
 
+#include <imgui.h>
+
 namespace
 {
 
@@ -122,7 +124,9 @@ void SKY::UpdateFogSphere(const bool initialize)
             const auto fCos = cosf(static_cast<float>(x) / static_cast<float>(kNumAngles) * PIm2);
             const auto fSin = sinf(static_cast<float>(x) / static_cast<float>(kNumAngles) * PIm2);
 
-            vertices[idx] = CreateFogVertex(CVECTOR(R1 * fCos, h, R1 * fSin));
+            auto pos = CVECTOR(R1 * fCos, h, R1 * fSin);
+            pos += skyOffset_;
+            vertices[idx] = CreateFogVertex(pos);
 
             if (initialize)
             {
@@ -261,6 +265,7 @@ void SKY::GenerateSky(const bool initialize)
     {
         Verts[i].diffuse = 0xFFFFFFFF;
         Verts[i].pos *= fSkySize;
+        Verts[i].pos += skyOffset_;
         Verts[i + 20] = Verts[i];
         Verts[i + 20].pos.y = -Verts[i + 20].pos.y;
         Verts[i].tu2 = Verts[i].tu;
@@ -452,6 +457,11 @@ uint32_t SKY::AttributeChanged(ATTRIBUTES *pAttribute)
     if (*pAttribute == "Angle")
     {
         fSkyAngle = pAttribute->GetAttributeAsFloat();
+        return 0;
+    }
+    if (*pAttribute == "Offset")
+    {
+        skyOffset_ = {0, pAttribute->GetAttributeAsFloat(), 0};
         return 0;
     }
 
@@ -743,4 +753,19 @@ uint32_t SKY::GetPixelColor(IDirect3DTexture9 *pTex, float fu, float fv) const
     }
 
     return dwCol;
+}
+
+void SKY::ShowEditor()
+{
+    ImGui::Text("Sky");
+    if (ImGui::DragFloat("Size", &fSkySize, 1.0f, 0.0f, 1000.0f, "%.3f") ) {
+        GenerateSky(false);
+    }
+    float sky_offset[3] = {skyOffset_.x, skyOffset_.y, skyOffset_.z};
+    if (ImGui::DragFloat3("Sky offset", sky_offset, 1.0f, -100.0f, 100.0f, "%.3f") ) {
+        skyOffset_.x = sky_offset[0];
+        skyOffset_.y = sky_offset[1];
+        skyOffset_.z = sky_offset[2];
+        GenerateSky(false);
+    }
 }

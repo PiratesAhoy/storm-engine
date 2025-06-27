@@ -47,8 +47,8 @@ class CoreImpl final : public CorePrivate
     void ClearEvents();
     void *MakeClass(const char *class_name);
     void AppState(bool state) override;
-    uint32_t MakeHashValue(const char *string);
-    VMA *FindVMA(const char *class_name);
+    uint32_t MakeHashValue(std::string_view string);
+    VMA *FindVMA(std::string_view class_name);
     VMA *FindVMA(int32_t hash);
     //------------------------------------------------------------------------------------------------
     // API functions : (virtual API)
@@ -68,7 +68,7 @@ class CoreImpl final : public CorePrivate
     void Trace(const char *Format, ...) override;
 
     // return service object pointer;
-    void *GetService(const char *service_name) override;
+    void *GetService(std::string_view service_name) override;
 
     ATTRIBUTES *Entity_GetAttributeClass(entid_t id_PTR, const char *name) override;
     const char *Entity_GetAttribute(entid_t id_PTR, const char *name) override;
@@ -153,12 +153,14 @@ class CoreImpl final : public CorePrivate
 
 private:
     void loadCompatibilitySettings(INIFILE &inifile);
+    void determineScreenSize(INIFILE &inifile);
 
     EntityManager entity_manager_;
 
     std::unique_ptr<storm::editor::EngineEditor> editor_;
 
     storm::ENGINE_VERSION targetVersion_ = storm::ENGINE_VERSION::LATEST;
+    ScreenSize screenSize_;
 
     bool stopFrameProcessing_ = false;
 

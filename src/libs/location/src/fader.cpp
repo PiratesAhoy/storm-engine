@@ -239,7 +239,7 @@ uint64_t Fader::ProcessMessage(MESSAGE &message)
         {
             // sprintf_s(_name, "tips\\tips_%.4u.tga", rand() % numberOfTips);
             auto *const pTipsName = rs->GetTipsImage();
-            if (pTipsName)
+            if (pTipsName && *pTipsName != '\0')
             {
                 if (tipsID >= 0)
                 {

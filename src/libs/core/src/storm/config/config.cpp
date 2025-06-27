@@ -169,14 +169,25 @@ std::optional<uint32_t> GetColor(const storm::Data &node)
     }
     else if (node.is_string()) {
         const auto value = node.get<std::string>();
-        if (value.starts_with('#') && value.length() == 7) {
+        if (value.starts_with('#') ) {
             const auto code = std::string_view(value.begin() + 1, value.end());
-            uint32_t result;
-            const char *first = code.data();
-            const char *last = first + code.length();
-            const auto parse_result = std::from_chars(first, last, result, 16);
-            if (parse_result.ptr == last) {
-                return result | 0xff000000;
+            if (value.length() == 7) {
+                uint32_t result;
+                const char *first = code.data();
+                const char *last = first + code.length();
+                const auto parse_result = std::from_chars(first, last, result, 16);
+                if (parse_result.ptr == last) {
+                    return result | 0xff000000;
+                }
+            }
+            else if (value.length() == 9) {
+                uint32_t result;
+                const char *first = code.data();
+                const char *last = first + code.length();
+                const auto parse_result = std::from_chars(first, last, result, 16);
+                if (parse_result.ptr == last) {
+                    return result;
+                }
             }
         }
     }

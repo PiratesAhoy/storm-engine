@@ -1,8 +1,10 @@
 #include "sea_cameras.h"
 #include "deck_camera.h"
 #include "free_camera.h"
-#include "ship_camera.h"
 #include "shared/sea_ai/script_defines.h"
+#include "ship_camera.h"
+
+#include <storm/renderer/scene.hpp>
 
 CREATE_CLASS(SEA_CAMERAS)
 
@@ -68,6 +70,9 @@ uint64_t SEA_CAMERAS::ProcessMessage(MESSAGE &message)
         }
         pCamera->SetActive(bActive);
         pCamera->SetCharacter(pACharacter);
+        if (core.GetTargetEngineVersion() <= storm::ENGINE_VERSION::TO_EACH_HIS_OWN) {
+            storm::Scene::GetDefaultScene().SetActiveCamera(pCamera);
+        }
     }
     break;
     case AI_MESSAGE_SEASAVE: {

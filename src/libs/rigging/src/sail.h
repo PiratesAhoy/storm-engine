@@ -1,5 +1,7 @@
 #pragma once
 
+#include "sail_config.hpp"
+
 #include "sailone.h"
 #include "dx9render.h"
 #include "geos.h"
@@ -19,52 +21,6 @@ struct SAILGROUP
 
 class SAIL : public SAIL_BASE
 {
-    // parameters loaded from INI file //
-    // --------------------------------------
-    // float sailDownStep;
-    float SsailWindDepend;
-    float TsailWindDepend;
-    float FLEXSPEED;
-    float MAXSUMWIND;
-    float WINDANGL_DISCRETE;
-    float MAXTURNANGL;
-    float TURNSTEPANGL;
-    float ROLLINGSPEED;
-    int WINDVECTOR_TINCR;
-    int WINDVECTOR_TADD;
-    int WINDVECTOR_SINCR;
-    int WINDVECTOR_SADD;
-    int WINDVECTOR_QUANTITY;
-    float ts_min;
-    float ts_xdep;
-    float ts_zdep;
-    float fs_min;
-    float fs_xdep;
-    float fs_zdep;
-    float ss_min;
-    float ss_xdep;
-    float ss_zdep;
-    int texQuantity;
-    float texNumCommon;
-    float texNumEnglish;
-    float texNumTreangle;
-    float ROLL_Z_VAL;
-    float ROLL_Z_DELTA;
-    float ROLL_Y_VAL;
-    float ROLL_Y_DELTA;
-    float SSailRollForm[SAIL_COL_MAX];
-    float TSailRollForm[5];
-    float TR_FORM_MUL;
-    float fWindAdding;
-    float fTHoleFlexDepend;
-    float fSHoleFlexDepend;
-    float FALL_SSAIL_ADD_MIN;
-    float FALL_SSAIL_ADD_RAND;
-    float FALL_TSAIL_ADD_MIN;
-    float FALL_TSAIL_ADD_RAND;
-
-    int32_t GROUP_UPDATE_TIME;
-
     uint16_t SailQuantity;
     uint16_t SailCurNum;
 
@@ -72,7 +28,7 @@ class SAIL : public SAIL_BASE
 
     // wind description
     WIND globalWind;
-    float *WindVect;
+    std::vector<float> windVectors_;
     //------------------------------------------
 
     friend SAILONE;
@@ -138,6 +94,8 @@ class SAIL : public SAIL_BASE
     SAILGROUP sg;
 
   private:
+    storm::rigging::SailConfig sailConfig_;
+
     SAILTIME tm;
     // list of all sails
     int sailQuantity;

@@ -693,4 +693,9 @@ void ISLAND::ShowEditor()
 {
     ImGui::Text("Island");
     ImGui::Checkbox("Debug view", &enableDebugView_);
+    ImGui::Checkbox("Dynamic lights", &dynamicLightsOn);
+
+    ImGui::DragFloat("Immersion Depth", &fImmersionDepth, 0.005f, 0.0f, 1.0f, "%.3f");
+    ImGui::DragFloat("Immersion Distance", &fImmersionDistance, 0.005f, 0.0f, 1.0f, "%.3f");
+    ImGui::DragFloat("Current Immersion", &fCurrentImmersion, 0.005f, 0.0f, 1.0f, "%.3f");
 }

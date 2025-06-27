@@ -12,13 +12,12 @@
 #include "dx9render.h"
 #include "sail_base.h"
 
-extern float g_fSailHoleDepend;
+extern double g_fSailHoleDepend;
 extern float GetSailSpeed(int holeQ, int holeMax, float maxSpeed, float fSailHoleDepend = g_fSailHoleDepend);
 
 // used other classes
 class NODE;
 
-#define SAIL_COL_MAX 13
 #define SAIL_ROW_MAX 17
 #define SAILVERTEX_FORMAT (D3DFVF_XYZ | D3DFVF_NORMAL | D3DFVF_TEX3 | D3DFVF_TEXTUREFORMAT2)
 

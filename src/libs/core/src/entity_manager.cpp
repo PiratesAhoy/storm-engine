@@ -6,6 +6,8 @@
 #include <ranges>
 #include <type_traits>
 
+#include "storm/editor/storm_imgui.hpp"
+#include "storm/layers.hpp"
 #include "string_compare.hpp"
 #include "vma.hpp"
 
@@ -541,6 +543,33 @@ void EntityManager::ShowEditor(bool &active)
             Entity *entity = GetEntityPointer(selected_entity);
             if (entity != nullptr)
             {
+                // Show layer info
+                const auto entity_idx = GetEntityDataIdx(entity->GetId() );
+                EntityInternalData &data = entities_[entity_idx];
+                if (ImGui::TreeNode("Layers") ) {
+                    if (ImGui::BeginTable("layer_selection", 2, ImGuiTableFlags_Resizable | ImGuiTableFlags_Borders) ) {
+                        size_t i = 0;
+                        for (const auto &layer : layers_) {
+                            ImGui::TableNextRow();
+                            ImGui::TableNextColumn();
+                            std::string label = fmt::format("{}", storm::GetLayerName(i) );
+                            bool selected = ( (data.mask >> i) & 1) == 1;
+                            if (ImGui::Selectable(label.c_str(), &selected) ) {
+                                if (selected) {
+                                    AddToLayer(i, selected_entity, data.priorities[i]);
+                                }
+                                else {
+                                    RemoveFromLayer(i, selected_entity);
+                                }
+                            }
+                            ImGui::TableNextColumn();
+                            ImGui::InputScalar("##priority", ImGuiDataType_U32, &data.priorities[i]);
+                            ++i;
+                        }
+                        ImGui::EndTable();
+                    }
+                }
+                // Show custom editor
                 entity->ShowEditor();
             }
             ImGui::End();
