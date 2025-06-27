@@ -17,9 +17,10 @@ class StormEngine(ConanFile):
 
     # dependencies used in deploy binaries
     # conan-center
-    requires = ["zlib/1.2.13", "spdlog/1.13.0", "fast_float/3.4.0", "mimalloc/2.1.7", "sentry-native/0.6.5", "tomlplusplus/3.3.0", "nlohmann_json/3.11.2",
+    requires = ["zlib/1.3.1", "spdlog/1.13.0", "fast_float/3.4.0", "mimalloc/2.1.7", "sentry-native/0.6.5", "tomlplusplus/3.3.0", "nlohmann_json/3.11.2",
     "imgui/1.90-docking",
     "cli11/2.3.2",
+    "ms-gsl/4.1.0",
     # gitlab.com/piratesahoy
     "directx/9.0@piratesahoy+storm-engine/stable", "fmod/2.02.05@piratesahoy+storm-engine/stable"]
     # aux dependencies (e.g. for tests)
@@ -38,7 +39,7 @@ class StormEngine(ConanFile):
         if self.options.steam:
             self.requires("steamworks/1.5.1@storm/prebuilt")
         if self.options.conan_sdl:
-            self.requires("sdl/2.0.18")
+            self.requires("sdl/2.26.5")
 
     generators = "cmake_multi"
 

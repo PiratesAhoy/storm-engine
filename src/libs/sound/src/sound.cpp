@@ -47,13 +47,10 @@ uint64_t SOUND::ProcessMessage(MESSAGE &message)
 
     auto code = message.Long();
     CVECTOR vector, vector2;
-    int32_t temp, temp2, temp3, temp4, vt;
+    int32_t temp;
     int32_t id, tempLong;
-    float minD, maxD;
-    int32_t loopPauseTime;
     float v1, v2, v3;
     float pitch;
-    float volume;
     VDATA *vd1, *vd2, *vd3;
     VDATA *pd;
     uint32_t outValue = 0;
@@ -100,62 +97,54 @@ uint64_t SOUND::ProcessMessage(MESSAGE &message)
         soundService->SetCameraOrientation(vector, vector2);
         break;
     case MSG_SOUND_PLAY: {
-        const std::string &tempString = message.String(); // filename
+        const std::string &name = message.String();
 
-        temp = message.Long(); // type
-        // defaults
-        vt = static_cast<int>(VOLUME_FX); // volume type
-        temp2 = 0;
-        temp3 = 0;
-        temp4 = 0;
-        tempLong = 0;
-        vector.x = 0;
-        vector.y = 0;
-        vector.z = 0;
-        minD = -1.0f;
-        maxD = -1.0f;
-        loopPauseTime = 0;
-        volume = 1.f;
+        VSoundService::SoundPlayOptions options{};
+        options.type = static_cast<eSoundType>(message.Long());
+
         // try to read as many parameters   as we can
         if (message.GetCurrentFormatType())
-            vt = message.Long(); // volume_type
+            options.volumeType = static_cast<eVolumeType>(message.Long());
         if (message.GetCurrentFormatType())
-            temp2 = message.Long(); // simple_cache
+            options.simpleCache = message.Long();
         if (message.GetCurrentFormatType())
-            temp3 = message.Long(); // looped
+            options.looped = message.Long();
         if (message.GetCurrentFormatType())
-            temp4 = message.Long(); // cached
+            options.cached = message.Long();
         if (message.GetCurrentFormatType())
-            tempLong = message.Long(); // fade_in_time
+            options.fadeInTime = message.Long();
         // boal fix 28.10.06
-        if (temp == SOUND_MP3_STEREO)
+        if (options.type == SOUND_MP3_STEREO || options.type == SOUND_WAV_STEREO)
         {
-            if (temp3) // stereo OGG, looped
+            if (options.looped) // stereo OGG, looped
             {
                 if (message.GetCurrentFormatType())
-                    loopPauseTime = message.Long();
+                    options.loopPauseTime = message.Long();
                 if (message.GetCurrentFormatType())
-                    volume = message.Float();
+                    options.volume = message.Float();
+                if (message.GetCurrentFormatType() == 'l')
+                    options.loopStart = message.Long();
+                if (message.GetCurrentFormatType() == 'l')
+                    options.loopEnd = message.Long();
             }
         }
         else
         {
+            CVECTOR startPosition = {};
             if (message.GetCurrentFormatType())
-                vector.x = message.Float();
+                startPosition.x = message.Float();
             if (message.GetCurrentFormatType())
-                vector.y = message.Float();
+                startPosition.y = message.Float();
             if (message.GetCurrentFormatType())
-                vector.z = message.Float();
+                startPosition.z = message.Float();
+            options.startPosition = startPosition;
             if (message.GetCurrentFormatType())
-                minD = message.Float();
+                options.minDistance = message.Float();
             if (message.GetCurrentFormatType())
-                maxD = message.Float();
+                options.maxDistance = message.Float();
         }
 
-        outValue = static_cast<uint32_t>(soundService->SoundPlay(
-            tempString.c_str(), static_cast<eSoundType>(temp), static_cast<eVolumeType>(vt), (temp2 != 0), (temp3 != 0),
-            (temp4 != 0), tempLong, &vector, minD, maxD, loopPauseTime, volume));
-
+        outValue = static_cast<uint32_t>(soundService->SoundPlay(name, options));
         break;
     }
     case MSG_SOUND_STOP:

@@ -7,7 +7,9 @@
 
 #include <fstream>
 
+#include "v_sound_service.h"
 #include "string_compare.hpp"
+
 #include <SDL2/SDL.h>
 
 Core &core = core_internal;
@@ -122,6 +124,11 @@ void CoreImpl::Init()
 
     storm::editor::EngineEditor::RegisterEditorTool("Entities", [this] (bool &active) {
         entity_manager_.ShowEditor(active);
+    });
+
+    storm::editor::EngineEditor::RegisterEditorTool("Sound Service", [this] (bool &active) {
+        auto* sound_service = GetServiceX<VSoundService>();
+        sound_service->ShowEditor(active);
     });
 }
 
@@ -481,7 +488,7 @@ void CoreImpl::ReleaseServices()
     Controls = nullptr;
 }
 
-VMA *CoreImpl::FindVMA(const char *class_name)
+VMA *CoreImpl::FindVMA(const std::string_view class_name)
 {
     const int32_t hash = MakeHashValue(class_name);
     for (auto *const c : __STORM_CLASSES_REGISTRY)
@@ -500,7 +507,7 @@ VMA *CoreImpl::FindVMA(int32_t hash)
     return nullptr;
 }
 
-void *CoreImpl::GetService(const char *service_name)
+void *CoreImpl::GetService(const std::string_view service_name)
 {
     auto *pClass = FindVMA(service_name);
     if (pClass == nullptr)
@@ -805,13 +812,12 @@ void CoreImpl::AppState(bool state)
         Controls->AppState(state);
 }
 
-uint32_t CoreImpl::MakeHashValue(const char *string)
+uint32_t CoreImpl::MakeHashValue(const std::string_view string)
 {
     uint32_t hval = 0;
 
-    while (*string != 0)
+    for (char v : string)
     {
-        char v = *string++;
         if ('A' <= v && v <= 'Z')
             v += 'a' - 'A';
 

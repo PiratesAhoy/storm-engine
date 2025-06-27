@@ -26,7 +26,6 @@ CXI_TEXTBUTTON::CXI_TEXTBUTTON()
 
     m_pTex = nullptr;
     m_nNodeType = NODETYPE_TEXTBUTTON;
-    m_sString = nullptr;
     m_bVideoToBack = true;
 
     m_dwBackColor = ARGB(128, 0, 0, 0);
@@ -182,13 +181,13 @@ void CXI_TEXTBUTTON::Draw(bool bSelected, uint32_t Delta_Time)
             }
         }
 
-        if (m_idString != -1 || m_sString != nullptr)
+        if (m_idString != -1 || text_)
             if (m_nPressedDelay > 0)
             {
                 m_rs->ExtPrint(m_nFontNum, m_dwPressedFontColor, 0, PR_ALIGN_CENTER, true, m_fFontScale, m_screenSize.x,
                                m_screenSize.y, (m_rect.left + m_rect.right) / 2 + static_cast<int>(m_fXDeltaPress),
                                m_rect.top + m_dwStrOffset + static_cast<int>(m_fYDeltaPress), "%s",
-                               m_idString != -1 ? pStringService->GetString(m_idString) : m_sString);
+                               m_idString != -1 ? pStringService->GetString(m_idString) : text_->c_str());
             }
             else
             {
@@ -198,20 +197,20 @@ void CXI_TEXTBUTTON::Draw(bool bSelected, uint32_t Delta_Time)
                     {    
                         m_rs->ExtPrint(m_nFontNum, m_dwSelectedFontColor, 0, PR_ALIGN_CENTER, true, m_fFontScale, m_screenSize.x,
                                        m_screenSize.y, (m_rect.left + m_rect.right) / 2, m_rect.top + m_dwStrOffset, "%s",
-                                       m_idString != -1 ? pStringService->GetString(m_idString) : m_sString);
+                                       m_idString != -1 ? pStringService->GetString(m_idString) : text_->c_str());
                     }
                     else
                     {
                         m_rs->ExtPrint(m_nFontNum, m_dwFontColor, 0, PR_ALIGN_CENTER, true, m_fFontScale, m_screenSize.x,
                                        m_screenSize.y, (m_rect.left + m_rect.right) / 2, m_rect.top + m_dwStrOffset, "%s",
-                                       m_idString != -1 ? pStringService->GetString(m_idString) : m_sString);
+                                       m_idString != -1 ? pStringService->GetString(m_idString) : text_->c_str());
             }
     }
                 else
                     m_rs->ExtPrint(m_nFontNum, m_dwUnselFontColor, 0, PR_ALIGN_CENTER, true, m_fFontScale,
                                    m_screenSize.x, m_screenSize.y, (m_rect.left + m_rect.right) / 2,
                                    m_rect.top + m_dwStrOffset, "%s",
-                                   m_idString != -1 ? pStringService->GetString(m_idString) : m_sString);
+                                   m_idString != -1 ? pStringService->GetString(m_idString) : text_->c_str());
             }
     }
 }
@@ -546,7 +545,6 @@ void CXI_TEXTBUTTON::ReleaseAll()
     PICTURE_TEXTURE_RELEASE(pPictureService, m_sGroupName, m_idTex);
     TEXTURE_RELEASE(m_rs, m_idShadowTex);
     STORM_DELETE(m_sGroupName);
-    STORM_DELETE(m_sString);
     VERTEX_BUFFER_RELEASE(m_rs, m_idVBuf);
     INDEX_BUFFER_RELEASE(m_rs, m_idIBuf);
     VIDEOTEXTURE_RELEASE(m_rs, m_pTex);
@@ -610,27 +608,16 @@ uint32_t CXI_TEXTBUTTON::MessageProc(int32_t msgcode, MESSAGE &message)
     case 0: // change the text on the button
     {
         const std::string &param = message.String();
-        STORM_DELETE(m_sString);
         m_idString = -1;
         if (param[0] == '#')
         {
             {
-                const auto len = param.size();
-                if ((m_sString = new char[len]) == nullptr)
-                {
-                    throw std::runtime_error("allocate memory error");
-                }
-                memcpy(m_sString, param.c_str() + 1, len);
+                text_ = param.substr(1);
             }
         }
         else if (core.GetTargetEngineVersion() <= storm::ENGINE_VERSION::PIRATES_OF_THE_CARIBBEAN)
         {
-            const auto len = param.size();
-            if ((m_sString = new char[len + 1]) == nullptr)
-            {
-                throw std::runtime_error("allocate memory error");
-            }
-            memcpy(m_sString, param.c_str(), len + 1);
+            text_ = param;
         }
         else
         {

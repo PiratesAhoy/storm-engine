@@ -4,12 +4,14 @@
 #include "ai_fort.h"
 #include "ai_helper.h"
 
+#include <gsl/gsl>
+
 class SEA_AI : public Entity
 {
   private:
     bool bFirstInit;
 
-    void AddShip(entid_t _eidShip, ATTRIBUTES *pCharacter, ATTRIBUTES *pAShip);
+    void AddShip(entid_t _eidShip, gsl::not_null<ATTRIBUTES*> pCharacter, gsl::not_null<ATTRIBUTES*> pAShip);
     void SetCompanionEnemy(ATTRIBUTES *pACharacter);
 
   public:
