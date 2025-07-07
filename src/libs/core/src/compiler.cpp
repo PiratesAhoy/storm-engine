@@ -7316,6 +7316,10 @@ void COMPILER::ShowEditor(bool &active)
     if (ImGui::Begin("Scripting", &active, 0))
     {
         static const VarInfo *selected = nullptr;
+
+        static std::string filter;
+        ImGui::InputText("Search", &filter);
+
         if (ImGui::BeginTable("Globals", 3, ImGuiTableFlags_SizingFixedFit | ImGuiTableFlags_Resizable | ImGuiTableFlags_Reorderable) )
         {
             ImGui::TableSetupColumn("ID", ImGuiTableColumnFlags_WidthFixed);
@@ -7329,10 +7333,19 @@ void COMPILER::ShowEditor(bool &active)
                 if (var_info == nullptr) {
                     continue;
                 }
+                std::string label = var_info->name;
+
+                if (!filter.empty() )
+                {
+                    if (!label.contains(filter) )
+                    {
+                        continue;
+                    }
+                }
+
                 ImGui::TableNextRow();
                 ImGui::TableNextColumn();
 
-                std::string label = var_info->name;
                 if (ImGui::Selectable(label.c_str(), var_info == selected, ImGuiSelectableFlags_SpanAllColumns) )
                 {
                     selected = var_info;
