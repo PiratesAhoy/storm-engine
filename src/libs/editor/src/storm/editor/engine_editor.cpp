@@ -66,33 +66,28 @@ void EngineEditor::StartFrame()
 #endif WIN32
     ImGui_ImplSDL2_NewFrame();
     ImGui::NewFrame();
-    if (ImGui::Begin("Developer Tools", NULL, ImGuiWindowFlags_MenuBar) )
+    if (ImGui::BeginMainMenuBar() )
     {
-        if (ImGui::BeginMenuBar() )
+        if (ImGui::BeginMenu("Tools") )
         {
-            if (ImGui::BeginMenu("Tools") )
+            for (auto &config : Impl::tools_)
             {
-                for (auto &config : Impl::tools_)
-                {
-                    ImGui::MenuItem(config.title.c_str(), NULL, &config.active);
-                }
-                ImGui::EndMenu();
+                ImGui::MenuItem(config.title.c_str(), NULL, &config.active);
             }
-
-            if (ImGui::BeginMenu("Debug") )
-            {
-                ImGui::MenuItem("Wireframe mode", NULL, &impl_->debugFlags_[static_cast<size_t>(DebugFlag::RenderWireframe)]);
-                ImGui::MenuItem("Sound debug", NULL, &impl_->debugFlags_[static_cast<size_t>(DebugFlag::SoundDebug)]);
-                ImGui::MenuItem("Location debug", NULL, &impl_->debugFlags_[static_cast<size_t>(DebugFlag::LocationDebug)]);
-                ImGui::MenuItem("Extended location debug", NULL, &impl_->debugFlags_[static_cast<size_t>(DebugFlag::ExtendedLocationDebug)]);
-                ImGui::MenuItem("Ship cannon debug", NULL, &impl_->debugFlags_[static_cast<size_t>(DebugFlag::CannonDebug)]);
-                ImGui::EndMenu();
-            }
-
-            ImGui::EndMenuBar();
+            ImGui::EndMenu();
         }
 
-        ImGui::End();
+        if (ImGui::BeginMenu("Debug") )
+        {
+            ImGui::MenuItem("Wireframe mode", NULL, &impl_->debugFlags_[static_cast<size_t>(DebugFlag::RenderWireframe)]);
+            ImGui::MenuItem("Sound debug", NULL, &impl_->debugFlags_[static_cast<size_t>(DebugFlag::SoundDebug)]);
+            ImGui::MenuItem("Location debug", NULL, &impl_->debugFlags_[static_cast<size_t>(DebugFlag::LocationDebug)]);
+            ImGui::MenuItem("Extended location debug", NULL, &impl_->debugFlags_[static_cast<size_t>(DebugFlag::ExtendedLocationDebug)]);
+            ImGui::MenuItem("Ship cannon debug", NULL, &impl_->debugFlags_[static_cast<size_t>(DebugFlag::CannonDebug)]);
+            ImGui::EndMenu();
+        }
+
+        ImGui::EndMainMenuBar();
     }
 
     for (auto &config : Impl::tools_)
