@@ -15,6 +15,9 @@
 #include "shared/messages.h"
 #include "core.h"
 
+#include "entity.h"
+#include "math_inlines.h"
+#include "string_compare.hpp"
 #include "wdm_camera_std_ctrl.h"
 #include "wdm_clouds.h"
 #include "wdm_follow_ship.h"
@@ -25,10 +28,8 @@
 #include "wdm_sea.h"
 #include "wdm_storm.h"
 #include "wdm_warring_ship.h"
+#include "wdm_wind_rose.h"
 #include "wdm_wind_ui.h"
-#include "entity.h"
-#include "math_inlines.h"
-#include "string_compare.hpp"
 
 #ifdef GetObject
 #undef GetObject
@@ -194,6 +195,11 @@ bool WorldMap::Init()
         wdmObjects->isDebug = s && (storm::iEquals(s, "true"));
         saveData = AttributesPointer->CreateSubAClass(AttributesPointer, "encounters");
         wdmObjects->resizeRatio = AttributesPointer->GetAttributeAsFloat("resizeRatio", wdmObjects->resizeRatio);
+        if (AttributesPointer->HasAttribute("compass") )
+        {
+            const ATTRIBUTES* compass_attr = AttributesPointer->GetAttributeClass("compass");
+            showCompass_ = compass_attr->GetAttributeAsDword("enable", 1) != 0;
+        }
     }
     static_cast<WdmShip *>(ro)->Teleport(psX, psZ, psAy);
     static_cast<WdmPlayerShip *>(ro)->SetActionRadius(psRad);
@@ -256,8 +262,11 @@ bool WorldMap::Init()
     AddLObject(AddObject(windUI, 1001), 10100);
 
     // Compass
-    // ro = CreateModel(new WdmWindRose(), "WindRose");
-    // AddLObject(ro, 10099);
+    if (showCompass_)
+    {
+        ro = CreateModel(new WdmWindRose(), "WindRose");
+        AddLObject(ro, 10099);
+    }
     // The calendar
     // WdmCounter * cnt = new WdmCounter();
     // if(!cnt->Init()) core.Trace("Counter not created");
