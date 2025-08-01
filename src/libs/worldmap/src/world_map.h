@@ -156,6 +156,8 @@ class WorldMap : public Entity
 
     std::string bufForSave;
 
+    bool showCompass_ = false;
+
   public:
     uint32_t encCounter;
 
