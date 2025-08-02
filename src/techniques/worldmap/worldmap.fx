@@ -577,6 +577,7 @@ technique WdmIslandWaves
     {
         Lighting = false;
         FogEnable = false;
+        ZEnable = false;
         ZWriteEnable = false;
 
         AlphaTestEnable = false;
@@ -595,5 +596,27 @@ technique WdmIslandWaves
         AlphaArg1[0] = tfactor;
         AlphaArg2[0] = texture;
         AlphaOp[1] = disable;
+    }
+}
+
+technique WdmCompasShadow
+{
+    pass p0
+    {
+        Lighting = false;
+        FogEnable = false;
+        ZWriteEnable = false;
+
+        AlphaTestEnable = false;
+        AlphaBlendEnable = true;
+        SrcBlend = zero;
+        DestBlend = srccolor;
+
+        TextureFactor = 0x00000000;
+        ColorArg1[0] = tfactor;
+        ColorArg2[0] = texture;
+        ColorOp[0] = add;
+        ColorOp[1] = disable;
+        AlphaOp[0] = disable;
     }
 }
