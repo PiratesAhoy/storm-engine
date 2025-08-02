@@ -7337,7 +7337,7 @@ void COMPILER::ShowEditor(bool &active)
 
                 if (!filter.empty() )
                 {
-                    if (!label.contains(filter) )
+                    if (label.find(filter) == std::string::npos)
                     {
                         continue;
                     }
