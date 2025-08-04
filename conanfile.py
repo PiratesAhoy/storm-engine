@@ -97,7 +97,7 @@ class StormEngine(ConanFile):
                 self.__install_lib("libmimalloc.so.2.0")
                 self.__install_lib("libmimalloc.so")
 
-        self.__write_watermark();
+        self.__write_watermark()
 
 
     def __write_watermark(self):
