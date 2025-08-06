@@ -87,7 +87,7 @@ void LoadImGuiFontFromResource(ImGuiIO &io)
     HMODULE hModule = GetModuleHandle(NULL);
 
     // 2. Find the font resource
-    HRSRC hRes = FindResource(hModule, MAKEINTRESOURCE(IDR_FONT_ROBOTOREGULAR), TEXT("RCDATA"));
+    HRSRC hRes = FindResource(NULL, L"IDR_FONT_ROBOTOREGULAR", RT_RCDATA);
     if (!hRes)
     {
         DWORD err = GetLastError();
@@ -120,21 +120,18 @@ void LoadImGuiFontFromResource(ImGuiIO &io)
 
     ImFont *font = io.Fonts->AddFontFromMemoryTTF(pData,         // pointer to TTF data
                                                   (int)dataSize, // size of the TTF data
-                                                  16.0f,         // font size in pixels
+                                                  25.0f,         // font size in pixels
                                                   &fontConfig);
 
     if (!font)
     {
         OutputDebugStringA("Failed to load font into ImGui\n");
     }
-
-    io.FontDefault = font;
+    std::cout << "Succesfully loaded font resource." << std::endl;
 }
 
 int main(int, char **)
 {
-    std::cout << "Hello, ConfigApp!" << std::endl;
-
     // SDL and window init
     if (SDL_Init(SDL_INIT_VIDEO | SDL_INIT_TIMER | SDL_INIT_GAMECONTROLLER) != 0)
     {
@@ -292,7 +289,7 @@ int main(int, char **)
             }
         }
     }
-
+    
     // Cleanup
     ImGui_ImplDX9_Shutdown();
     ImGui_ImplSDL2_Shutdown();
