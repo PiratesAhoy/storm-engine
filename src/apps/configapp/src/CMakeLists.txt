@@ -1,3 +1,8 @@
+add_library(inimanager
+    IniFile.cpp
+    IniFile.h
+)
+
 add_executable(configapp
     configapp.cpp
     ../rsrc/resource.rc
@@ -25,7 +30,7 @@ endif()
 target_include_directories(imgui_backend PUBLIC ${IMGUI_BINGINDS_DIR})
 target_link_libraries(imgui_backend PUBLIC imgui ${SDL2_LIBRARIES} ${SYSTEM_DEPS})
 
-target_link_libraries(configapp PRIVATE imgui_backend)
+target_link_libraries(configapp PRIVATE imgui_backend inimanager)
 
 #set_target_properties(configapp PROPERTIES
 #    RUNTIME_OUTPUT_DIRECTORY ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}

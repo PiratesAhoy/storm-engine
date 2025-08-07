@@ -1,5 +1,6 @@
 #include <windows.h>
 #include "../rsrc/resource.h"
+#include "iniFile.h"
 #include <SDL.h>
 #include <SDL_syswm.h>
 #include <d3d9.h>
@@ -130,8 +131,78 @@ void LoadImGuiFontFromResource(ImGuiIO &io)
     std::cout << "Succesfully loaded font resource." << std::endl;
 }
 
+bool IniTest()
+{
+    IniFile ini;
+
+    // Open an existing INI file
+    if (!ini.open("TESTINI.ini"))
+    {
+        std::cout << "Could not open file. Quitting." << std::endl;
+        return false;
+    }
+
+    // Read values
+    std::string name = ini.getValue("section1", "myname", "Unknown");
+    std::string somestuff = ini.getValue("", "somestuff", "0"); // Global section (empty string)
+    std::string other = ini.getValue("section2", "someotherstuff", "0.0");
+
+    std::cout << "myname = " << name << std::endl;
+    std::cout << "somestuff = " << somestuff << std::endl;
+    std::cout << "someotherstuff = " << other << std::endl;
+
+    // Modify values (preserves comments and structure)
+    ini.setValue("section1", "myname", "Alice");
+    ini.setValue("", "somestuff", "25"); // Global section
+    ini.setValue("section2", "someotherstuff", "15.5");
+
+    // Add new values
+    ini.setValue("section1", "age", "30");
+    ini.setValue("section3", "newkey", "newvalue");
+
+    // Save the file
+    if (ini.save())
+    {
+        std::cout << "File saved successfully!" << std::endl;
+    }
+    else
+    {
+        std::cout << "Failed to save file!" << std::endl;
+    }
+
+    // List all sections
+    std::cout << "\nSections:" << std::endl;
+    auto sections = ini.getSections();
+    for (const auto &section : sections)
+    {
+        std::cout << "  [" << section << "]" << std::endl;
+    }
+
+    // List keys in section1
+    std::cout << "\nKeys in section1:" << std::endl;
+    auto keys = ini.getKeys("section1");
+    for (const auto &key : keys)
+    {
+        std::cout << "  " << key << " = " << ini.getValue("section1", key) << std::endl;
+    }
+
+    // Explicit close (optional, destructor will close automatically)
+    ini.close();
+
+    return true;
+}
+
 int main(int, char **)
 {
+
+    if (!IniTest())
+    {
+        return 1;
+    }
+    return 0;
+
+
+
     // SDL and window init
     if (SDL_Init(SDL_INIT_VIDEO | SDL_INIT_TIMER | SDL_INIT_GAMECONTROLLER) != 0)
     {
