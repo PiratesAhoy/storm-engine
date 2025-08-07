@@ -7,9 +7,6 @@ if (NOT WIN32)
     set(SYSTEM_DEPS "${NATIVE_D3D9_LIBS}")
 endif()
 
-set(CORE_INCLUDE_DIR "${CMAKE_SOURCE_DIR}/src/libs/core/include")
-set(CORE_UTIL_INCLUDE_DIR "${CMAKE_SOURCE_DIR}/src/libs/util/include")
-
 set(IMGUI_BINGINDS_DIR "${CMAKE_BINARY_DIR}/imgui")
 
 # TODO: imgui_backend is defined in `libs\editor\CMakeLists.txt`, but
@@ -26,11 +23,7 @@ if (WIN32)
 endif()
 
 target_include_directories(imgui_backend PUBLIC ${IMGUI_BINGINDS_DIR})
-target_include_directories(configapp PRIVATE
-    ${CORE_INCLUDE_DIR}
-    ${CORE_UTIL_INCLUDE_DIR}
-)
-target_link_libraries(imgui_backend PUBLIC imgui ${SDL2_LIBRARIES} ${SYSTEM_DEPS} nlohmann_json)
+target_link_libraries(imgui_backend PUBLIC imgui ${SDL2_LIBRARIES} ${SYSTEM_DEPS})
 
 target_link_libraries(configapp PRIVATE imgui_backend)
 

@@ -8,7 +8,6 @@
 #include <imgui_impl_sdl2.h>
 #include <iostream>
 #include <string>
-#include "file_service.h"
 #pragma comment(lib, "d3d9.lib")
 
 // Globals
@@ -198,6 +197,10 @@ int main(int, char **)
         return -1;
     }
 
+    // Application state
+    std::string label_text = "Hello!";
+    int click_count = 0;
+
     LoadImGuiFontFromResource(io);
 
     // Main loop
@@ -231,6 +234,29 @@ int main(int, char **)
                                         ImGuiWindowFlags_NoBringToFrontOnFocus | ImGuiWindowFlags_NoNavFocus;
 
         ImGui::Begin("MainWindow", nullptr, window_flags);
+
+        ImGui::Text("%s", label_text.c_str());
+        ImGui::Text("Button clicked %d times", click_count);
+
+        if (ImGui::Button("Click Me"))
+        {
+            click_count++;
+            label_text = "You clicked the button " + std::to_string(click_count) + " time(s)!";
+        }
+
+        ImGui::SameLine();
+        if (ImGui::Button("Reset"))
+        {
+            click_count = 0;
+            label_text = "Hello!";
+        }
+
+        ImGui::Separator();
+
+        if (ImGui::Button("Quit"))
+        {
+            done = true;
+        }
 
         ImGui::End();
 
