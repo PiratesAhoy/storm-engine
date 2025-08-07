@@ -260,43 +260,51 @@ void SaveConfigToFile()
     g_HasUnsavedChanges = false;
 }
 
-void RenderConfigValue(ConfigValue &config)
-{
-    ImGui::PushID(&config);
 
-    // Display name and description
+void TryLoadIniFile()
+{
+    if (!g_CurrentFileName.empty())
+    {
+        g_IniFile.close();
+        if (g_IniFile.open(g_CurrentFileName))
+        {
+            g_FileLoaded = true;
+            LoadConfigFromFile();
+            g_HasUnsavedChanges = false;
+        }
+    }
+}
+
+// Replace RenderConfigValue with a version that draws into table columns
+void RenderConfigValueTable(ConfigValue &config)
+{
+    ImGui::TableNextRow();
+    ImGui::TableSetColumnIndex(0);
     ImGui::Text("%s", config.displayName.c_str());
     if (!config.description.empty() && ImGui::IsItemHovered())
-    {
         ImGui::SetTooltip("%s", config.description.c_str());
-    }
-    ImGui::SameLine();
 
+    ImGui::TableSetColumnIndex(1);
     bool changed = false;
+    ImGui::PushID(&config);
 
     switch (config.type)
     {
     case ConfigValueType::String: {
         if (!config.constraints.allowedValues.empty())
         {
-            // Dropdown for restricted values
-            auto it = std::find(config.constraints.allowedValues.begin(), config.constraints.allowedValues.end(),
-                                config.stringValue);
-            int currentItem =
-                (it != config.constraints.allowedValues.end()) ? (it - config.constraints.allowedValues.begin()) : 0;
-
-            if (ImGui::Combo(
-                    "##combo", &currentItem,
-                    [](void *data, int idx, const char **out_text) {
-                        auto *values = static_cast<std::vector<std::string> *>(data);
-                        if (idx >= 0 && idx < values->size())
-                        {
-                            *out_text = (*values)[idx].c_str();
-                            return true;
-                        }
-                        return false;
-                    },
-                    &config.constraints.allowedValues, config.constraints.allowedValues.size()))
+            auto it = std::find(config.constraints.allowedValues.begin(), config.constraints.allowedValues.end(), config.stringValue);
+            int currentItem = (it != config.constraints.allowedValues.end()) ? (int)(it - config.constraints.allowedValues.begin()) : 0;
+            if (ImGui::Combo("##combo", &currentItem,
+                [](void* data, int idx, const char** out_text) {
+                    auto* values = static_cast<std::vector<std::string>*>(data);
+                    if (idx >= 0 && idx < (int)values->size()) {
+                        *out_text = (*values)[idx].c_str();
+                        return true;
+                    }
+                    return false;
+                },
+                &config.constraints.allowedValues, (int)config.constraints.allowedValues.size()))
             {
                 config.stringValue = config.constraints.allowedValues[currentItem];
                 changed = true;
@@ -304,40 +312,28 @@ void RenderConfigValue(ConfigValue &config)
         }
         else
         {
-            // Text input
             char buffer[256];
             strncpy_s(buffer, config.stringValue.c_str(), sizeof(buffer) - 1);
             if (ImGui::InputText("##input", buffer, sizeof(buffer)))
             {
                 config.stringValue = buffer;
                 if (config.stringValue.length() > config.constraints.maxLength)
-                {
                     config.stringValue = config.stringValue.substr(0, config.constraints.maxLength);
-                }
                 changed = true;
             }
         }
         break;
     }
-
     case ConfigValueType::Integer: {
-        if (ImGui::SliderInt("##slider", &config.intValue, (int)config.constraints.minValue,
-                             (int)config.constraints.maxValue))
-        {
+        if (ImGui::SliderInt("##slider", &config.intValue, (int)config.constraints.minValue, (int)config.constraints.maxValue))
             changed = true;
-        }
         break;
     }
-
     case ConfigValueType::Float: {
-        if (ImGui::SliderFloat("##slider", &config.floatValue, config.constraints.minValue, config.constraints.maxValue,
-                               "%.1f"))
-        {
+        if (ImGui::SliderFloat("##slider", &config.floatValue, config.constraints.minValue, config.constraints.maxValue, "%.1f"))
             changed = true;
-        }
         break;
     }
-
     case ConfigValueType::Boolean: {
         const char* boolItems[] = { "False", "True" };
         int current = config.boolValue ? 1 : 0;
@@ -349,8 +345,7 @@ void RenderConfigValue(ConfigValue &config)
     }
     }
 
-    // Reset to default button
-    ImGui::SameLine();
+    ImGui::TableSetColumnIndex(2);
     if (ImGui::SmallButton("Reset"))
     {
         config.setFromString(config.defaultValue);
@@ -358,42 +353,22 @@ void RenderConfigValue(ConfigValue &config)
     }
 
     if (changed)
-    {
         g_HasUnsavedChanges = true;
-    }
 
     ImGui::PopID();
 }
 
-void PerformLoadIniFile()
-{
-    if (!g_CurrentFileName.empty())
-    {
-        g_IniFile.close();
-        if (g_IniFile.open(g_CurrentFileName))
-        {
-            LoadConfigFromFile();
-            g_HasUnsavedChanges = false;
-        }
-    }
-}
-
+// In RenderConfigEditor, use a table for each section:
 void RenderConfigEditor()
 {
-
-    // File operations
     ImGui::Text("File: %s", g_CurrentFileName.empty() ? "No file loaded" : g_CurrentFileName.c_str());
 
     if (ImGui::Button("Load File"))
-    {
-        PerformLoadIniFile();
-    }
+        TryLoadIniFile();
 
     ImGui::SameLine();
     if (ImGui::Button("Save File") && g_FileLoaded)
-    {
         SaveConfigToFile();
-    }
 
     if (g_HasUnsavedChanges)
     {
@@ -406,7 +381,7 @@ void RenderConfigEditor()
     if (!g_FileLoaded)
     {
         ImGui::Text("Loading INI file...");
-        PerformLoadIniFile();
+        TryLoadIniFile();
         return;
     }
 
@@ -415,22 +390,25 @@ void RenderConfigEditor()
     // Group settings by section
     std::map<std::string, std::vector<ConfigValue *>> sections;
     for (auto &config : g_ConfigDefinitions)
-    {
         sections[config.section].push_back(&config);
-    }
 
-    // Render sections
     for (auto &[sectionName, configs] : sections)
     {
-        std::string headerName = sectionName;
-        if (sectionName == "")
-            headerName = "[UNCATEGORISED]";
+        std::string headerName = sectionName.empty() ? "[UNCATEGORISED]" : sectionName;
         if (ImGui::CollapsingHeader(headerName.c_str(), ImGuiTreeNodeFlags_DefaultOpen))
         {
             ImGui::Indent();
-            for (auto *config : configs)
+            if (ImGui::BeginTable("config_table", 3, ImGuiTableFlags_RowBg | ImGuiTableFlags_BordersInnerV | ImGuiTableFlags_SizingFixedFit))
             {
-                RenderConfigValue(*config);
+                ImGui::TableSetupColumn("Name", ImGuiTableColumnFlags_WidthStretch, 0.4f);
+                ImGui::TableSetupColumn("Value", ImGuiTableColumnFlags_WidthStretch, 0.4f);
+                ImGui::TableSetupColumn("Reset", ImGuiTableColumnFlags_WidthFixed, 60.0f); // 60 pixels for Reset
+                ImGui::TableHeadersRow();
+
+                for (auto *config : configs)
+                    RenderConfigValueTable(*config);
+
+                ImGui::EndTable();
             }
             ImGui::Unindent();
         }
@@ -548,16 +526,7 @@ int main(int, char **)
             {
                 if (ImGui::MenuItem("Load", "Ctrl+O"))
                 {
-                    if (!g_CurrentFileName.empty())
-                    {
-                        g_IniFile.close();
-                        if (g_IniFile.open(g_CurrentFileName))
-                        {
-                            g_FileLoaded = true;
-                            LoadConfigFromFile();
-                            g_HasUnsavedChanges = false;
-                        }
-                    }
+                    TryLoadIniFile();
                 }
                 if (ImGui::MenuItem("Save", "Ctrl+S", false, g_FileLoaded))
                 {
