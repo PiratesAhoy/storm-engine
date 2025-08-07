@@ -325,12 +325,12 @@ void RenderConfigValueTable(ConfigValue &config)
         break;
     }
     case ConfigValueType::Integer: {
-        if (ImGui::InputInt("##input", &config.intValue, 0, 0, ImGuiInputTextFlags_EnterReturnsTrue))
+        if (ImGui::InputInt("##input", &config.intValue, 0, 0))
             changed = true;
         break;
     }
     case ConfigValueType::Float: {
-        if (ImGui::InputFloat("##input", &config.floatValue, 0, 0, "%.3f", ImGuiInputTextFlags_EnterReturnsTrue))
+        if (ImGui::InputFloat("##input", &config.floatValue, 0, 0, "%.3f"))
             changed = true;
         break;
     }
@@ -346,11 +346,11 @@ void RenderConfigValueTable(ConfigValue &config)
     }
 
     ImGui::TableSetColumnIndex(2);
-    if (ImGui::SmallButton("Reset"))
+    /* if (ImGui::SmallButton("Reset"))
     {
         config.setFromString(config.defaultValue);
         changed = true;
-    }
+    }*/
 
     if (changed)
         g_HasUnsavedChanges = true;
@@ -402,7 +402,7 @@ void RenderConfigEditor()
             {
                 ImGui::TableSetupColumn("Name", ImGuiTableColumnFlags_WidthStretch, 0.4f);
                 ImGui::TableSetupColumn("Value", ImGuiTableColumnFlags_WidthStretch, 0.4f);
-                ImGui::TableSetupColumn("Reset", ImGuiTableColumnFlags_WidthFixed, 60.0f); // 60 pixels for Reset
+                //ImGui::TableSetupColumn("Reset", ImGuiTableColumnFlags_WidthFixed, 60.0f); // 60 pixels for Reset
                 ImGui::TableHeadersRow();
 
                 for (auto *config : configs)
@@ -531,18 +531,6 @@ int main(int, char **)
                 if (ImGui::MenuItem("Save", "Ctrl+S", false, g_FileLoaded))
                 {
                     SaveConfigToFile();
-                }
-                if (ImGui::MenuItem("Save As...", "Ctrl+Shift+S"))
-                {
-                    if (!g_CurrentFileName.empty())
-                    {
-                        g_IniFile.close();
-                        if (g_IniFile.open(g_CurrentFileName))
-                        {
-                            g_FileLoaded = true;
-                            SaveConfigToFile();
-                        }
-                    }
                 }
                 ImGui::Separator();
                 if (ImGui::MenuItem("Exit"))
