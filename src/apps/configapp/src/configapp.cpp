@@ -1,15 +1,20 @@
-#include <windows.h>
 #include "../rsrc/resource.h"
 #include "iniFile.h"
 #include <SDL.h>
 #include <SDL_syswm.h>
+#include <algorithm>
 #include <d3d9.h>
 #include <imgui.h>
 #include <imgui_impl_dx9.h>
 #include <imgui_impl_sdl2.h>
 #include <iostream>
+#include <map>
+#include <shlwapi.h>
 #include <string>
+#include <vector>
+#include <windows.h>
 #pragma comment(lib, "d3d9.lib")
+#pragma comment(lib, "shlwapi.lib")
 
 // Globals
 LPDIRECT3D9 g_pD3D = NULL;
@@ -19,17 +24,151 @@ SDL_Window *g_Window = NULL;
 SDL_Renderer *g_Renderer = NULL;
 SDL_SysWMinfo g_WmInfo;
 
+enum class ConfigValueType
+{
+    String,
+    Integer,
+    Float,
+    Boolean
+};
 
-// TODO: Consider using something else? DirectX is a bit overkill for this,
-//  but it's what we already use, so I'm not sure.
+struct ConfigConstraints
+{
+    // For numeric types
+    float minValue = 0.0f;
+    float maxValue = 100.0f;
+
+    // For string types
+    size_t maxLength = 255;
+
+    // For all types
+    std::vector<std::string> allowedValues; // If not empty, restricts to these values
+};
+
+struct ConfigValue
+{
+    std::string section;
+    std::string key;
+    std::string displayName;
+    std::string description;
+    ConfigValueType type;
+    std::string defaultValue;
+    ConfigConstraints constraints;
+
+    // Current values for editing
+    std::string stringValue;
+    int intValue = 0;
+    float floatValue = 0.0f;
+    bool boolValue = false;
+
+    ConfigValue(const std::string &sect, const std::string &k, const std::string &display, const std::string &desc,
+                ConfigValueType t, const std::string &def, const ConfigConstraints &constr = {})
+        : section(sect)
+        , key(k)
+        , displayName(display)
+        , description(desc)
+        , type(t)
+        , defaultValue(def)
+        , constraints(constr)
+    {
+        setFromString(def);
+    }
+
+    void setFromString(const std::string &value)
+    {
+        switch (type)
+        {
+        case ConfigValueType::String:
+            stringValue = value;
+            break;
+        case ConfigValueType::Integer:
+            intValue = std::stoi(value.empty() ? "0" : value);
+            break;
+        case ConfigValueType::Float:
+            floatValue = std::stof(value.empty() ? "0.0" : value);
+            break;
+        case ConfigValueType::Boolean:
+            boolValue = (value == "true" || value == "1" || value == "yes");
+            break;
+        }
+    }
+
+    std::string toString() const
+    {
+        switch (type)
+        {
+        case ConfigValueType::String:
+            return stringValue;
+        case ConfigValueType::Integer:
+            return std::to_string(intValue);
+        case ConfigValueType::Float:
+            return std::to_string(floatValue);
+        case ConfigValueType::Boolean:
+            return boolValue ? "true" : "false";
+        }
+        return "";
+    }
+};
+
+// Configuration definitions - Add your preset values here
+/* std::vector<ConfigValue> g_ConfigDefinitions = {
+    // Graphics settings
+    ConfigValue("graphics", "resolution_width", "Screen Width", "Horizontal resolution in pixels",
+                ConfigValueType::Integer, "1920", {800, 3840}),
+    ConfigValue("graphics", "resolution_height", "Screen Height", "Vertical resolution in pixels",
+                ConfigValueType::Integer, "1080", {600, 2160}),
+    ConfigValue("graphics", "fullscreen", "Fullscreen Mode", "Enable fullscreen display", ConfigValueType::Boolean,
+                "false"),
+    ConfigValue("graphics", "vsync", "V-Sync", "Enable vertical synchronization", ConfigValueType::Boolean, "true"),
+    ConfigValue("graphics", "quality", "Graphics Quality", "Overall graphics quality preset", ConfigValueType::String,
+                "High", {0, 0, 0, {"Low", "Medium", "High", "Ultra"}}),
+
+    // Audio settings
+    ConfigValue("audio", "master_volume", "Master Volume", "Overall volume level (0-100)", ConfigValueType::Float,
+                "75.0", {0.0f, 100.0f}),
+    ConfigValue("audio", "music_volume", "Music Volume", "Background music volume (0-100)", ConfigValueType::Float,
+                "50.0", {0.0f, 100.0f}),
+    ConfigValue("audio", "sfx_volume", "Sound Effects Volume", "Sound effects volume (0-100)", ConfigValueType::Float,
+                "80.0", {0.0f, 100.0f}),
+    ConfigValue("audio", "muted", "Mute Audio", "Disable all audio output", ConfigValueType::Boolean, "false"),
+
+    // Game settings
+    ConfigValue("game", "player_name", "Player Name", "Default player name", ConfigValueType::String, "Player",
+                {0, 0, 32}),
+    ConfigValue("game", "difficulty", "Difficulty Level", "Game difficulty setting", ConfigValueType::String, "Normal",
+                {0, 0, 0, {"Easy", "Normal", "Hard", "Nightmare"}}),
+    ConfigValue("game", "auto_save", "Auto Save", "Enable automatic saving", ConfigValueType::Boolean, "true"),
+    ConfigValue("game", "save_interval", "Save Interval", "Auto-save interval in minutes", ConfigValueType::Integer,
+                "5", {1, 60}),
+
+    // Network settings
+    ConfigValue("network", "server_port", "Server Port", "Default server port", ConfigValueType::Integer, "7777",
+                {1024, 65535}),
+    ConfigValue("network", "max_players", "Max Players", "Maximum number of players", ConfigValueType::Integer, "8",
+                {1, 64}),
+    ConfigValue("network", "timeout", "Connection Timeout", "Network timeout in seconds", ConfigValueType::Float,
+                "30.0", {5.0f, 120.0f}),
+};*/
+std::vector<ConfigValue> g_ConfigDefinitions = {
+    /* ConfigValue("", "full_screen", "Full Screen on/off", "Whether the game will be opened full-screen",
+                ConfigValueType::Integer, "0", {0, 1}),
+    ConfigValue("", "display", "Display Index", "Index of display to use, 0 = default display",
+                ConfigValueType::Integer, "0", {}),*/
+    ConfigValue("interface", "screen_width", "Screen width.", "The width of the game window in pixels", ConfigValueType::Integer, "0",
+                {200, 6000}),
+    ConfigValue("script", "debuginfo", "Debug info on/off", "Debug info for scripts.",
+                ConfigValueType::Integer, "0", {0, 3}),
+};
+
+IniFile g_IniFile;
+std::string g_CurrentFileName = "enginetest.ini";
+bool g_FileLoaded = false;
+bool g_HasUnsavedChanges = false;
 
 bool CreateDeviceD3D(HWND hWnd)
 {
     if ((g_pD3D = Direct3DCreate9(D3D_SDK_VERSION)) == NULL)
-    {
-        std::cerr << "Failed to create Direct3D9 object" << std::endl;
         return false;
-    }
 
     ZeroMemory(&g_d3dpp, sizeof(g_d3dpp));
     g_d3dpp.Windowed = TRUE;
@@ -41,19 +180,13 @@ bool CreateDeviceD3D(HWND hWnd)
 
     HRESULT hr = g_pD3D->CreateDevice(D3DADAPTER_DEFAULT, D3DDEVTYPE_HAL, hWnd, D3DCREATE_HARDWARE_VERTEXPROCESSING,
                                       &g_d3dpp, &g_pd3dDevice);
-
-    // Fallback to software vertex processing if hardware fails
     if (FAILED(hr))
     {
         hr = g_pD3D->CreateDevice(D3DADAPTER_DEFAULT, D3DDEVTYPE_HAL, hWnd, D3DCREATE_SOFTWARE_VERTEXPROCESSING,
                                   &g_d3dpp, &g_pd3dDevice);
         if (FAILED(hr))
-        {
-            std::cerr << "Failed to create D3D device" << std::endl;
             return false;
-        }
     }
-
     return true;
 }
 
@@ -74,135 +207,241 @@ void CleanupDeviceD3D()
 bool ResetDevice()
 {
     HRESULT hr = g_pd3dDevice->Reset(&g_d3dpp);
-    if (FAILED(hr))
-    {
-        std::cerr << "Failed to reset D3D device" << std::endl;
-        return false;
-    }
-    return true;
+    return !FAILED(hr);
 }
 
 void LoadImGuiFontFromResource(ImGuiIO &io)
 {
-    // 1. Get the EXE module handle
     HMODULE hModule = GetModuleHandle(NULL);
-
-    // 2. Find the font resource
     HRSRC hRes = FindResource(NULL, L"IDR_FONT_ROBOTOREGULAR", RT_RCDATA);
     if (!hRes)
-    {
-        DWORD err = GetLastError();
-        char buf[256];
-        sprintf(buf, "FindResource failed (error %d)\n", err);
-        OutputDebugStringA(buf);
-        std::cout << buf << std::endl;
         return;
-    }
 
-    // 3. Load and lock it
     HGLOBAL hResLoad = LoadResource(hModule, hRes);
     if (!hResLoad)
-    {
-        OutputDebugStringA("Failed to load font resource\n");
         return;
-    }
 
     void *pData = LockResource(hResLoad);
     DWORD dataSize = SizeofResource(hModule, hRes);
     if (!pData || dataSize == 0)
+        return;
+
+    ImFontConfig fontConfig;
+    fontConfig.FontDataOwnedByAtlas = false;
+
+    ImFont *font = io.Fonts->AddFontFromMemoryTTF(pData, (int)dataSize, 16.0f, &fontConfig);
+    if (font)
     {
-        OutputDebugStringA("Invalid font resource data\n");
+        std::cout << "Successfully loaded font resource." << std::endl;
+    }
+}
+
+void LoadConfigFromFile()
+{
+    for (auto &config : g_ConfigDefinitions)
+    {
+        std::string value = g_IniFile.getValue(config.section, config.key, config.defaultValue);
+        config.setFromString(value);
+    }
+}
+
+void SaveConfigToFile()
+{
+    for (const auto &config : g_ConfigDefinitions)
+    {
+        g_IniFile.setValue(config.section, config.key, config.toString());
+    }
+    g_IniFile.save();
+    g_HasUnsavedChanges = false;
+}
+
+void RenderConfigValue(ConfigValue &config)
+{
+    ImGui::PushID(&config);
+
+    // Display name and description
+    ImGui::Text("%s", config.displayName.c_str());
+    if (!config.description.empty() && ImGui::IsItemHovered())
+    {
+        ImGui::SetTooltip("%s", config.description.c_str());
+    }
+    ImGui::SameLine();
+
+    bool changed = false;
+
+    switch (config.type)
+    {
+    case ConfigValueType::String: {
+        if (!config.constraints.allowedValues.empty())
+        {
+            // Dropdown for restricted values
+            auto it = std::find(config.constraints.allowedValues.begin(), config.constraints.allowedValues.end(),
+                                config.stringValue);
+            int currentItem =
+                (it != config.constraints.allowedValues.end()) ? (it - config.constraints.allowedValues.begin()) : 0;
+
+            if (ImGui::Combo(
+                    "##combo", &currentItem,
+                    [](void *data, int idx, const char **out_text) {
+                        auto *values = static_cast<std::vector<std::string> *>(data);
+                        if (idx >= 0 && idx < values->size())
+                        {
+                            *out_text = (*values)[idx].c_str();
+                            return true;
+                        }
+                        return false;
+                    },
+                    &config.constraints.allowedValues, config.constraints.allowedValues.size()))
+            {
+                config.stringValue = config.constraints.allowedValues[currentItem];
+                changed = true;
+            }
+        }
+        else
+        {
+            // Text input
+            char buffer[256];
+            strncpy_s(buffer, config.stringValue.c_str(), sizeof(buffer) - 1);
+            if (ImGui::InputText("##input", buffer, sizeof(buffer)))
+            {
+                config.stringValue = buffer;
+                if (config.stringValue.length() > config.constraints.maxLength)
+                {
+                    config.stringValue = config.stringValue.substr(0, config.constraints.maxLength);
+                }
+                changed = true;
+            }
+        }
+        break;
+    }
+
+    case ConfigValueType::Integer: {
+        if (ImGui::SliderInt("##slider", &config.intValue, (int)config.constraints.minValue,
+                             (int)config.constraints.maxValue))
+        {
+            changed = true;
+        }
+        break;
+    }
+
+    case ConfigValueType::Float: {
+        if (ImGui::SliderFloat("##slider", &config.floatValue, config.constraints.minValue, config.constraints.maxValue,
+                               "%.1f"))
+        {
+            changed = true;
+        }
+        break;
+    }
+
+    case ConfigValueType::Boolean: {
+        if (ImGui::Checkbox("##checkbox", &config.boolValue))
+        {
+            changed = true;
+        }
+        break;
+    }
+    }
+
+    // Reset to default button
+    ImGui::SameLine();
+    if (ImGui::SmallButton("Reset"))
+    {
+        config.setFromString(config.defaultValue);
+        changed = true;
+    }
+
+    if (changed)
+    {
+        g_HasUnsavedChanges = true;
+    }
+
+    ImGui::PopID();
+}
+
+void RenderConfigEditor()
+{
+    ImGui::Begin("INI Configuration Editor");
+
+    // File operations
+    ImGui::Text("File: %s", g_CurrentFileName.empty() ? "No file loaded" : g_CurrentFileName.c_str());
+
+    if (ImGui::Button("Load File"))
+    {
+        if (!g_CurrentFileName.empty())
+        {
+            g_IniFile.close();
+            if (g_IniFile.open(g_CurrentFileName))
+            {
+                g_FileLoaded = true;
+                LoadConfigFromFile();
+                g_HasUnsavedChanges = false;
+            }
+        }
+    }
+
+    ImGui::SameLine();
+    if (ImGui::Button("Save File") && g_FileLoaded)
+    {
+        SaveConfigToFile();
+    }
+
+    ImGui::SameLine();
+    if (ImGui::Button("Save As..."))
+    {
+        std::string filename = g_CurrentFileName;
+        if (!filename.empty())
+        {
+            g_IniFile.close();
+            if (g_IniFile.open(filename))
+            {
+                g_CurrentFileName = filename;
+                g_FileLoaded = true;
+                SaveConfigToFile();
+            }
+        }
+    }
+
+    if (g_HasUnsavedChanges)
+    {
+        ImGui::SameLine();
+        ImGui::TextColored(ImVec4(1.0f, 0.5f, 0.0f, 1.0f), "*");
+    }
+
+    ImGui::Separator();
+
+    if (!g_FileLoaded)
+    {
+        ImGui::Text("Please load an INI file to begin editing.");
+        ImGui::End();
         return;
     }
 
-    // 4. Add it to ImGui
-    ImFontConfig fontConfig;
-    fontConfig.FontDataOwnedByAtlas = false; // We manage the memory, not ImGui
-
-    ImFont *font = io.Fonts->AddFontFromMemoryTTF(pData,         // pointer to TTF data
-                                                  (int)dataSize, // size of the TTF data
-                                                  25.0f,         // font size in pixels
-                                                  &fontConfig);
-
-    if (!font)
+    // Group settings by section
+    std::map<std::string, std::vector<ConfigValue *>> sections;
+    for (auto &config : g_ConfigDefinitions)
     {
-        OutputDebugStringA("Failed to load font into ImGui\n");
-    }
-    std::cout << "Succesfully loaded font resource." << std::endl;
-}
-
-bool IniTest()
-{
-    IniFile ini;
-
-    // Open an existing INI file
-    if (!ini.open("TESTINI.ini"))
-    {
-        std::cout << "Could not open file. Quitting." << std::endl;
-        return false;
+        sections[config.section].push_back(&config);
     }
 
-    // Read values
-    std::string name = ini.getValue("section1", "myname", "Unknown");
-    std::string somestuff = ini.getValue("", "somestuff", "0"); // Global section (empty string)
-    std::string other = ini.getValue("section2", "someotherstuff", "0.0");
-
-    std::cout << "myname = " << name << std::endl;
-    std::cout << "somestuff = " << somestuff << std::endl;
-    std::cout << "someotherstuff = " << other << std::endl;
-
-    // Modify values (preserves comments and structure)
-    ini.setValue("section1", "myname", "Alice");
-    ini.setValue("", "somestuff", "25"); // Global section
-    ini.setValue("section2", "someotherstuff", "15.5");
-
-    // Add new values
-    ini.setValue("section1", "age", "30");
-    ini.setValue("section3", "newkey", "newvalue");
-
-    // Save the file
-    if (ini.save())
+    // Render sections
+    for (auto &[sectionName, configs] : sections)
     {
-        std::cout << "File saved successfully!" << std::endl;
-    }
-    else
-    {
-        std::cout << "Failed to save file!" << std::endl;
+        if (ImGui::CollapsingHeader(sectionName.c_str(), ImGuiTreeNodeFlags_DefaultOpen))
+        {
+            ImGui::Indent();
+            for (auto *config : configs)
+            {
+                RenderConfigValue(*config);
+            }
+            ImGui::Unindent();
+        }
     }
 
-    // List all sections
-    std::cout << "\nSections:" << std::endl;
-    auto sections = ini.getSections();
-    for (const auto &section : sections)
-    {
-        std::cout << "  [" << section << "]" << std::endl;
-    }
-
-    // List keys in section1
-    std::cout << "\nKeys in section1:" << std::endl;
-    auto keys = ini.getKeys("section1");
-    for (const auto &key : keys)
-    {
-        std::cout << "  " << key << " = " << ini.getValue("section1", key) << std::endl;
-    }
-
-    // Explicit close (optional, destructor will close automatically)
-    ini.close();
-
-    return true;
+    ImGui::End();
 }
 
 int main(int, char **)
 {
-
-    if (!IniTest())
-    {
-        return 1;
-    }
-    return 0;
-
-
-
     // SDL and window init
     if (SDL_Init(SDL_INIT_VIDEO | SDL_INIT_TIMER | SDL_INIT_GAMECONTROLLER) != 0)
     {
@@ -210,9 +449,9 @@ int main(int, char **)
         return -1;
     }
 
-    SDL_WindowFlags window_flags = (SDL_WindowFlags)(SDL_WINDOW_ALLOW_HIGHDPI);
-    g_Window =
-        SDL_CreateWindow("Enhanced ImGui App", SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED, 600, 400, window_flags);
+    SDL_WindowFlags window_flags = (SDL_WindowFlags)(SDL_WINDOW_ALLOW_HIGHDPI | SDL_WINDOW_RESIZABLE);
+    g_Window = SDL_CreateWindow("INI Configuration Editor", SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED, 800, 600,
+                                window_flags);
 
     if (!g_Window)
     {
@@ -245,34 +484,20 @@ int main(int, char **)
     IMGUI_CHECKVERSION();
     ImGui::CreateContext();
     ImGuiIO &io = ImGui::GetIO();
-    io.ConfigFlags |= ImGuiConfigFlags_NavEnableKeyboard; // Enable keyboard navigation
+    io.ConfigFlags |= ImGuiConfigFlags_NavEnableKeyboard;
+    io.ConfigFlags |= ImGuiConfigFlags_DockingEnable;
 
     ImGui::StyleColorsDark();
-
-    if (!ImGui_ImplSDL2_InitForD3D(g_Window))
-    {
-        std::cerr << "Failed to initialize ImGui SDL2 backend" << std::endl;
-        CleanupDeviceD3D();
-        SDL_DestroyWindow(g_Window);
-        SDL_Quit();
-        return -1;
-    }
-
-    if (!ImGui_ImplDX9_Init(g_pd3dDevice))
-    {
-        std::cerr << "Failed to initialize ImGui DX9 backend" << std::endl;
-        ImGui_ImplSDL2_Shutdown();
-        CleanupDeviceD3D();
-        SDL_DestroyWindow(g_Window);
-        SDL_Quit();
-        return -1;
-    }
-
-    // Application state
-    std::string label_text = "Hello!";
-    int click_count = 0;
-
     LoadImGuiFontFromResource(io);
+
+    if (!ImGui_ImplSDL2_InitForD3D(g_Window) || !ImGui_ImplDX9_Init(g_pd3dDevice))
+    {
+        std::cerr << "Failed to initialize ImGui backends" << std::endl;
+        CleanupDeviceD3D();
+        SDL_DestroyWindow(g_Window);
+        SDL_Quit();
+        return -1;
+    }
 
     // Main loop
     bool done = false;
@@ -294,42 +519,86 @@ int main(int, char **)
         ImGui_ImplSDL2_NewFrame();
         ImGui::NewFrame();
 
-        // Create a fullscreen ImGui window
+        // Create dockspace
         ImGuiViewport *viewport = ImGui::GetMainViewport();
         ImGui::SetNextWindowPos(viewport->Pos);
         ImGui::SetNextWindowSize(viewport->Size);
         ImGui::SetNextWindowViewport(viewport->ID);
 
-        ImGuiWindowFlags window_flags = ImGuiWindowFlags_NoTitleBar | ImGuiWindowFlags_NoCollapse |
+        ImGuiWindowFlags window_flags = ImGuiWindowFlags_MenuBar | ImGuiWindowFlags_NoDocking |
+                                        ImGuiWindowFlags_NoTitleBar | ImGuiWindowFlags_NoCollapse |
                                         ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoMove |
                                         ImGuiWindowFlags_NoBringToFrontOnFocus | ImGuiWindowFlags_NoNavFocus;
 
-        ImGui::Begin("MainWindow", nullptr, window_flags);
+        ImGui::PushStyleVar(ImGuiStyleVar_WindowRounding, 0.0f);
+        ImGui::PushStyleVar(ImGuiStyleVar_WindowBorderSize, 0.0f);
+        ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, ImVec2(0.0f, 0.0f));
 
-        ImGui::Text("%s", label_text.c_str());
-        ImGui::Text("Button clicked %d times", click_count);
+        ImGui::Begin("DockSpace", nullptr, window_flags);
+        ImGui::PopStyleVar(3);
 
-        if (ImGui::Button("Click Me"))
+        // DockSpace
+        ImGuiID dockspace_id = ImGui::GetID("MyDockSpace");
+        ImGui::DockSpace(dockspace_id, ImVec2(0.0f, 0.0f), ImGuiDockNodeFlags_None);
+
+        // Menu bar
+        if (ImGui::BeginMenuBar())
         {
-            click_count++;
-            label_text = "You clicked the button " + std::to_string(click_count) + " time(s)!";
-        }
+            if (ImGui::BeginMenu("File"))
+            {
+                if (ImGui::MenuItem("Load", "Ctrl+O"))
+                {
+                    if (!g_CurrentFileName.empty())
+                    {
+                        g_IniFile.close();
+                        if (g_IniFile.open(g_CurrentFileName))
+                        {
+                            g_FileLoaded = true;
+                            LoadConfigFromFile();
+                            g_HasUnsavedChanges = false;
+                        }
+                    }
+                }
+                if (ImGui::MenuItem("Save", "Ctrl+S", false, g_FileLoaded))
+                {
+                    SaveConfigToFile();
+                }
+                if (ImGui::MenuItem("Save As...", "Ctrl+Shift+S"))
+                {
+                    if (!g_CurrentFileName.empty())
+                    {
+                        g_IniFile.close();
+                        if (g_IniFile.open(g_CurrentFileName))
+                        {
+                            g_FileLoaded = true;
+                            SaveConfigToFile();
+                        }
+                    }
+                }
+                ImGui::Separator();
+                if (ImGui::MenuItem("Exit"))
+                {
+                    done = true;
+                }
+                ImGui::EndMenu();
+            }
 
-        ImGui::SameLine();
-        if (ImGui::Button("Reset"))
-        {
-            click_count = 0;
-            label_text = "Hello!";
-        }
+            if (ImGui::BeginMenu("Help"))
+            {
+                if (ImGui::MenuItem("About"))
+                {
+                    // TODO: Add an about page, maybe?
+                }
+                ImGui::EndMenu();
+            }
 
-        ImGui::Separator();
-
-        if (ImGui::Button("Quit"))
-        {
-            done = true;
+            ImGui::EndMenuBar();
         }
 
         ImGui::End();
+
+        // Render the configuration editor
+        RenderConfigEditor();
 
         // Rendering
         ImGui::EndFrame();
@@ -360,7 +629,7 @@ int main(int, char **)
             }
         }
     }
-    
+
     // Cleanup
     ImGui_ImplDX9_Shutdown();
     ImGui_ImplSDL2_Shutdown();
