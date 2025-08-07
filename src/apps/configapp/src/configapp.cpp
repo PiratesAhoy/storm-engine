@@ -88,7 +88,7 @@ struct ConfigValue
             floatValue = std::stof(value.empty() ? "0.0" : value);
             break;
         case ConfigValueType::Boolean:
-            boolValue = (value == "true" || value == "1" || value == "yes");
+            boolValue = (value == "1");
             break;
         }
     }
@@ -151,13 +151,13 @@ struct ConfigValue
 };*/
 std::vector<ConfigValue> g_ConfigDefinitions = {
     ConfigValue("", "full_screen", "Full Screen on/off", "Whether the game will be opened full-screen",
-                ConfigValueType::Integer, "0", {0, 1}),
+        ConfigValueType::Boolean, "0"),
     ConfigValue("", "display", "Display Index", "Index of display to use, 0 = default display",
-                ConfigValueType::Integer, "0", {}),
+        ConfigValueType::Integer, "0", {0, 5}),
     ConfigValue("interface", "screen_width", "Screen width.", "The width of the game window in pixels",
-                ConfigValueType::Integer, "0", {200, 6000}),
-    ConfigValue("script", "debuginfo", "Debug info on/off", "Debug info for scripts.", ConfigValueType::Integer, "0",
-                {0, 1}),
+        ConfigValueType::Integer, "0", {200, 6000}),
+    ConfigValue("script", "debuginfo", "Debug info on/off", "Debug info for scripts.",
+        ConfigValueType::Boolean, "0"),
 };
 
 IniFile g_IniFile;
@@ -335,8 +335,10 @@ void RenderConfigValue(ConfigValue &config)
     }
 
     case ConfigValueType::Boolean: {
-        if (ImGui::Checkbox("##checkbox", &config.boolValue))
-        {
+        const char* boolItems[] = { "False", "True" };
+        int current = config.boolValue ? 1 : 0;
+        if (ImGui::Combo("##boolcombo", &current, boolItems, 2)) {
+            config.boolValue = (current == 1);
             changed = true;
         }
         break;
