@@ -150,14 +150,14 @@ struct ConfigValue
                 "30.0", {5.0f, 120.0f}),
 };*/
 std::vector<ConfigValue> g_ConfigDefinitions = {
-    /* ConfigValue("", "full_screen", "Full Screen on/off", "Whether the game will be opened full-screen",
+    ConfigValue("", "full_screen", "Full Screen on/off", "Whether the game will be opened full-screen",
                 ConfigValueType::Integer, "0", {0, 1}),
     ConfigValue("", "display", "Display Index", "Index of display to use, 0 = default display",
-                ConfigValueType::Integer, "0", {}),*/
-    ConfigValue("interface", "screen_width", "Screen width.", "The width of the game window in pixels", ConfigValueType::Integer, "0",
-                {200, 6000}),
-    ConfigValue("script", "debuginfo", "Debug info on/off", "Debug info for scripts.",
-                ConfigValueType::Integer, "0", {0, 3}),
+                ConfigValueType::Integer, "0", {}),
+    ConfigValue("interface", "screen_width", "Screen width.", "The width of the game window in pixels",
+                ConfigValueType::Integer, "0", {200, 6000}),
+    ConfigValue("script", "debuginfo", "Debug info on/off", "Debug info for scripts.", ConfigValueType::Integer, "0",
+                {0, 1}),
 };
 
 IniFile g_IniFile;
@@ -243,6 +243,7 @@ void LoadConfigFromFile()
         std::string value = g_IniFile.getValue(config.section, config.key, config.defaultValue);
         config.setFromString(value);
     }
+    g_FileLoaded = true;
 }
 
 void SaveConfigToFile()
@@ -358,47 +359,34 @@ void RenderConfigValue(ConfigValue &config)
     ImGui::PopID();
 }
 
+void PerformLoadIniFile()
+{
+    if (!g_CurrentFileName.empty())
+    {
+        g_IniFile.close();
+        if (g_IniFile.open(g_CurrentFileName))
+        {
+            LoadConfigFromFile();
+            g_HasUnsavedChanges = false;
+        }
+    }
+}
+
 void RenderConfigEditor()
 {
-    ImGui::Begin("INI Configuration Editor");
 
     // File operations
     ImGui::Text("File: %s", g_CurrentFileName.empty() ? "No file loaded" : g_CurrentFileName.c_str());
 
     if (ImGui::Button("Load File"))
     {
-        if (!g_CurrentFileName.empty())
-        {
-            g_IniFile.close();
-            if (g_IniFile.open(g_CurrentFileName))
-            {
-                g_FileLoaded = true;
-                LoadConfigFromFile();
-                g_HasUnsavedChanges = false;
-            }
-        }
+        PerformLoadIniFile();
     }
 
     ImGui::SameLine();
     if (ImGui::Button("Save File") && g_FileLoaded)
     {
         SaveConfigToFile();
-    }
-
-    ImGui::SameLine();
-    if (ImGui::Button("Save As..."))
-    {
-        std::string filename = g_CurrentFileName;
-        if (!filename.empty())
-        {
-            g_IniFile.close();
-            if (g_IniFile.open(filename))
-            {
-                g_CurrentFileName = filename;
-                g_FileLoaded = true;
-                SaveConfigToFile();
-            }
-        }
     }
 
     if (g_HasUnsavedChanges)
@@ -411,10 +399,12 @@ void RenderConfigEditor()
 
     if (!g_FileLoaded)
     {
-        ImGui::Text("Please load an INI file to begin editing.");
-        ImGui::End();
+        ImGui::Text("Loading INI file...");
+        PerformLoadIniFile();
         return;
     }
+
+    ImGui::BeginChild("ConfigEditorChild", ImVec2(0, 0), false, ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoResize);
 
     // Group settings by section
     std::map<std::string, std::vector<ConfigValue *>> sections;
@@ -426,7 +416,10 @@ void RenderConfigEditor()
     // Render sections
     for (auto &[sectionName, configs] : sections)
     {
-        if (ImGui::CollapsingHeader(sectionName.c_str(), ImGuiTreeNodeFlags_DefaultOpen))
+        std::string headerName = sectionName;
+        if (sectionName == "")
+            headerName = "[UNCATEGORISED]";
+        if (ImGui::CollapsingHeader(headerName.c_str(), ImGuiTreeNodeFlags_DefaultOpen))
         {
             ImGui::Indent();
             for (auto *config : configs)
@@ -437,7 +430,7 @@ void RenderConfigEditor()
         }
     }
 
-    ImGui::End();
+    ImGui::EndChild();
 }
 
 int main(int, char **)
@@ -485,14 +478,14 @@ int main(int, char **)
     ImGui::CreateContext();
     ImGuiIO &io = ImGui::GetIO();
     io.ConfigFlags |= ImGuiConfigFlags_NavEnableKeyboard;
-    io.ConfigFlags |= ImGuiConfigFlags_DockingEnable;
+    // io.ConfigFlags |= ImGuiConfigFlags_DockingEnable;
 
     ImGui::StyleColorsDark();
     LoadImGuiFontFromResource(io);
 
     if (!ImGui_ImplSDL2_InitForD3D(g_Window) || !ImGui_ImplDX9_Init(g_pd3dDevice))
     {
-        std::cerr << "Failed to initialize ImGui backends" << std::endl;
+        std::cerr << "Failed to initialise ImGui backends" << std::endl;
         CleanupDeviceD3D();
         SDL_DestroyWindow(g_Window);
         SDL_Quit();
@@ -514,35 +507,23 @@ int main(int, char **)
                 done = true;
         }
 
-        // Start the Dear ImGui frame
         ImGui_ImplDX9_NewFrame();
         ImGui_ImplSDL2_NewFrame();
         ImGui::NewFrame();
 
-        // Create dockspace
+        // --- Main fixed window ---
         ImGuiViewport *viewport = ImGui::GetMainViewport();
         ImGui::SetNextWindowPos(viewport->Pos);
         ImGui::SetNextWindowSize(viewport->Size);
         ImGui::SetNextWindowViewport(viewport->ID);
 
-        ImGuiWindowFlags window_flags = ImGuiWindowFlags_MenuBar | ImGuiWindowFlags_NoDocking |
-                                        ImGuiWindowFlags_NoTitleBar | ImGuiWindowFlags_NoCollapse |
+        ImGuiWindowFlags window_flags = ImGuiWindowFlags_NoTitleBar | ImGuiWindowFlags_NoCollapse |
                                         ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoMove |
                                         ImGuiWindowFlags_NoBringToFrontOnFocus | ImGuiWindowFlags_NoNavFocus;
 
-        ImGui::PushStyleVar(ImGuiStyleVar_WindowRounding, 0.0f);
-        ImGui::PushStyleVar(ImGuiStyleVar_WindowBorderSize, 0.0f);
-        ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, ImVec2(0.0f, 0.0f));
+        ImGui::Begin("MainWindow", nullptr, window_flags);
 
-        ImGui::Begin("DockSpace", nullptr, window_flags);
-        ImGui::PopStyleVar(3);
-
-        // DockSpace
-        ImGuiID dockspace_id = ImGui::GetID("MyDockSpace");
-        ImGui::DockSpace(dockspace_id, ImVec2(0.0f, 0.0f), ImGuiDockNodeFlags_None);
-
-        // Menu bar
-        if (ImGui::BeginMenuBar())
+        if (ImGui::BeginMainMenuBar())
         {
             if (ImGui::BeginMenu("File"))
             {
@@ -592,15 +573,14 @@ int main(int, char **)
                 ImGui::EndMenu();
             }
 
-            ImGui::EndMenuBar();
+            ImGui::EndMainMenuBar();
         }
 
-        ImGui::End();
-
-        // Render the configuration editor
         RenderConfigEditor();
 
-        // Rendering
+        ImGui::End();
+        // --- End main window ---
+
         ImGui::EndFrame();
 
         g_pd3dDevice->SetRenderState(D3DRS_ZENABLE, FALSE);
