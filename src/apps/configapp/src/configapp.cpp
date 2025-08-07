@@ -17,7 +17,7 @@
 #pragma comment(lib, "shlwapi.lib")
 
 // Changeable settings
-#define DEFAULT_WINDOW_WIDTH 500
+#define DEFAULT_WINDOW_WIDTH 400
 #define DEFAULT_WINDOW_HEIGHT 600
 
 // Globals
@@ -108,7 +108,7 @@ struct ConfigValue
         case ConfigValueType::Float:
             return std::to_string(floatValue);
         case ConfigValueType::Boolean:
-            return boolValue ? "true" : "false";
+            return boolValue ? "1" : "0";
         }
         return "";
     }
@@ -245,6 +245,9 @@ void LoadConfigFromFile()
     for (auto &config : g_ConfigDefinitions)
     {
         std::string value = g_IniFile.getValue(config.section, config.key, config.defaultValue);
+
+        std::cout << "Loading config: " << config.section << " -> " << config.key << " = " << value << std::endl;
+
         config.setFromString(value);
     }
     g_FileLoaded = true;
@@ -254,6 +257,9 @@ void SaveConfigToFile()
 {
     for (const auto &config : g_ConfigDefinitions)
     {
+        std::cout << "Saving config: " << config.section << " -> " << config.key << " = " << config.toString()
+            << std::endl;
+
         g_IniFile.setValue(config.section, config.key, config.toString());
     }
     g_IniFile.save();
@@ -339,22 +345,24 @@ void RenderConfigValueTable(ConfigValue &config)
         int current = config.boolValue ? 1 : 0;
         if (ImGui::Combo("##boolcombo", &current, boolItems, 2)) {
             config.boolValue = (current == 1);
+            std::cout << "Boolean changed to: " << (config.boolValue ? "True" : "False") << std::endl;
             changed = true;
         }
         break;
     }
     }
 
+    /*
     ImGui::TableSetColumnIndex(2);
-    /* if (ImGui::SmallButton("Reset"))
+     if (ImGui::SmallButton("Reset"))
     {
         config.setFromString(config.defaultValue);
         changed = true;
-    }*/
+    }
 
     if (changed)
         g_HasUnsavedChanges = true;
-
+    */
     ImGui::PopID();
 }
 
@@ -398,7 +406,7 @@ void RenderConfigEditor()
         if (ImGui::CollapsingHeader(headerName.c_str(), ImGuiTreeNodeFlags_DefaultOpen))
         {
             ImGui::Indent();
-            if (ImGui::BeginTable("config_table", 3, ImGuiTableFlags_RowBg | ImGuiTableFlags_BordersInnerV | ImGuiTableFlags_SizingFixedFit))
+            if (ImGui::BeginTable("config_table", 2, ImGuiTableFlags_RowBg | ImGuiTableFlags_BordersInnerV | ImGuiTableFlags_SizingFixedFit))
             {
                 ImGui::TableSetupColumn("Name", ImGuiTableColumnFlags_WidthStretch, 0.4f);
                 ImGui::TableSetupColumn("Value", ImGuiTableColumnFlags_WidthStretch, 0.4f);
