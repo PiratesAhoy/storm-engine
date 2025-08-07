@@ -325,12 +325,12 @@ void RenderConfigValueTable(ConfigValue &config)
         break;
     }
     case ConfigValueType::Integer: {
-        if (ImGui::SliderInt("##slider", &config.intValue, (int)config.constraints.minValue, (int)config.constraints.maxValue))
+        if (ImGui::InputInt("##input", &config.intValue, 0, 0, ImGuiInputTextFlags_EnterReturnsTrue))
             changed = true;
         break;
     }
     case ConfigValueType::Float: {
-        if (ImGui::SliderFloat("##slider", &config.floatValue, config.constraints.minValue, config.constraints.maxValue, "%.1f"))
+        if (ImGui::InputFloat("##input", &config.floatValue, 0, 0, "%.3f", ImGuiInputTextFlags_EnterReturnsTrue))
             changed = true;
         break;
     }
