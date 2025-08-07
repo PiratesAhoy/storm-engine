@@ -16,6 +16,10 @@
 #pragma comment(lib, "d3d9.lib")
 #pragma comment(lib, "shlwapi.lib")
 
+// Changeable settings
+#define DEFAULT_WINDOW_WIDTH 500
+#define DEFAULT_WINDOW_HEIGHT 600
+
 // Globals
 LPDIRECT3D9 g_pD3D = NULL;
 LPDIRECT3DDEVICE9 g_pd3dDevice = NULL;
@@ -445,7 +449,8 @@ int main(int, char **)
     }
 
     SDL_WindowFlags window_flags = (SDL_WindowFlags)(SDL_WINDOW_ALLOW_HIGHDPI | SDL_WINDOW_RESIZABLE);
-    g_Window = SDL_CreateWindow("INI Configuration Editor", SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED, 800, 600,
+    g_Window = SDL_CreateWindow("INI Configuration Editor", SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED,
+                                DEFAULT_WINDOW_WIDTH, DEFAULT_WINDOW_HEIGHT,
                                 window_flags);
 
     if (!g_Window)
@@ -507,6 +512,18 @@ int main(int, char **)
             if (event.type == SDL_WINDOWEVENT && event.window.event == SDL_WINDOWEVENT_CLOSE &&
                 event.window.windowID == SDL_GetWindowID(g_Window))
                 done = true;
+            if (event.type == SDL_WINDOWEVENT && event.window.event == SDL_WINDOWEVENT_RESIZED)
+            {
+                int new_width = event.window.data1;
+                int new_height = event.window.data2;
+                g_d3dpp.BackBufferWidth = new_width;
+                g_d3dpp.BackBufferHeight = new_height;
+                ImGui_ImplDX9_InvalidateDeviceObjects();
+                if (ResetDevice())
+                {
+                    ImGui_ImplDX9_CreateDeviceObjects();
+                }
+            }
         }
 
         ImGui_ImplDX9_NewFrame();
