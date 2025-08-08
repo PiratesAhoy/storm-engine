@@ -19,7 +19,7 @@
 // Changeable settings
 #define DEFAULT_WINDOW_WIDTH 400
 #define DEFAULT_WINDOW_HEIGHT 600
-#define DEFAULT_WINDOW_TITLE "Game Configuration"
+#define DEFAULT_WINDOW_TITLE std::string("Game Configuration")
 
 #define VSYNC_ENABLED true
 
@@ -741,6 +741,11 @@ void RenderConfigEditor()
     {
         ImGui::SameLine();
         ImGui::TextColored(ImVec4(1.0f, 0.5f, 0.0f, 1.0f), "*");
+        SDL_SetWindowTitle(g_Window, (DEFAULT_WINDOW_TITLE + " *").c_str());
+    }
+    else
+    {
+        SDL_SetWindowTitle(g_Window, DEFAULT_WINDOW_TITLE.c_str());
     }
 
     ImGui::Separator();
@@ -798,7 +803,7 @@ int main(int, char **)
     }
 
     SDL_WindowFlags window_flags = (SDL_WindowFlags)(SDL_WINDOW_ALLOW_HIGHDPI | SDL_WINDOW_RESIZABLE);
-    g_Window = SDL_CreateWindow(DEFAULT_WINDOW_TITLE, SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED,
+    g_Window = SDL_CreateWindow(DEFAULT_WINDOW_TITLE.c_str(), SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED,
                                 DEFAULT_WINDOW_WIDTH, DEFAULT_WINDOW_HEIGHT,
                                 window_flags);
 
