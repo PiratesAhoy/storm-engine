@@ -118,45 +118,7 @@ struct ConfigValue
     }
 };
 
-// Configuration definitions - Add your preset values here
-/* std::vector<ConfigValue> g_ConfigDefinitions = {
-    // Graphics settings
-    ConfigValue("graphics", "resolution_width", "Screen Width", "Horizontal resolution in pixels",
-                ConfigValueType::Integer, "1920", {800, 3840}),
-    ConfigValue("graphics", "resolution_height", "Screen Height", "Vertical resolution in pixels",
-                ConfigValueType::Integer, "1080", {600, 2160}),
-    ConfigValue("graphics", "fullscreen", "Fullscreen Mode", "Enable fullscreen display", ConfigValueType::Boolean,
-                "false"),
-    ConfigValue("graphics", "vsync", "V-Sync", "Enable vertical synchronization", ConfigValueType::Boolean, "true"),
-    ConfigValue("graphics", "quality", "Graphics Quality", "Overall graphics quality preset", ConfigValueType::String,
-                "High", {0, 0, 0, {"Low", "Medium", "High", "Ultra"}}),
-
-    // Audio settings
-    ConfigValue("audio", "master_volume", "Master Volume", "Overall volume level (0-100)", ConfigValueType::Float,
-                "75.0", {0.0f, 100.0f}),
-    ConfigValue("audio", "music_volume", "Music Volume", "Background music volume (0-100)", ConfigValueType::Float,
-                "50.0", {0.0f, 100.0f}),
-    ConfigValue("audio", "sfx_volume", "Sound Effects Volume", "Sound effects volume (0-100)", ConfigValueType::Float,
-                "80.0", {0.0f, 100.0f}),
-    ConfigValue("audio", "muted", "Mute Audio", "Disable all audio output", ConfigValueType::Boolean, "false"),
-
-    // Game settings
-    ConfigValue("game", "player_name", "Player Name", "Default player name", ConfigValueType::String, "Player",
-                {0, 0, 32}),
-    ConfigValue("game", "difficulty", "Difficulty Level", "Game difficulty setting", ConfigValueType::String, "Normal",
-                {0, 0, 0, {"Easy", "Normal", "Hard", "Nightmare"}}),
-    ConfigValue("game", "auto_save", "Auto Save", "Enable automatic saving", ConfigValueType::Boolean, "true"),
-    ConfigValue("game", "save_interval", "Save Interval", "Auto-save interval in minutes", ConfigValueType::Integer,
-                "5", {1, 60}),
-
-    // Network settings
-    ConfigValue("network", "server_port", "Server Port", "Default server port", ConfigValueType::Integer, "7777",
-                {1024, 65535}),
-    ConfigValue("network", "max_players", "Max Players", "Maximum number of players", ConfigValueType::Integer, "8",
-                {1, 64}),
-    ConfigValue("network", "timeout", "Connection Timeout", "Network timeout in seconds", ConfigValueType::Float,
-                "30.0", {5.0f, 120.0f}),
-};*/
+// Configuration definitions
 
 // TODO: Do validation for loaded values. Could they be found in the file when loading? Are their values valid?
 std::vector<ConfigValue> g_ConfigDefinitions = {
