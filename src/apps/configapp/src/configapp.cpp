@@ -334,6 +334,16 @@ void LoadConfigFromFile()
 {
     for (auto &config : g_ConfigDefinitions)
     {
+        bool parameterValidlyDefined = g_IniFile.hasKey(config.section, config.key);
+        if (!parameterValidlyDefined)
+        {
+            // TODO: Throw warning to users?
+            std::cout << "Config parameter not found: " << config.section << " -> " << config.key
+                      << ". Using default value: " << config.defaultValue << std::endl;
+            config.setFromString(config.defaultValue);
+            continue;
+        }
+
         std::string value = g_IniFile.getValue(config.section, config.key, config.defaultValue);
 
         std::cout << "Loading config: " << config.section << " -> " << config.key << " = " << value << std::endl;
