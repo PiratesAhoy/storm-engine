@@ -238,12 +238,32 @@ std::vector<ConfigValue> g_ConfigDefinitions = {
 
     // TODO: Look into the "offclass" parameter. What does it actually do?
 
-    // I don't think the "mem_profile" parameter actually does anything.
+    // I don't think the "mem_profile" parameter actually does anything in the engine.
 
     ConfigValue("", "startFontIniFile", "INI File for Fonts", "The path of the starting\nINI file that handles the fonts\n",
         ConfigValueType::String, "resource\\ini\\fonts_euro.ini", true),
     ConfigValue("", "font", "Default Interface Font", "The default font used by the game's interface",
         ConfigValueType::String, "interface_normal", true),
+
+    // I don't think the "numoftips" parameter actually does anything in the engine.
+
+    ConfigValue("", "tracefilesoff", "Trace Files OFF", "Whether script stack-traces are turned off.\nLook out: True here means that tracing\nis off, and False that it is on.",
+        ConfigValueType::Boolean, "1", true),
+    ConfigValue("", "run_in_background", "Run in Background", "Whether the game runs in the background\nwhen the game window is not in focus.\nIf off, the game will pause if it loses focus.",
+        ConfigValueType::Boolean, "0", false),
+    ConfigValue("", "sound_in_background", "Sound in Background On", "Whether the game has sound in the background\nwhen the game window is not in focus.\nIf off, the game will be mute if it loses focus.",
+        ConfigValueType::Boolean, "0", false),
+    ConfigValue("", "stash_folder", "Stash Folder", "Configure the \"Stash\" folder\nwhere the game will store generated files, defaults to\n\"<Documents>/My Games/Sea Dogs/\"",
+        ConfigValueType::String, "stash", true),
+    ConfigValue("", "logs_folder", "Logs Folder", "Configure the \"Logs\" folder where\nthe game will write log files, defaults\nto \"<Stash>/Logs/\"",
+        ConfigValueType::String, ".", true),
+    ConfigValue("", "title", "Window Title", "The title of the game window. You\ncan see this if you hover over the game's icon\non the taskbar, or on the top of your\nwindow if you play in windowed\nmode and the borders are enabled.",
+        ConfigValueType::String, "Storm Engine", true),
+    
+    
+    // --- SECTION: COMPATIBILITY ---
+    ConfigValue("compatibility", "target_version", "Compatibility Target", "The engine supports multiple games, and each\nhave little differences that the engine\nhas to specifically accomodate for.\nThis option selects the compatibility mode.\nModes:\nsd - Sea Dogs\npotc - Pirates of the Caribbean\nct - Caribbean Tales\ncoas - City of Abandoned Ships\nteho - To Each His Own\nlatest - Beyond New Horizons",
+        ConfigValueType::String, "latest", true, {0,0,0, {"latest", "sd", "potc", "ct", "coas", "teho", "latest"}}),
 
 
     ConfigValue("interface", "screen_width", "Screen width", "The width of the UI in pixels - DO NOT CHANGE",
@@ -389,6 +409,7 @@ void RenderConfigValueTable(ConfigValue &config)
     if (!config.description.empty() && ImGui::IsItemHovered()){
         ImVec2 sp = ImGui::GetCursorScreenPos();
         ImGui::PushTextWrapPos();
+        // TODO: Show the original key to the user? Maybe while if they hold Shift?
         ImGui::SetTooltip("%s", config.description.c_str());
         ImGui::PopTextWrapPos();
     }
