@@ -82,12 +82,10 @@ struct ConfigValue
     std::string description;
     ConfigValueType type;
     std::string defaultValue;
-    std::string originalValue; // Value from the file, used for comparison
+    std::string originalValue;      // Value from the file, used for comparison
     ConfigConstraints constraints;
-    bool isAdvanced; // TODO: Hide advanced settings in UI;
-                             //       should be toggleable with a checkbox
-
-    bool isChanged = false; // Whether the value has been changed from the value from the file
+    bool isAdvanced;                // Whether this value is considered advanced and should be hidden by default
+    bool isChanged = false;         // Whether the value has been changed from the value from the file
 
     // Current values for editing
     std::string stringValue;
