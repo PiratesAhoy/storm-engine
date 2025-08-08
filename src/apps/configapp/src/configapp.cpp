@@ -23,6 +23,8 @@
 
 #define VSYNC_ENABLED true
 
+#define GAME_EXE_PATH std::string("engine.exe")
+
 // Globals
 LPDIRECT3D9 g_pD3D = NULL;
 LPDIRECT3DDEVICE9 g_pd3dDevice = NULL;
@@ -30,6 +32,25 @@ D3DPRESENT_PARAMETERS g_d3dpp = {};
 SDL_Window *g_Window = NULL;
 SDL_Renderer *g_Renderer = NULL;
 SDL_SysWMinfo g_WmInfo;
+
+
+std::wstring to_wide(const std::string &multi)
+{
+    std::wstring wide;
+    wchar_t w;
+    mbstate_t mb{};
+    size_t n = 0, len = multi.length() + 1;
+    while (auto res = mbrtowc(&w, multi.c_str() + n, len - n, &mb))
+    {
+        if (res == size_t(-1) || res == size_t(-2))
+            throw "invalid encoding";
+
+        n += res;
+        wide += w;
+    }
+    return wide;
+}
+
 
 // TODO: Introduce Path type with validation
 enum class ConfigValueType
@@ -600,6 +621,50 @@ void RenderConfigValueTable(ConfigValue &config)
     ImGui::PopID();
 }
 
+// Code copied from learn.microsoft.com
+// https://learn.microsoft.com/en-us/windows/win32/api/processthreadsapi/ns-processthreadsapi-startupinfoa
+void LaunchGame()
+{
+    STARTUPINFO si;
+    PROCESS_INFORMATION pi;
+
+    ZeroMemory(&si, sizeof(si));
+    si.cb = sizeof(si);
+    ZeroMemory(&pi, sizeof(pi));
+
+    std::wstring gameExePath = to_wide(GAME_EXE_PATH);
+
+    // Start the child process.
+    if (!CreateProcessW(gameExePath.c_str(), // No module name (use command line)
+                       NULL,    // Command line
+                       NULL,    // Process handle not inheritable
+                       NULL,    // Thread handle not inheritable
+                       FALSE,   // Set handle inheritance to FALSE
+                       0,       // No creation flags
+                       NULL,    // Use parent's environment block
+                       NULL,    // Use parent's starting directory
+                       &si,     // Pointer to STARTUPINFO structure
+                       &pi)     // Pointer to PROCESS_INFORMATION structure
+    )
+    {
+        //printf("CreateProcess failed (%d).\n", GetLastError());
+        ImGui::OpenPopup("Error");
+        ImGui::Text("Failed to launch the game.\nPlease check if the game executable exists:\n%s",
+                    GAME_EXE_PATH.c_str());
+        ImGui::EndPopup();
+
+        return;
+    }
+
+    ImGui::OpenPopup("Success");
+    ImGui::Text("Well it kinda worked?");
+    ImGui::EndPopup();
+
+    // Close process and thread handles.
+    CloseHandle(pi.hProcess);
+    CloseHandle(pi.hThread);
+}
+
 // In RenderConfigEditor, use a table for each section:
 void RenderConfigEditor()
 {
@@ -611,6 +676,14 @@ void RenderConfigEditor()
     ImGui::SameLine();
     if (ImGui::Button("Save File") && g_FileLoaded)
         SaveConfigToFile();
+
+    ImGui::SameLine();
+    if (ImGui::Button("Save and Play") && g_FileLoaded)
+    {
+        SaveConfigToFile();
+        LaunchGame();
+        exit(0); // Exit the app after launching the game
+    }
 
     if (g_HasUnsavedChanges)
     {
