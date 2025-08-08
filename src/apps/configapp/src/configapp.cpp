@@ -28,6 +28,7 @@ SDL_Window *g_Window = NULL;
 SDL_Renderer *g_Renderer = NULL;
 SDL_SysWMinfo g_WmInfo;
 
+// TODO: Introduce Path type with validation
 enum class ConfigValueType
 {
     String,
@@ -164,7 +165,7 @@ std::vector<ConfigValue> g_ConfigDefinitions = {
 
     Boolean:
     ConfigValue(changethis"SECTION", changethis"KEY", changethis"DisplayName", changethis"Description",
-        ConfigValueType::Boolean, changethis"DEFAULTVALUE", changethis bool, changethis{}),
+        ConfigValueType::Boolean, changethis"DEFAULTVALUE", changethis bool),
     
     Integer:
     ConfigValue(changethis"SECTION", changethis"KEY", changethis"DisplayName", changethis"Description",
@@ -226,10 +227,23 @@ std::vector<ConfigValue> g_ConfigDefinitions = {
         ConfigValueType::String, "PROGRAM\\", true),
     ConfigValue("", "run", "Entry-Point Script", "The .c script file's name (with extension) inside\nthe Program Directory that is the entry script\nby the engine for launching the game.\nThis is traditionally `seadogs.c`.",
         ConfigValueType::String, "seadogs.c", true),
-    
+    ConfigValue("", "show_fps", "Show FPS", "Whether the game shows the frame-per-second value",
+        ConfigValueType::Boolean, "0", false),
+    ConfigValue("", "safe_render", "Safe Render On", "Whether safe mode for rendering is on",
+        ConfigValueType::Boolean, "0", true),
+    ConfigValue("", "texture_log", "Texture-Related Logging", "Whether to log texture-related operations",
+        ConfigValueType::Boolean, "0", true),
+    ConfigValue("", "geometry_log", "Geometry-Related Logging", "Whether to log geometry-related operations",
+        ConfigValueType::Boolean, "0", true),
 
+    // TODO: Look into the "offclass" parameter. What does it actually do?
 
+    // I don't think the "mem_profile" parameter actually does anything.
 
+    ConfigValue("", "startFontIniFile", "INI File for Fonts", "The path of the starting\nINI file that handles the fonts\n",
+        ConfigValueType::String, "resource\\ini\\fonts_euro.ini", true),
+    ConfigValue("", "font", "Default Interface Font", "The default font used by the game's interface",
+        ConfigValueType::String, "interface_normal", true),
 
 
     ConfigValue("interface", "screen_width", "Screen width", "The width of the UI in pixels - DO NOT CHANGE",
@@ -447,6 +461,7 @@ void RenderConfigValueTable(ConfigValue &config)
     case ConfigValueType::Boolean: {
         const char* boolItems[] = { "False", "True" };
         int current = config.boolValue ? 1 : 0;
+
         if (ImGui::Combo("##boolcombo", &current, boolItems, 2)) {
             config.boolValue = (current == 1);
             changed = true;
