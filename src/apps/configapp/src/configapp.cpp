@@ -289,7 +289,7 @@ std::vector<ConfigValue> g_ConfigDefinitions = {
 };
 
 IniFile g_IniFile;
-std::string g_CurrentFileName = "enginetest.ini";
+std::string g_CurrentFileName = "engine.ini";
 bool g_FileLoaded = false;
 bool g_HasUnsavedChanges = false;
 
