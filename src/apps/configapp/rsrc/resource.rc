@@ -77,7 +77,7 @@ BEGIN
             VALUE "FileVersion",        "1, 0, 0, 1"
             VALUE "InternalName",       "INI Configurator"
             VALUE "LegalCopyright",     "Copyright 2025"
-            VALUE "OriginalFilename",   "configapp.exe"
+            VALUE "OriginalFilename",   "config.exe"
             VALUE "ProductName",        "Storm Engine INI Configurator"
             VALUE "ProductVersion",     "1, 0, 0, 1"
         END

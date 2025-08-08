@@ -34,6 +34,7 @@ target_link_libraries(configapp PRIVATE imgui_backend inimanager)
 
 set_target_properties(configapp PROPERTIES
     WIN32_EXECUTABLE ON
+    OUTPUT_NAME "config"
 )
 
 #set_target_properties(configapp PROPERTIES
