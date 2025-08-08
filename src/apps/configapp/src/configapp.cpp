@@ -320,6 +320,7 @@ IniFile g_IniFile;
 std::string g_CurrentFileName = "engine.ini";
 bool g_FileLoaded = false;
 bool g_HasUnsavedChanges = false;
+bool g_ShowAdvancedSettings = false;
 
 bool CreateDeviceD3D(HWND hWnd)
 {
@@ -508,6 +509,11 @@ void RenderConfigValueTable(ConfigValue &config)
 
     // TODO: Give it a .ico
 
+    if (!g_ShowAdvancedSettings && config.isAdvanced)
+    {
+        return;
+    }
+
     ImGui::TableNextRow();
     ImGui::TableSetColumnIndex(0);
     if (config.isChanged)
@@ -673,6 +679,16 @@ void LaunchGame()
     CloseHandle(pi.hThread);
 }
 
+bool SectionHasMembersToShow(const std::string &sectionName)
+{
+    for (const auto &config : g_ConfigDefinitions)
+    {
+        if (config.section == sectionName && (!config.isAdvanced || g_ShowAdvancedSettings))
+            return true;
+    }
+    return false;
+}
+
 // In RenderConfigEditor, use a table for each section:
 void RenderConfigEditor()
 {
@@ -692,6 +708,9 @@ void RenderConfigEditor()
         LaunchGame();
         exit(0); // Exit the app after launching the game
     }
+
+    ImGui::SameLine();
+    ImGui::Checkbox("Advanced Settings", &g_ShowAdvancedSettings);
 
     if (g_HasUnsavedChanges)
     {
@@ -717,6 +736,9 @@ void RenderConfigEditor()
 
     for (auto &[sectionName, configs] : sections)
     {
+        if (!SectionHasMembersToShow(sectionName))
+            continue;
+
         std::string headerName = sectionName.empty() ? "[UNCATEGORISED]" : sectionName;
         if (ImGui::CollapsingHeader(headerName.c_str(), ImGuiTreeNodeFlags_DefaultOpen))
         {
