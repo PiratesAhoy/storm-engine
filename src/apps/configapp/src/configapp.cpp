@@ -123,7 +123,7 @@ struct ConfigValue
 // TODO: Do validation for loaded values. Could they be found in the file when loading? Are their values valid?
 std::vector<ConfigValue> g_ConfigDefinitions = {
     /*
-    DEFAULTS:
+    TEMPLATES:
 
     Boolean:
     ConfigValue(changethis"SECTION", changethis"KEY", changethis"DisplayName", changethis"Description",
