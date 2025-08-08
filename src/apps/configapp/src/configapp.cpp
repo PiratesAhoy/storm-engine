@@ -429,6 +429,8 @@ void RenderConfigValueTable(ConfigValue &config)
 
     // TODO: Give it a .ico
 
+    // TODO: "Save and Launch" button
+
     ImGui::TableNextRow();
     ImGui::TableSetColumnIndex(0);
     ImGui::Text("%s", config.displayName.c_str());
