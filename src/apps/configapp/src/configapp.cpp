@@ -272,6 +272,7 @@ std::vector<ConfigValue> g_ConfigDefinitions = {
     
 
     // --- SECTION: INTERFACE ---
+
     // The width and height of the UI is not to be changed. They are relative to the screen site parameters above.
     /*
     ConfigValue("interface", "screen_width", "Screen Width", "The width of the UI in pixels - DO NOT CHANGE",
@@ -282,12 +283,13 @@ std::vector<ConfigValue> g_ConfigDefinitions = {
 
 
     // --- SECTION: SCRIPT ---
-    ConfigValue("script", "debuginfo", "Debug Info ON", "Debug info for scripts.",
-        ConfigValueType::Boolean, "0"),
-    ConfigValue("script", "codefiles", "Code Files On", "Whether to enable code file output.",
-        ConfigValueType::Boolean, "0"),
-    ConfigValue("script", "runtimelog", "Runtime Log On", "Whether to enable runtime logging for scripts.",
-        ConfigValueType::Boolean, "1"),
+
+    ConfigValue("script", "debuginfo", "Debug Info ON", "Debug info for scripts",
+        ConfigValueType::Boolean, "0", true),
+    ConfigValue("script", "codefiles", "Code Files On", "Whether to enable code file output",
+        ConfigValueType::Boolean, "0", true),
+    ConfigValue("script", "runtimelog", "Runtime Log On", "Whether to enable runtime logging for scripts",
+        ConfigValueType::Boolean, "1", true),
     
     // "tracefiles" is commented out in the engine (as of 2025-aug-08)
     /*
@@ -295,8 +297,33 @@ std::vector<ConfigValue> g_ConfigDefinitions = {
         ConfigValueType::Boolean, "0"),
     */
 
-    ConfigValue("script", "cache_mode", "Script Cache Mode", "Script caching mode.\n0 = disable,\n1 = check on load,\n2 = check only at start",
-        ConfigValueType::Integer, "0", false, {0, 2}),
+    ConfigValue("script", "cache_mode", "Script Cache Mode", "Script caching mode.\n0 = disable\n1 = check on load\n2 = check only at start",
+        ConfigValueType::Integer, "0", true, {0, 2}),
+
+    // --- SECTION: CONTROLS ---
+    
+    ConfigValue("controls", "ondebugkeys", "Debug Keys On", "Whether to enable debug controls",
+        ConfigValueType::Boolean, "0", true),
+
+    // --- SECTION: SOUND ---
+    // I don't think "sound path" does anything either.
+    /*
+    ConfigValue("sound", "sound path", "Sound Path", "The path to the directory containing sound resources",
+                ConfigValueType::String, "resource\\sounds\\", true),
+    */
+
+    // --- SECTION: STATS ---
+    // I don't think "memory_stats" does anything either.
+    /*
+    ConfigValue("stats", "memory_stats", "Memory Stats On", "Whether to enable memory statistics collection",
+                ConfigValueType::Boolean, "0", true),
+    */
+    // Nor "update_mem_profile".
+    /*
+    ConfigValue("stats", "update_mem_profile", "Update Memory Profile",
+                "Enable updating of memory profiling (0 = off, 1 = on)", ConfigValueType::Boolean, "0", true),
+    */
+        
 };
 
 IniFile g_IniFile;
