@@ -417,6 +417,11 @@ void TryLoadIniFile()
 
 void RenderConfigValueTable(ConfigValue &config)
 {
+    // TODO: Add a "changed" star for each value, not just an over-all one.
+    
+    // TODO: Add a RESET button for reverting to the value *originally loaded from the file*
+    //  The actual default value given in the definitions in this code should just be disregarded.
+
     ImGui::TableNextRow();
     ImGui::TableSetColumnIndex(0);
     ImGui::Text("%s", config.displayName.c_str());
@@ -667,6 +672,7 @@ int main(int, char **)
                 done = true;
             if (event.type == SDL_WINDOWEVENT && event.window.event == SDL_WINDOWEVENT_CLOSE &&
                 event.window.windowID == SDL_GetWindowID(g_Window))
+                // TODO: Add a dialog for if the user closes the window - Save, Discard or Cancel
                 done = true;
             if (event.type == SDL_WINDOWEVENT && event.window.event == SDL_WINDOWEVENT_RESIZED)
             {
