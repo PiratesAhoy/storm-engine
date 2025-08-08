@@ -319,6 +319,8 @@ std::string g_CurrentFileName = "engine.ini";
 bool g_FileLoaded = false;
 bool g_HasUnsavedChanges = false;
 bool g_ShowAdvancedSettings = false;
+char g_SearchInput[256] = "";
+std::vector<std::string> g_SearchResults; // Stores search results for the search input
 
 bool CreateDeviceD3D(HWND hWnd)
 {
@@ -490,6 +492,23 @@ void HandleValueChange(ConfigValue &config)
     g_HasUnsavedChanges = AnyChanges() ? true : false;
 }
 
+bool KeyFilteredBySearch(const std::string &key)
+{
+    if (g_SearchInput[0] == '\0')
+    {
+        // If the search input is empty, show all results
+        return false;
+    }
+
+    auto it = std::find(g_SearchResults.begin(), g_SearchResults.end(), key);
+    if (it != g_SearchResults.end())
+    {
+        return false;
+    }
+
+    return true;
+}
+
 void RenderConfigValueTable(ConfigValue &config)
 {
     
@@ -506,6 +525,11 @@ void RenderConfigValueTable(ConfigValue &config)
     {
         return;
     }
+
+    if (KeyFilteredBySearch(config.key))
+        return;
+
+    
 
     ImGui::TableNextRow();
     ImGui::TableSetColumnIndex(0);
@@ -676,7 +700,10 @@ bool SectionHasMembersToShow(const std::string &sectionName)
 {
     for (const auto &config : g_ConfigDefinitions)
     {
-        if (config.section == sectionName && (!config.isAdvanced || g_ShowAdvancedSettings))
+        if (
+            (config.section == sectionName && (!config.isAdvanced || g_ShowAdvancedSettings)) &&
+            !KeyFilteredBySearch(config.key) // Check if the key is filtered by search
+        )
             return true;
     }
     return false;
@@ -704,6 +731,22 @@ void RenderConfigEditor()
 
     ImGui::SameLine();
     ImGui::Checkbox("Advanced Settings", &g_ShowAdvancedSettings);
+
+    if (ImGui::InputTextWithHint("", "Search...", g_SearchInput, sizeof(g_SearchInput), ImGuiInputTextFlags_AutoSelectAll))
+    {
+        g_SearchResults.clear();
+        std::string searchStr = g_SearchInput;
+        std::transform(searchStr.begin(), searchStr.end(), searchStr.begin(), ::tolower);
+        for (const auto &config : g_ConfigDefinitions)
+        {
+            std::string displayNameLower = config.displayName;
+            std::transform(displayNameLower.begin(), displayNameLower.end(), displayNameLower.begin(), ::tolower);
+            if (displayNameLower.find(searchStr) != std::string::npos)
+            {
+                g_SearchResults.push_back(config.key);
+            }
+        }
+    }
 
     if (g_HasUnsavedChanges)
     {
