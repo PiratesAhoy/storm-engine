@@ -169,7 +169,7 @@ std::vector<ConfigValue> g_ConfigDefinitions = {
         ConfigValueType::Boolean, "0", true),
     ConfigValue("", "screen_bpp", "Screen BPP", "Colour format for Direct3D\nD3DFMT_X8R8G8B8 = 32-bit, D3DFMT_R5G6B5 = 16-bit",
         ConfigValueType::String, "D3DFMT_X8R8G8B8", true, {0, 0, 0, {"D3DFMT_A8R8G8B8", "D3DFMT_X8R8G8B8", "D3DFMT_R5G6B5"}}),
-    ConfigValue("", "texture_degradation", "Texture Degradation", "Texture quality degradation\n0 = High, 2 = Low",
+    ConfigValue("", "texture_degradation", "Texture Degradation", "Texture quality degradation.\nIf you want the best-looking textures, keep at 0.\n0 = Highest Quality Textures\n2 = Lowest Quality Textures",
         ConfigValueType::Integer, "0", false, {0,2}),
 
     // As of now (2025-aug-08), the post-processing read is commented out in the storm engine source code, and it is
