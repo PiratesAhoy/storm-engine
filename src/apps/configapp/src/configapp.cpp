@@ -391,6 +391,7 @@ void RenderConfigValueTable(ConfigValue &config)
     switch (config.type)
     {
     case ConfigValueType::String: {
+        ImGui::SetNextItemWidth(-FLT_MIN); // Fill column
         if (!config.constraints.allowedValues.empty())
         {
             auto it = std::find(config.constraints.allowedValues.begin(), config.constraints.allowedValues.end(), config.stringValue);
@@ -459,6 +460,7 @@ void RenderConfigValueTable(ConfigValue &config)
         break;
     }
     case ConfigValueType::Boolean: {
+        ImGui::SetNextItemWidth(-FLT_MIN); // Fill column
         const char* boolItems[] = { "False", "True" };
         int current = config.boolValue ? 1 : 0;
 
