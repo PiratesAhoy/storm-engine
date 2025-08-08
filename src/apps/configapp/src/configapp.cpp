@@ -59,9 +59,12 @@ struct ConfigValue
     std::string description;
     ConfigValueType type;
     std::string defaultValue;
+    std::string originalValue; // Value from the file, used for comparison
     ConfigConstraints constraints;
     bool isAdvanced; // TODO: Hide advanced settings in UI;
                              //       should be toggleable with a checkbox
+
+    bool isChanged = false; // Whether the value has been changed from the value from the file
 
     // Current values for editing
     std::string stringValue;
@@ -85,6 +88,7 @@ struct ConfigValue
 
     void setFromString(const std::string &value)
     {
+        originalValue = value; // Store the original value for comparison later
         switch (type)
         {
         case ConfigValueType::String:
@@ -388,6 +392,14 @@ void LoadConfigFromFile()
     g_FileLoaded = true;
 }
 
+void MarkAllConfigValuesAsUnchanged()
+{
+    for (auto &config : g_ConfigDefinitions)
+    {
+        config.isChanged = false;
+    }
+}
+
 void SaveConfigToFile()
 {
     for (const auto &config : g_ConfigDefinitions)
@@ -399,6 +411,7 @@ void SaveConfigToFile()
     }
     g_IniFile.save();
     g_HasUnsavedChanges = false;
+    MarkAllConfigValuesAsUnchanged();
 }
 
 
@@ -412,8 +425,39 @@ void TryLoadIniFile()
             g_FileLoaded = true;
             LoadConfigFromFile();
             g_HasUnsavedChanges = false;
+            MarkAllConfigValuesAsUnchanged();
         }
     }
+}
+
+bool AnyChanges()
+{
+   for (const auto &config : g_ConfigDefinitions)
+    {
+        if (config.isChanged)
+            return true;
+    }
+    return false;
+}
+
+void HandleValueChange(ConfigValue &config)
+{
+    g_HasUnsavedChanges = true;
+    config.isChanged = false;
+    if (config.toString() != config.originalValue)
+    {
+        // If the value has changed from the original value, mark it as changed
+        config.isChanged = true;
+        return;
+    }
+
+    // If the config value became the same as the original value,
+    //  then the whole ini might have been reset to the original values.
+    if (!AnyChanges())
+    {
+        g_HasUnsavedChanges = false;
+    }
+
 }
 
 void RenderConfigValueTable(ConfigValue &config)
@@ -433,7 +477,15 @@ void RenderConfigValueTable(ConfigValue &config)
 
     ImGui::TableNextRow();
     ImGui::TableSetColumnIndex(0);
-    ImGui::Text("%s", config.displayName.c_str());
+    if (config.isChanged)
+    {
+        ImGui::TextColored(ImVec4(1.0f, 0.5f, 0.0f, 1.0f), "* %s", config.displayName.c_str());
+    }
+    else
+    {
+        ImGui::Text("%s", config.displayName.c_str());
+    }
+
     if (!config.description.empty() && ImGui::IsItemHovered()){
         ImVec2 sp = ImGui::GetCursorScreenPos();
         ImGui::PushTextWrapPos();
@@ -540,7 +592,7 @@ void RenderConfigValueTable(ConfigValue &config)
     }
     */
     if (changed)
-        g_HasUnsavedChanges = true;
+        HandleValueChange(config);
     ImGui::PopID();
 }
 
