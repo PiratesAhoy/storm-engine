@@ -58,6 +58,8 @@ struct ConfigValue
     ConfigValueType type;
     std::string defaultValue;
     ConfigConstraints constraints;
+    bool isAdvanced; // TODO: Hide advanced settings in UI;
+                             //       should be toggleable with a checkbox
 
     // Current values for editing
     std::string stringValue;
@@ -66,13 +68,14 @@ struct ConfigValue
     bool boolValue = false;
 
     ConfigValue(const std::string &sect, const std::string &k, const std::string &display, const std::string &desc,
-                ConfigValueType t, const std::string &def, const ConfigConstraints &constr = {})
+                ConfigValueType t, const std::string &def, bool isAdvanced = false, const ConfigConstraints &constr = {})
         : section(sect)
         , key(k)
         , displayName(display)
         , description(desc)
         , type(t)
         , defaultValue(def)
+        , isAdvanced(isAdvanced)
         , constraints(constr)
     {
         setFromString(def);
@@ -154,14 +157,61 @@ struct ConfigValue
                 "30.0", {5.0f, 120.0f}),
 };*/
 std::vector<ConfigValue> g_ConfigDefinitions = {
-    ConfigValue("", "full_screen", "Full Screen on/off", "Whether the game will be opened full-screen",
+    /*
+    DEFAULTS:
+
+    Boolean:
+    ConfigValue(changethis"SECTION", changethis"KEY", changethis"DisplayName", changethis"Description",
+        ConfigValueType::Boolean, changethis"DEFAULTVALUE", changethis bool, changethis{}),
+    
+    Integer:
+    ConfigValue(changethis"SECTION", changethis"KEY", changethis"DisplayName", changethis"Description",
+        ConfigValueType::Integer, changethis"DEFAULTVALUE", changethis bool, changethis{}),
+    
+    Float:
+    ConfigValue(changethis"SECTION", changethis"KEY", changethis"DisplayName", changethis"Description",
+        ConfigValueType::Float, changethis"DEFAULTVALUE", changethis bool, changethis{}),
+
+    String:
+    ConfigValue(changethis"SECTION", changethis"KEY", changethis"DisplayName", changethis"Description",
+        ConfigValueType::String, changethis"DEFAULTVALUE", changethis bool, changethis{}),
+    */
+
+
+    // These are usually loaded in `s_device.cpp` or `main.cpp`
+
+    // UNCATEGORISED
+
+    ConfigValue("", "full_screen", "Full Screen On", "Whether the game will be opened full-screen",
         ConfigValueType::Boolean, "0"),
     ConfigValue("", "display", "Display Index", "Index of display to use, 0 = default display",
-        ConfigValueType::Integer, "0", {0, 5}),
+        ConfigValueType::Integer, "0", true, {0, 5}),
+    ConfigValue("", "window_borders", "Window Borders On", "Whether to show window borders in windowed mode",
+        ConfigValueType::Boolean, "1"),
+    ConfigValue("", "screen_x", "Horizontal Resolution", "Horizontal resolution in pixels",
+        ConfigValueType::Integer, "1", false, {500, 7680}),
+    ConfigValue("", "screen_y", "Vertical Resolution", "Vertical resolution in pixels",
+        ConfigValueType::Integer, "1", false, {250, 4320}),
+
+    // I don't think "driver" is actually checked in the engine, but it is in the .ini
+
+    ConfigValue("", "vsync", "Vsync Enabled", "Whether Vsync is enabled in the game",
+        ConfigValueType::Boolean, "1"), 
+    ConfigValue("", "msaa", "MSAA", "Multi-Sampling Anti-Aliasing",
+        ConfigValueType::Integer, "8", false, {0, 16}),
+    ConfigValue("", "lockable_back_buffer", "Lockable Back Buffer", "Whether the D3DPRESENTFLAG_LOCKABLE_BACKBUFFER flag will be passed to Direct3D",
+        ConfigValueType::Boolean, "0", true),
+    ConfigValue("", "screen_bpp", "Screen BPP", "Colour format for Direct3D",
+        ConfigValueType::String, "D3DFMT_X8R8G8B8", true, {0, 0, 0, {"D3DFMT_A8R8G8B8", "D3DFMT_X8R8G8B8", "D3DFMT_R5G6B5"}}),
+
+
+
     ConfigValue("interface", "screen_width", "Screen width.", "The width of the game window in pixels",
-        ConfigValueType::Integer, "0", {200, 6000}),
+        ConfigValueType::Integer, "0", false, {200, 6000}),
     ConfigValue("script", "debuginfo", "Debug info on/off", "Debug info for scripts.",
         ConfigValueType::Boolean, "0"),
+
+
 };
 
 IniFile g_IniFile;
