@@ -498,7 +498,6 @@ void HandleValueChange(ConfigValue &config)
 
 void RenderConfigValueTable(ConfigValue &config)
 {
-    // TODO: Add a "changed" star for each value, not just an over-all one.
     
     // TODO: Add a RESET button for reverting to the value *originally loaded from the file*
     //  The actual default value given in the definitions in this code should just be disregarded.
@@ -508,8 +507,6 @@ void RenderConfigValueTable(ConfigValue &config)
     // TODO: A search bar would be nice.
 
     // TODO: Give it a .ico
-
-    // TODO: "Save and Launch" button
 
     ImGui::TableNextRow();
     ImGui::TableSetColumnIndex(0);
