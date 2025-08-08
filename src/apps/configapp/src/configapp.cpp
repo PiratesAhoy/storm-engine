@@ -427,6 +427,8 @@ void RenderConfigValueTable(ConfigValue &config)
 
     // TODO: A search bar would be nice.
 
+    // TODO: Give it a .ico
+
     ImGui::TableNextRow();
     ImGui::TableSetColumnIndex(0);
     ImGui::Text("%s", config.displayName.c_str());
