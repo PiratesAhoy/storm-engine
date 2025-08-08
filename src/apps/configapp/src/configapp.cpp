@@ -517,8 +517,6 @@ void RenderConfigValueTable(ConfigValue &config)
 
     // TODO: Add some logging.
 
-    // TODO: A search bar would be nice.
-
     // TODO: Give it a .ico
 
     if (!g_ShowAdvancedSettings && config.isAdvanced)
