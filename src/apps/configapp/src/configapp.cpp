@@ -477,7 +477,6 @@ bool AnyChanges()
 
 void HandleValueChange(ConfigValue &config)
 {
-    g_HasUnsavedChanges = true;
     config.isChanged = false;
     if (config.toString() != config.originalValue)
     {
@@ -488,11 +487,7 @@ void HandleValueChange(ConfigValue &config)
 
     // If the config value became the same as the original value,
     //  then the whole ini might have been reset to the original values.
-    if (!AnyChanges())
-    {
-        g_HasUnsavedChanges = false;
-    }
-
+    g_HasUnsavedChanges = AnyChanges() ? true : false;
 }
 
 void RenderConfigValueTable(ConfigValue &config)
