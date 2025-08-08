@@ -15,6 +15,7 @@ private:
         std::string value;    // for KEY_VALUE lines
         std::string section;  // for KEY_VALUE lines
         std::string comment;  // inline comment if any
+        std::string commentPrefix;
     };
     
     std::vector<Line> lines;

@@ -122,7 +122,7 @@ void IniFile::setValue(const std::string &section, const std::string &key, const
 
     if (lineIndex >= 0)
     {
-        // Key exists, update it while preserving comment
+        // Key exists, update it while preserving comment and spacing
         Line &line = lines[lineIndex];
         line.value = value;
 
@@ -130,7 +130,7 @@ void IniFile::setValue(const std::string &section, const std::string &key, const
         std::string newContent = line.key + " = " + value;
         if (!line.comment.empty())
         {
-            newContent += " " + line.comment;
+            newContent += line.commentPrefix + line.comment;
         }
         line.content = newContent;
     }
@@ -165,6 +165,8 @@ void IniFile::setValue(const std::string &section, const std::string &key, const
         newLine.value = value;
         newLine.section = section;
         newLine.content = key + " = " + value;
+        newLine.commentPrefix.clear();
+        newLine.comment.clear();
 
         if (sectionIndex >= 0)
         {
@@ -264,8 +266,18 @@ void IniFile::parseLine(const std::string &line, Line &parsedLine, std::string &
             size_t commentPos = valuePart.find(';');
             if (commentPos != std::string::npos)
             {
+                // Find the prefix (spaces/tabs) before the comment
+                size_t prefixStart = commentPos;
+                while (prefixStart > 0 && (valuePart[prefixStart - 1] == ' ' || valuePart[prefixStart - 1] == '\t'))
+                    --prefixStart;
+                parsedLine.commentPrefix = valuePart.substr(prefixStart, commentPos - prefixStart);
                 parsedLine.comment = valuePart.substr(commentPos);
-                valuePart = valuePart.substr(0, commentPos);
+                valuePart = valuePart.substr(0, prefixStart);
+            }
+            else
+            {
+                parsedLine.commentPrefix.clear();
+                parsedLine.comment.clear();
             }
 
             parsedLine.key = keyPart;
