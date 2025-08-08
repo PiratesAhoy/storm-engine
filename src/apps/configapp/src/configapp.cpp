@@ -156,6 +156,8 @@ struct ConfigValue
     ConfigValue("network", "timeout", "Connection Timeout", "Network timeout in seconds", ConfigValueType::Float,
                 "30.0", {5.0f, 120.0f}),
 };*/
+
+// TODO: Do validation for loaded values. Could they be found in the file when loading? Are their values valid?
 std::vector<ConfigValue> g_ConfigDefinitions = {
     /*
     DEFAULTS:
@@ -180,7 +182,7 @@ std::vector<ConfigValue> g_ConfigDefinitions = {
 
     // These are usually loaded in `s_device.cpp` or `main.cpp`
 
-    // UNCATEGORISED
+    // --- SECTION: UNCATEGORISED ---
 
     ConfigValue("", "full_screen", "Full Screen On", "Whether the game will be opened full-screen",
         ConfigValueType::Boolean, "0"),
@@ -199,15 +201,39 @@ std::vector<ConfigValue> g_ConfigDefinitions = {
         ConfigValueType::Boolean, "1"), 
     ConfigValue("", "msaa", "MSAA", "Multi-Sampling Anti-Aliasing",
         ConfigValueType::Integer, "8", false, {0, 16}),
-    ConfigValue("", "lockable_back_buffer", "Lockable Back Buffer", "Whether the D3DPRESENTFLAG_LOCKABLE_BACKBUFFER flag will be passed to Direct3D",
+    ConfigValue("", "lockable_back_buffer", "Lockable Back Buffer", "Whether the\nD3DPRESENTFLAG_LOCKABLE_BACKBUFFER\nflag will be passed to Direct3D",
         ConfigValueType::Boolean, "0", true),
-    ConfigValue("", "screen_bpp", "Screen BPP", "Colour format for Direct3D",
+    ConfigValue("", "screen_bpp", "Screen BPP", "Colour format for Direct3D\nD3DFMT_X8R8G8B8 = 32-bit, D3DFMT_R5G6B5 = 16-bit",
         ConfigValueType::String, "D3DFMT_X8R8G8B8", true, {0, 0, 0, {"D3DFMT_A8R8G8B8", "D3DFMT_X8R8G8B8", "D3DFMT_R5G6B5"}}),
+    ConfigValue("", "texture_degradation", "Texture Degradation", "Texture quality degradation\n0 = High, 2 = Low",
+        ConfigValueType::Integer, "0", false, {0,2}),
+
+    // As of now (2025-aug-08), the post-processing read is commented out in the storm engine source code, and it is
+    //  turned off.
+    /*
+    ConfigValue("", "postprocess", "Post-Processing Enabled", "Whether post-processing is enabled.",
+        ConfigValueType::Boolean, "1", false),
+    */
+
+    // `controls` only supports "pcs_controls" from what I can see.
+    /*
+    ConfigValue("", "controls", "Controls", "Control-scheme",
+        ConfigValueType::String, "pcs_controls", true, {0,0,0, {"pcs_controls"}}),
+    */
+    
+    // TODO: Do some validation checks
+    ConfigValue("", "program_directory", "Program Directory", "The relative path of the directory where\nthe game scripts are. This is\ntraditionally \"PROGRAM\\\"",
+        ConfigValueType::String, "PROGRAM\\", true),
+    ConfigValue("", "run", "Entry-Point Script", "The .c script file's name (with extension) inside\nthe Program Directory that is the entry script\nby the engine for launching the game.\nThis is traditionally `seadogs.c`.",
+        ConfigValueType::String, "seadogs.c", true),
+    
 
 
 
-    ConfigValue("interface", "screen_width", "Screen width.", "The width of the game window in pixels",
-        ConfigValueType::Integer, "0", false, {200, 6000}),
+
+
+    ConfigValue("interface", "screen_width", "Screen width", "The width of the UI in pixels - DO NOT CHANGE",
+        ConfigValueType::Integer, "0", true, {200, 6000}),
     ConfigValue("script", "debuginfo", "Debug info on/off", "Debug info for scripts.",
         ConfigValueType::Boolean, "0"),
 
@@ -336,8 +362,13 @@ void RenderConfigValueTable(ConfigValue &config)
     ImGui::TableNextRow();
     ImGui::TableSetColumnIndex(0);
     ImGui::Text("%s", config.displayName.c_str());
-    if (!config.description.empty() && ImGui::IsItemHovered())
+    if (!config.description.empty() && ImGui::IsItemHovered()){
+        ImVec2 sp = ImGui::GetCursorScreenPos();
+        ImGui::PushTextWrapPos();
         ImGui::SetTooltip("%s", config.description.c_str());
+        ImGui::PopTextWrapPos();
+    }
+
 
     ImGui::TableSetColumnIndex(1);
     bool changed = false;
