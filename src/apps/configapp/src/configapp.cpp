@@ -479,16 +479,7 @@ bool AnyChanges()
 
 void HandleValueChange(ConfigValue &config)
 {
-    config.isChanged = false;
-    if (config.toString() != config.originalValue)
-    {
-        // If the value has changed from the original value, mark it as changed
-        config.isChanged = true;
-        return;
-    }
-
-    // If the config value became the same as the original value,
-    //  then the whole ini might have been reset to the original values.
+    config.isChanged = config.toString() != config.originalValue;
     g_HasUnsavedChanges = AnyChanges() ? true : false;
 }
 
