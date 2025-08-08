@@ -538,10 +538,9 @@ void RenderConfigValueTable(ConfigValue &config)
         config.setFromString(config.defaultValue);
         changed = true;
     }
-
+    */
     if (changed)
         g_HasUnsavedChanges = true;
-    */
     ImGui::PopID();
 }
 
