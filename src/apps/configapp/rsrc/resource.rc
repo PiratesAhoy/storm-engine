@@ -21,31 +21,43 @@ LANGUAGE LANG_RUSSIAN,
 #endif //_WIN32
 
 #ifdef APSTUDIO_INVOKED
-    /////////////////////////////////////////////////////////////////////////////
-    //
-    // TEXTINCLUDE
-    //
+/////////////////////////////////////////////////////////////////////////////
+//
+// TEXTINCLUDE
+//
 
-    1 TEXTINCLUDE BEGIN "resource.h\0" END
+1 TEXTINCLUDE 
+BEGIN
+    "resource.h\0"
+END
 
-    2 TEXTINCLUDE BEGIN "#include "
-                        "WinResrc.h"
-                        "\r\n"
-                        "\0" END
+2 TEXTINCLUDE 
+BEGIN
+    "#include "
+    "WinResrc.h"
+    "\r\n"
+    "\0"
+END
 
-    3 TEXTINCLUDE BEGIN "\r\n"
-                        "\0" END
+3 TEXTINCLUDE 
+BEGIN
+    "\r\n"
+    "\0"
+END
 
 #endif // APSTUDIO_INVOKED
 
-                            /////////////////////////////////////////////////////////////////////////////
-                            //
-                            // Version
-                            //
+/////////////////////////////////////////////////////////////////////////////
+//
+// Version
+//
 
-                            VS_VERSION_INFO VERSIONINFO FILEVERSION 2,
-    9, 0, 1 PRODUCTVERSION 2, 9, 0,
-    1 FILEFLAGSMASK 0x3fL
+VS_VERSION_INFO VERSIONINFO
+ FILEVERSION     1, 0, 0, 1
+ PRODUCTVERSION  1, 0, 0, 1
+ FILEFLAGSMASK   0x3fL
+
+
 #ifdef _DEBUG
     FILEFLAGS 0x1L
 #else
