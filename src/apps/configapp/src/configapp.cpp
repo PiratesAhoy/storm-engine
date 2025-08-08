@@ -423,6 +423,14 @@ void MarkAllConfigValuesAsUnchanged()
     }
 }
 
+void MakeAllConfigValuesOriginal()
+{
+    for (auto &config : g_ConfigDefinitions)
+    {
+        config.originalValue = config.toString();
+    }
+}
+
 void SaveConfigToFile()
 {
     for (const auto &config : g_ConfigDefinitions)
@@ -435,6 +443,9 @@ void SaveConfigToFile()
     g_IniFile.save();
     g_HasUnsavedChanges = false;
     MarkAllConfigValuesAsUnchanged();
+
+    // Make all config values original, so that they are not marked as changed wrongly.
+    MakeAllConfigValuesOriginal(); 
 }
 
 
