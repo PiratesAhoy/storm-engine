@@ -430,6 +430,8 @@ void TryLoadIniFile()
     }
 }
 
+// Not exactly optimal, but at least simple.
+//  At such a small scale, it doesn't matter.
 bool AnyChanges()
 {
    for (const auto &config : g_ConfigDefinitions)
