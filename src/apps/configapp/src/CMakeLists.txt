@@ -32,6 +32,10 @@ target_link_libraries(imgui_backend PUBLIC imgui ${SDL2_LIBRARIES} ${SYSTEM_DEPS
 
 target_link_libraries(configapp PRIVATE imgui_backend inimanager)
 
+set_target_properties(configapp PROPERTIES
+    WIN32_EXECUTABLE ON
+)
+
 #set_target_properties(configapp PROPERTIES
 #    RUNTIME_OUTPUT_DIRECTORY ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}
 #    RUNTIME_OUTPUT_DIRECTORY_RELEASE ${CMAKE_RUNTIME_OUTPUT_DIRECTORY_RELEASE}

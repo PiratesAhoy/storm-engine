@@ -19,6 +19,7 @@
 // Changeable settings
 #define DEFAULT_WINDOW_WIDTH 400
 #define DEFAULT_WINDOW_HEIGHT 600
+#define DEFAULT_WINDOW_TITLE "Game Configuration"
 
 // Globals
 LPDIRECT3D9 g_pD3D = NULL;
@@ -360,7 +361,7 @@ void LoadImGuiFontFromResource(ImGuiIO &io)
     ImFont *font = io.Fonts->AddFontFromMemoryTTF(pData, (int)dataSize, 16.0f, &fontConfig);
     if (font)
     {
-        std::cout << "Successfully loaded font resource." << std::endl;
+        //std::cout << "Successfully loaded font resource." << std::endl;
     }
 }
 
@@ -372,15 +373,15 @@ void LoadConfigFromFile()
         if (!parameterValidlyDefined)
         {
             // TODO: Throw warning to users?
-            std::cout << "Config parameter not found: " << config.section << " -> " << config.key
-                      << ". Using default value: " << config.defaultValue << std::endl;
+            /* std::cout << "Config parameter not found: " << config.section << " -> " << config.key
+                      << ". Using default value: " << config.defaultValue << std::endl;*/
             config.setFromString(config.defaultValue);
             continue;
         }
 
         std::string value = g_IniFile.getValue(config.section, config.key, config.defaultValue);
 
-        std::cout << "Loading config: " << config.section << " -> " << config.key << " = " << value << std::endl;
+        //std::cout << "Loading config: " << config.section << " -> " << config.key << " = " << value << std::endl;
 
         config.setFromString(value);
     }
@@ -391,8 +392,8 @@ void SaveConfigToFile()
 {
     for (const auto &config : g_ConfigDefinitions)
     {
-        std::cout << "Saving config: " << config.section << " -> " << config.key << " = " << config.toString()
-            << std::endl;
+        /* std::cout << "Saving config: " << config.section << " -> " << config.key << " = " << config.toString()
+            << std::endl; */
 
         g_IniFile.setValue(config.section, config.key, config.toString());
     }
@@ -421,6 +422,8 @@ void RenderConfigValueTable(ConfigValue &config)
     
     // TODO: Add a RESET button for reverting to the value *originally loaded from the file*
     //  The actual default value given in the definitions in this code should just be disregarded.
+
+    // TODO: Add some logging.
 
     ImGui::TableNextRow();
     ImGui::TableSetColumnIndex(0);
@@ -606,7 +609,7 @@ int main(int, char **)
     }
 
     SDL_WindowFlags window_flags = (SDL_WindowFlags)(SDL_WINDOW_ALLOW_HIGHDPI | SDL_WINDOW_RESIZABLE);
-    g_Window = SDL_CreateWindow("INI Configuration Editor", SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED,
+    g_Window = SDL_CreateWindow(DEFAULT_WINDOW_TITLE, SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED,
                                 DEFAULT_WINDOW_WIDTH, DEFAULT_WINDOW_HEIGHT,
                                 window_flags);
 
