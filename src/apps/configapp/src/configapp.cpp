@@ -425,6 +425,8 @@ void RenderConfigValueTable(ConfigValue &config)
 
     // TODO: Add some logging.
 
+    // TODO: A search bar would be nice.
+
     ImGui::TableNextRow();
     ImGui::TableSetColumnIndex(0);
     ImGui::Text("%s", config.displayName.c_str());
