@@ -281,7 +281,6 @@ void TryLoadIniFile()
     }
 }
 
-// Replace RenderConfigValue with a version that draws into table columns
 void RenderConfigValueTable(ConfigValue &config)
 {
     ImGui::TableNextRow();
@@ -331,13 +330,37 @@ void RenderConfigValueTable(ConfigValue &config)
         break;
     }
     case ConfigValueType::Integer: {
-        if (ImGui::InputInt("##input", &config.intValue, 0, 0))
+
+        // NOTE: Yes, the slider already has a text input, but a regular
+        //  user might not know that they have to CTRL+Click to edit it.
+        if (ImGui::SliderInt("##slider", &config.intValue, (int)config.constraints.minValue,
+                             (int)config.constraints.maxValue, "", ImGuiSliderFlags_NoInput))
+        {
             changed = true;
+        }
+
+        ImGui::SameLine();
+
+        if (ImGui::InputInt("##input", &config.intValue, 0, 0))
+        {
+            changed = true;
+        
+        }
         break;
     }
     case ConfigValueType::Float: {
+
+        if (ImGui::SliderFloat("##slider", &config.floatValue, config.constraints.minValue,
+                             config.constraints.maxValue, "", ImGuiSliderFlags_NoInput))
+        {
+            changed = true;
+        }
+
+        ImGui::SameLine();
+
         if (ImGui::InputFloat("##input", &config.floatValue, 0, 0, "%.3f"))
             changed = true;
+
         break;
     }
     case ConfigValueType::Boolean: {
@@ -345,7 +368,6 @@ void RenderConfigValueTable(ConfigValue &config)
         int current = config.boolValue ? 1 : 0;
         if (ImGui::Combo("##boolcombo", &current, boolItems, 2)) {
             config.boolValue = (current == 1);
-            std::cout << "Boolean changed to: " << (config.boolValue ? "True" : "False") << std::endl;
             changed = true;
         }
         break;
@@ -408,10 +430,11 @@ void RenderConfigEditor()
             ImGui::Indent();
             if (ImGui::BeginTable("config_table", 2, ImGuiTableFlags_RowBg | ImGuiTableFlags_BordersInnerV | ImGuiTableFlags_SizingFixedFit))
             {
-                ImGui::TableSetupColumn("Name", ImGuiTableColumnFlags_WidthStretch, 0.4f);
-                ImGui::TableSetupColumn("Value", ImGuiTableColumnFlags_WidthStretch, 0.4f);
+                ImGui::TableSetupColumn("Name", ImGuiTableColumnFlags_WidthStretch, 0.2f);
+                ImGui::TableSetupColumn("Value", ImGuiTableColumnFlags_WidthStretch, 0.2f);
+                //ImGui::TableSetupColumn("Manual Control", ImGuiTableColumnFlags_WidthStretch, 0.1f);
                 //ImGui::TableSetupColumn("Reset", ImGuiTableColumnFlags_WidthFixed, 60.0f); // 60 pixels for Reset
-                ImGui::TableHeadersRow();
+                //ImGui::TableHeadersRow();
 
                 for (auto *config : configs)
                     RenderConfigValueTable(*config);
