@@ -247,8 +247,11 @@ std::vector<ConfigValue> g_ConfigDefinitions = {
 
     // I don't think the "numoftips" parameter actually does anything in the engine.
 
+    // I don't think the "tracefilesoff" parameter actually does anything in the engine.
+    /*
     ConfigValue("", "tracefilesoff", "Trace Files OFF", "Whether script stack-traces are turned off.\nLook out: True here means that tracing\nis off, and False that it is on.",
         ConfigValueType::Boolean, "1", true),
+    */
     ConfigValue("", "run_in_background", "Run in Background", "Whether the game runs in the background\nwhen the game window is not in focus.\nIf off, the game will pause if it loses focus.",
         ConfigValueType::Boolean, "0", false),
     ConfigValue("", "sound_in_background", "Sound in Background On", "Whether the game has sound in the background\nwhen the game window is not in focus.\nIf off, the game will be mute if it loses focus.",
@@ -262,16 +265,38 @@ std::vector<ConfigValue> g_ConfigDefinitions = {
     
     
     // --- SECTION: COMPATIBILITY ---
+
     ConfigValue("compatibility", "target_version", "Compatibility Target", "The engine supports multiple games, and each\nhave little differences that the engine\nhas to specifically accomodate for.\nThis option selects the compatibility mode.\nModes:\nsd - Sea Dogs\npotc - Pirates of the Caribbean\nct - Caribbean Tales\ncoas - City of Abandoned Ships\nteho - To Each His Own\nlatest - Beyond New Horizons",
         ConfigValueType::String, "latest", true, {0,0,0, {"latest", "sd", "potc", "ct", "coas", "teho", "latest"}}),
 
+    
 
-    ConfigValue("interface", "screen_width", "Screen width", "The width of the UI in pixels - DO NOT CHANGE",
+    // --- SECTION: INTERFACE ---
+    // The width and height of the UI is not to be changed. They are relative to the screen site parameters above.
+    /*
+    ConfigValue("interface", "screen_width", "Screen Width", "The width of the UI in pixels - DO NOT CHANGE",
         ConfigValueType::Integer, "0", true, {200, 6000}),
-    ConfigValue("script", "debuginfo", "Debug info on/off", "Debug info for scripts.",
+    ConfigValue("interface", "screen_height", "Screen Height", "The height of the UI in pixels - DO NOT CHANGE",
+        ConfigValueType::Integer, "0", true, {200, 6000}),
+    */
+
+
+    // --- SECTION: SCRIPT ---
+    ConfigValue("script", "debuginfo", "Debug Info ON", "Debug info for scripts.",
         ConfigValueType::Boolean, "0"),
+    ConfigValue("script", "codefiles", "Code Files On", "Whether to enable code file output.",
+        ConfigValueType::Boolean, "0"),
+    ConfigValue("script", "runtimelog", "Runtime Log On", "Whether to enable runtime logging for scripts.",
+        ConfigValueType::Boolean, "1"),
+    
+    // "tracefiles" is commented out in the engine (as of 2025-aug-08)
+    /*
+    ConfigValue("script", "tracefiles", "Trace Files On", "Whether to enable stack-tracing for scripts.",
+        ConfigValueType::Boolean, "0"),
+    */
 
-
+    ConfigValue("script", "cache_mode", "Script Cache Mode", "Script caching mode.\n0 = disable,\n1 = check on load,\n2 = check only at start",
+        ConfigValueType::Integer, "0", false, {0, 2}),
 };
 
 IniFile g_IniFile;
