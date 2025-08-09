@@ -33,7 +33,8 @@ SDL_Window *g_Window = NULL;
 SDL_Renderer *g_Renderer = NULL;
 SDL_SysWMinfo g_WmInfo;
 
-
+// Copied from Stack Overflow
+// https://stackoverflow.com/a/64471501
 std::wstring to_wide(const std::string &multi)
 {
     std::wstring wide;
