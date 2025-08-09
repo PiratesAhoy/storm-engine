@@ -17,11 +17,11 @@
 #pragma comment(lib, "shlwapi.lib")
 
 // Changeable settings
-#define DEFAULT_WINDOW_WIDTH 400
-#define DEFAULT_WINDOW_HEIGHT 600
+constexpr auto DEFAULT_WINDOW_WIDTH = 400;
+constexpr auto DEFAULT_WINDOW_HEIGHT = 600;
 #define DEFAULT_WINDOW_TITLE std::string("Game Configuration")
 
-#define VSYNC_ENABLED true
+constexpr bool VSYNC_ENABLED = true;
 
 #define GAME_EXE_PATH std::string("engine.exe")
 
