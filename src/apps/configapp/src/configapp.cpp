@@ -753,8 +753,17 @@ void RenderConfigEditor()
 
     if (!g_FileLoaded)
     {
-        ImGui::Text("Loading INI file...");
         TryLoadIniFile();
+        if (!g_FileLoaded)
+        {
+            ImGui::Text("Failed to load the INI file.\nPlease check if the file exists:\n%s",
+                        g_CurrentFileName.c_str());
+            if (ImGui::Button("OK"))
+            {
+                exit(0); // Exit the app if the file cannot be loaded
+            }
+            return;
+        }
         return;
     }
 
