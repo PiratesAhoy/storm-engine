@@ -478,6 +478,18 @@ bool AnyChanges()
     return false;
 }
 
+void UserActionTryLoadFile()
+{
+    if (g_HasUnsavedChanges)
+    {
+        ImGui::OpenPopup("Unsaved Changes - Load File");
+    }
+    else
+    {
+        TryLoadIniFile();
+    }
+}
+
 void HandleValueChange(ConfigValue &config)
 {
     config.isChanged = config.toString() != config.originalValue;
@@ -705,7 +717,10 @@ void RenderConfigEditor()
     ImGui::Text("File: %s", g_CurrentFileName.empty() ? "No file loaded" : g_CurrentFileName.c_str());
 
     if (ImGui::Button("Load File"))
-        TryLoadIniFile();
+    {
+        std::cout << "Hiii";
+        UserActionTryLoadFile();
+    }
 
     ImGui::SameLine();
     if (ImGui::Button("Save File") && g_FileLoaded)
@@ -805,7 +820,7 @@ void RenderConfigEditor()
 
 void RenderUnsavedChangesPopup(bool &done)
 {
-    if (ImGui::BeginPopupModal("unsaved_changes", NULL, ImGuiWindowFlags_AlwaysAutoResize))
+    if (ImGui::BeginPopupModal("Unsaved Changes", NULL, ImGuiWindowFlags_AlwaysAutoResize))
     {
         ImGui::Text("You have unsaved changes. What do you want to do?");
         ImGui::Separator();
@@ -835,7 +850,7 @@ void RenderUnsavedChangesPopup(bool &done)
         {
             if (ImGui::MenuItem("Load", "Ctrl+O"))
             {
-                TryLoadIniFile();
+                UserActionTryLoadFile();
             }
             if (ImGui::MenuItem("Save", "Ctrl+S", false, g_FileLoaded))
             {
@@ -859,6 +874,31 @@ void RenderUnsavedChangesPopup(bool &done)
         }
 
         ImGui::EndMainMenuBar();
+    }
+}
+
+// When the user reloads the file, even though they have unsaved changes
+void RenderUnsavedChangesLoadingPopup()
+{
+    if (ImGui::BeginPopupModal("Unsaved Changes - Load File", NULL, ImGuiWindowFlags_AlwaysAutoResize))
+    {
+        ImGui::Text("Unsaved Changes!");
+        ImGui::Separator();
+
+        ImGui::Text("You have unsaved changes. What do you want to do?");
+        ImGui::Separator();
+
+        if (ImGui::Button("Cancel Load"))
+        {
+            ImGui::CloseCurrentPopup();
+        }
+        ImGui::SameLine();
+        if (ImGui::Button("Discard Changes and Load"))
+        {
+            TryLoadIniFile();
+            ImGui::CloseCurrentPopup();
+        }
+        ImGui::EndPopup();
     }
 }
 
@@ -985,13 +1025,14 @@ int main(int, char **)
 
         if (g_HasUnsavedChanges && openUnsavedChangesPopup)
         {
-            ImGui::OpenPopup("unsaved_changes");
+            ImGui::OpenPopup("Unsaved Changes");
             openUnsavedChangesPopup = false;
         }
 
         // Doesn't actually render it if it is not open
         // Will change the `done` variable to true if the user chooses to exit
-        RenderUnsavedChangesPopup(done); 
+        RenderUnsavedChangesPopup(done);
+        RenderUnsavedChangesLoadingPopup(); 
 
 
         RenderConfigEditor();
