@@ -44,7 +44,7 @@ std::wstring to_wide(const std::string &multi)
     while (auto res = mbrtowc(&w, multi.c_str() + n, len - n, &mb))
     {
         if (res == size_t(-1) || res == size_t(-2))
-            throw "invalid encoding";
+            throw std::runtime_error("invalid encoding");
 
         n += res;
         wide += w;
