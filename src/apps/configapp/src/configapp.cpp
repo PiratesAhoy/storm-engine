@@ -699,7 +699,7 @@ bool SectionHasMembersToShow(const std::string &sectionName)
     return false;
 }
 
-// In RenderConfigEditor, use a table for each section:
+// In RenderConfigEditor, use a table for each section
 void RenderConfigEditor()
 {
     ImGui::Text("File: %s", g_CurrentFileName.empty() ? "No file loaded" : g_CurrentFileName.c_str());
@@ -803,6 +803,65 @@ void RenderConfigEditor()
     ImGui::EndChild();
 }
 
+void RenderUnsavedChangesPopup(bool &done)
+{
+    if (ImGui::BeginPopupModal("unsaved_changes", NULL, ImGuiWindowFlags_AlwaysAutoResize))
+    {
+        ImGui::Text("You have unsaved changes. What do you want to do?");
+        ImGui::Separator();
+        if (ImGui::Button("Save"))
+        {
+            SaveConfigToFile();
+            ImGui::CloseCurrentPopup();
+            done = true;
+        }
+        ImGui::SameLine();
+        if (ImGui::Button("Discard Changes"))
+        {
+            ImGui::CloseCurrentPopup();
+            done = true;
+        }
+        ImGui::SameLine();
+        if (ImGui::Button("Cancel"))
+        {
+            ImGui::CloseCurrentPopup();
+        }
+        ImGui::EndPopup();
+    }
+
+    if (ImGui::BeginMainMenuBar())
+    {
+        if (ImGui::BeginMenu("File"))
+        {
+            if (ImGui::MenuItem("Load", "Ctrl+O"))
+            {
+                TryLoadIniFile();
+            }
+            if (ImGui::MenuItem("Save", "Ctrl+S", false, g_FileLoaded))
+            {
+                SaveConfigToFile();
+            }
+            ImGui::Separator();
+            if (ImGui::MenuItem("Exit"))
+            {
+                done = true;
+            }
+            ImGui::EndMenu();
+        }
+
+        if (ImGui::BeginMenu("Help"))
+        {
+            if (ImGui::MenuItem("About"))
+            {
+                // TODO: Add an about page, maybe?
+            }
+            ImGui::EndMenu();
+        }
+
+        ImGui::EndMainMenuBar();
+    }
+}
+
 int main(int, char **)
 {
     // SDL and window init
@@ -869,18 +928,31 @@ int main(int, char **)
 
     // Main loop
     bool done = false;
+    bool openUnsavedChangesPopup = false;
     while (!done)
     {
         SDL_Event event;
         while (SDL_PollEvent(&event))
         {
             ImGui_ImplSDL2_ProcessEvent(&event);
-            if (event.type == SDL_QUIT)
+            if (event.type == SDL_QUIT && !g_HasUnsavedChanges)
                 done = true;
             if (event.type == SDL_WINDOWEVENT && event.window.event == SDL_WINDOWEVENT_CLOSE &&
                 event.window.windowID == SDL_GetWindowID(g_Window))
+            {
                 // TODO: Add a dialog for if the user closes the window - Save, Discard or Cancel
-                done = true;
+
+                if (g_HasUnsavedChanges)
+                {
+                    openUnsavedChangesPopup = true;
+                }
+                else
+                {
+                    done = true; 
+                }
+
+            }
+                
             if (event.type == SDL_WINDOWEVENT && event.window.event == SDL_WINDOWEVENT_RESIZED)
             {
                 int new_width = event.window.data1;
@@ -911,37 +983,16 @@ int main(int, char **)
 
         ImGui::Begin("MainWindow", nullptr, window_flags);
 
-        if (ImGui::BeginMainMenuBar())
+        if (g_HasUnsavedChanges && openUnsavedChangesPopup)
         {
-            if (ImGui::BeginMenu("File"))
-            {
-                if (ImGui::MenuItem("Load", "Ctrl+O"))
-                {
-                    TryLoadIniFile();
-                }
-                if (ImGui::MenuItem("Save", "Ctrl+S", false, g_FileLoaded))
-                {
-                    SaveConfigToFile();
-                }
-                ImGui::Separator();
-                if (ImGui::MenuItem("Exit"))
-                {
-                    done = true;
-                }
-                ImGui::EndMenu();
-            }
-
-            if (ImGui::BeginMenu("Help"))
-            {
-                if (ImGui::MenuItem("About"))
-                {
-                    // TODO: Add an about page, maybe?
-                }
-                ImGui::EndMenu();
-            }
-
-            ImGui::EndMainMenuBar();
+            ImGui::OpenPopup("unsaved_changes");
+            openUnsavedChangesPopup = false;
         }
+
+        // Doesn't actually render it if it is not open
+        // Will change the `done` variable to true if the user chooses to exit
+        RenderUnsavedChangesPopup(done); 
+
 
         RenderConfigEditor();
 
