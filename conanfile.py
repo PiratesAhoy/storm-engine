@@ -1,15 +1,18 @@
-from conans import ConanFile, tools
+from conan import ConanFile
+from conan.tools.build import check_min_cppstd
+from conan.tools.scm import Git
+from conan.tools.files import copy
 from os import getenv
 from random import getrandbits
-from distutils.dir_util import copy_tree
+from shutil import copytree
 
 class StormEngine(ConanFile):
     settings = "os", "compiler", "build_type", "arch"
 
     # build options provided by CMakeLists.txt that are used in conanfile.py
     options = {
-        "output_directory": "ANY",
-        "watermark_file": "ANY",
+        "output_directory": ["ANY"],
+        "watermark_file": ["ANY"],
         "crash_reports": [True, False],
         "steam": [True, False],
         "conan_sdl": [True, False]
@@ -17,14 +20,24 @@ class StormEngine(ConanFile):
 
     # dependencies used in deploy binaries
     # conan-center
-    requires = ["zlib/1.3.1", "spdlog/1.13.0", "fast_float/3.4.0", "mimalloc/2.1.7", "sentry-native/0.6.5", "tomlplusplus/3.3.0", "nlohmann_json/3.11.2",
-    "imgui/1.90-docking",
-    "cli11/2.3.2",
-    "ms-gsl/4.1.0",
-    # gitlab.com/piratesahoy
-    "directx/9.0@piratesahoy+storm-engine/stable", "fmod/2.02.05@piratesahoy+storm-engine/stable"]
+    requires = [
+        "zlib/1.3.1",
+        "spdlog/1.13.0",
+        "fast_float/8.0.2",
+        "mimalloc/2.1.7",
+        "sentry-native/0.6.5",
+        "tomlplusplus/3.3.0",
+        "nlohmann_json/3.11.2",
+        "imgui/1.90-docking",
+        "cli11/2.3.2",
+        "ms-gsl/4.1.0",
+        # gitlab.com/piratesahoy
+        "directx/jun10+9.29.1962.1",
+        "fmod/2.02.05+1@piratesahoy+storm-engine/stable"
+    ]
+
     # aux dependencies (e.g. for tests)
-    build_requires = "catch2/2.13.7"
+    build_requires = "catch2/3.9.1"
 
     # optional dependencies
     def requirements(self):
@@ -39,17 +52,23 @@ class StormEngine(ConanFile):
         if self.options.steam:
             self.requires("steamworks/1.5.1@storm/prebuilt")
         if self.options.conan_sdl:
-            self.requires("sdl/2.26.5")
+            self.requires("sdl/2.32.2")
 
-    generators = "cmake_multi"
+    generators = "CMakeDeps"
 
     default_options = {
-        "sentry-native:backend": "crashpad",
-        "mimalloc:shared": True,
-        "mimalloc:override": True
+        "crash_reports": False,
+        "steam": False,
+        "conan_sdl": True,
+        "sentry-native/*:backend": "crashpad",
+        "mimalloc/*:shared": True,
+        "mimalloc/*:override": True
     }
 
-    def imports(self):
+    def validate(self):
+        check_min_cppstd(self, "20")
+
+    def generate(self):
         self.__dest = str(self.options.output_directory) + "/" + getenv("CONAN_IMPORT_PATH", "bin")
         self.__install_folder("/src/techniques", "/resource/techniques")
         self.__install_folder("/src/libs/shared_headers/include/shared", "/resource/shared")
@@ -107,7 +126,7 @@ class StormEngine(ConanFile):
             f.write("\n")
 
     def __generate_watermark(self):
-        git = tools.Git()
+        git = Git(self, self.recipe_folder)
         try:
             if git.is_pristine():
                 return "%s(%s)" % (git.get_branch(), git.get_revision())
@@ -117,16 +136,19 @@ class StormEngine(ConanFile):
             return "Unknown"
 
     def __install_bin(self, name):
-        self.copy(name, dst=self.__dest, src="bin")
+        copy(self, name, dst=self.__dest, src=self.source_folder + "/bin")
 
     def __install_lib(self, name):
-        self.copy(name, dst=self.__dest, src="lib")
+        copy(self, name, dst=self.__dest, src=self.source_folder + "/lib")
 
     def __install_folder(self, src, dst):
-        copy_tree(self.recipe_folder + src, self.__dest + dst)
+        copytree(self.recipe_folder + src, self.__dest + dst)
 
     def __copy_imgui_binding(self, name):
-        self.copy(name, dst=str(self.options.output_directory) + "/imgui", src="res/bindings")
+        imgui = self.dependencies["imgui"]
+        self.output.info("res:{}".format(imgui.package_folder))
+        copy(self, name, dst=str(self.options.output_directory) + "/imgui", src=f"{str(imgui.package_folder)}/res/bindings")
 
     def __copy_imgui_misc(self, name):
-        self.copy(name, dst=str(self.options.output_directory) + "/imgui", src="res/misc/cpp")
+        imgui = self.dependencies["imgui"]
+        copy(self, name, dst=str(self.options.output_directory) + "/imgui", src=f"{str(imgui.package_folder)}/res/misc/cpp")

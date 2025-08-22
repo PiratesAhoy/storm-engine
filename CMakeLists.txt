@@ -1,12 +1,13 @@
 cmake_minimum_required(VERSION 3.18)
 
+list(APPEND CMAKE_PROJECT_TOP_LEVEL_INCLUDES "${CMAKE_CURRENT_SOURCE_DIR}/cmake/conan_provider.cmake")
+
 set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_STANDARD_REQUIRED True)
 
 project(storm-engine)
 
 list(APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_SOURCE_DIR}/cmake")
-include(conan)
 include(StormSetup)
 
 option(STORM_ENABLE_CRASH_REPORTS "Enable automatic crash reports" OFF)
@@ -21,6 +22,7 @@ endif()
 set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR})
 set(CMAKE_RUNTIME_OUTPUT_DIRECTORY_RELEASE ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/Release)
 set(CMAKE_RUNTIME_OUTPUT_DIRECTORY_DEBUG ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/Debug)
+normalize_booleans(STORM_ENABLE_CRASH_REPORTS STORM_ENABLE_STEAM STORM_USE_CONAN_SDL)
 
 set(STORM_WATERMARK_FILE ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/watermark.hpp CACHE FILEPATH "Include file containing build revision, etc." FORCE)
 
@@ -30,23 +32,35 @@ else()
     include(linux)
 endif()
 
-### Set up third-party dependencies
-set(ENV{CONAN_REVISIONS_ENABLED} 1)
-conan_add_remote(NAME piratesahoy
-    URL https://gitlab.com/api/v4/projects/54068744/packages/conan
-    VERIFY_SSL True
+set(CONAN_INSTALL_ARGS ${CONAN_INSTALL_ARGS}
+        "-o output_directory=${CMAKE_BINARY_DIR}"
+        "-o watermark_file=${STORM_WATERMARK_FILE}"
+        "-o crash_reports=${STORM_ENABLE_CRASH_REPORTS}"
+        "-o steam=${STORM_ENABLE_STEAM}"
+        "-o conan_sdl=${STORM_USE_CONAN_SDL}"
+        "-c tools.cmake:cmake_program=${CMAKE_COMMAND}"
 )
-normalize_booleans(STORM_ENABLE_CRASH_REPORTS STORM_ENABLE_STEAM STORM_USE_CONAN_SDL)
-conan_cmake_run(CONANFILE conanfile.py
-    BASIC_SETUP CMAKE_TARGETS
-    BUILD missing
-    OPTIONS
-        output_directory=${CMAKE_RUNTIME_OUTPUT_DIRECTORY}
-        watermark_file=${STORM_WATERMARK_FILE}
-        crash_reports=${STORM_ENABLE_CRASH_REPORTS}
-        steam=${STORM_ENABLE_STEAM}
-        conan_sdl=${STORM_USE_CONAN_SDL}
-)
+
+#conan_add_remote(NAME piratesahoy
+#    URL https://gitlab.com/api/v4/projects/54068744/packages/conan
+#    VERIFY_SSL True
+#)
+
+find_package(zlib REQUIRED)
+find_package(spdlog REQUIRED)
+find_package(FastFloat REQUIRED)
+find_package(mimalloc REQUIRED)
+find_package(sentry REQUIRED)
+find_package(tomlplusplus REQUIRED)
+find_package(nlohmann_json REQUIRED)
+find_package(cli11 REQUIRED)
+find_package(directx REQUIRED)
+find_package(fmod REQUIRED)
+find_package(Microsoft.GSL REQUIRED)
+find_package(ImGui REQUIRED)
+find_package(SDL2 REQUIRED)
+
+find_package(Catch2)
 
 ### Define library ALIASes for use without CONAN_PKG:: prefix
 foreach (conan_target ${CONAN_TARGETS})
