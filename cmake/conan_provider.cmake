@@ -661,6 +661,38 @@ macro(conan_provide_dependency_check)
     unset(_conan_provide_dependency_invoked)
 endmacro()
 
+function(conan_add_remote)
+    set(options )
+    set(one_value_args NAME URL VERIFY_SSL)
+    set(multi_value_args )
+    cmake_parse_arguments(CONAN
+            "${options}" "${one_value_args}" "${multi_value_args}" ${ARGN})
+
+    set(CONAN_VERIFY_SSL_ARG "")
+    if(DEFINED CONAN_VERIFY_SSL AND NOT CONAN_VERIFY_SSL)
+        set(CONAN_VERIFY_SSL_ARG "--insecure")
+    endif()
+
+    if(DEFINED CONAN_COMMAND)
+        set(CONAN_CMD ${CONAN_COMMAND})
+    else()
+        find_program(CONAN_CMD conan)
+        if(NOT CONAN_CMD)
+            message(FATAL_ERROR "Conan executable not found! Please install conan.")
+        endif()
+    endif()
+
+    message("COMMAND ${CONAN_CMD} remote add -f ${CONAN_VERIFY_SSL_ARG} ${CONAN_NAME} ${CONAN_URL}")
+    execute_process(
+            COMMAND ${CONAN_CMD} remote add -f ${CONAN_VERIFY_SSL_ARG} ${CONAN_NAME} ${CONAN_URL}
+            OUTPUT_VARIABLE conan_output
+            RESULT_VARIABLE conan_result
+            OUTPUT_STRIP_TRAILING_WHITESPACE
+    )
+    if(conan_result)
+        message(FATAL_ERROR "CMake-Conan: Error when trying to run Conan")
+    endif()
+endfunction()
 
 # Add a deferred call at the end of processing the top-level directory
 # to check if the dependency provider was invoked at all.

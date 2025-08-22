@@ -142,7 +142,7 @@ class StormEngine(ConanFile):
         copy(self, name, dst=self.__dest, src=self.source_folder + "/lib")
 
     def __install_folder(self, src, dst):
-        copytree(self.recipe_folder + src, self.__dest + dst)
+        copytree(self.recipe_folder + src, self.__dest + dst, dirs_exist_ok=True)
 
     def __copy_imgui_binding(self, name):
         imgui = self.dependencies["imgui"]

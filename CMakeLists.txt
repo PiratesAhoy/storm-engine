@@ -41,10 +41,10 @@ set(CONAN_INSTALL_ARGS ${CONAN_INSTALL_ARGS}
         "-c tools.cmake:cmake_program=${CMAKE_COMMAND}"
 )
 
-#conan_add_remote(NAME piratesahoy
-#    URL https://gitlab.com/api/v4/projects/54068744/packages/conan
-#    VERIFY_SSL True
-#)
+conan_add_remote(NAME piratesahoy
+    URL https://gitlab.com/api/v4/projects/54068744/packages/conan
+    VERIFY_SSL True
+)
 
 find_package(zlib REQUIRED)
 find_package(spdlog REQUIRED)
