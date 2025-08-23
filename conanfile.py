@@ -82,38 +82,38 @@ class StormEngine(ConanFile):
 
         if self.settings.os == "Windows":
             if self.settings.build_type == "Debug":
-                self.__install_lib("fmodL.dll")
+                self.__install_lib("fmodL.dll", self.dependencies["fmod"])
             else:
-                self.__install_lib("fmod.dll")
+                self.__install_lib("fmod.dll", self.dependencies["fmod"])
 
-            self.__install_bin("crashpad_handler.exe")
+            self.__install_bin("crashpad_handler.exe", self.dependencies["sentry-native"])
             if self.options.crash_reports:
-                self.__install_bin("7za.exe")
+                self.__install_bin("7za.exe", self.dependencies["7zip"])
             if self.options.steam:
-                self.__install_lib("steam_api64.dll")
+                self.__install_lib("steam_api64.dll", self.dependencies["steamworks"])
 
-            self.__install_bin("mimalloc-redirect.dll")
+            self.__install_bin("mimalloc-redirect.dll", self.dependencies["mimalloc"])
             if self.settings.build_type == "Debug":
-                self.__install_bin("mimalloc-debug.dll")
+                self.__install_bin("mimalloc-debug.dll", self.dependencies["mimalloc"])
             else:
-                self.__install_bin("mimalloc.dll")
+                self.__install_bin("mimalloc.dll", self.dependencies["mimalloc"])
 
         else: # not Windows
             if self.settings.build_type == "Debug":
-                self.__install_lib("libfmodL.so.13")
+                self.__install_lib("libfmodL.so.13", self.dependencies["fmod"])
             else:
-                self.__install_lib("libfmod.so.13")
+                self.__install_lib("libfmod.so.13", self.dependencies["fmod"])
 
-            self.__install_bin("crashpad_handler")
+            self.__install_bin("crashpad_handler", self.dependencies["sentry-native"])
             #if self.options.steam:
             #    self.__install_lib("steam_api64.dll")#TODO: fix conan package and then lib name
 
             if self.settings.build_type == "Debug":
-                self.__install_lib("libmimalloc-debug.so.2.0")
-                self.__install_lib("libmimalloc-debug.so")
+                self.__install_lib("libmimalloc-debug.so.2.0", self.dependencies["mimalloc"])
+                self.__install_lib("libmimalloc-debug.so", self.dependencies["mimalloc"])
             else:
-                self.__install_lib("libmimalloc.so.2.0")
-                self.__install_lib("libmimalloc.so")
+                self.__install_lib("libmimalloc.so.2.0", self.dependencies["mimalloc"])
+                self.__install_lib("libmimalloc.so", self.dependencies["mimalloc"])
 
         self.__write_watermark()
 
@@ -124,21 +124,24 @@ class StormEngine(ConanFile):
             f.write(self.__generate_watermark())
             f.write("\n")
 
+    def __get_branch(self, git: Git):
+        return git.run("rev-parse --abbrev-ref HEAD")
+
     def __generate_watermark(self):
         git = Git(self, self.recipe_folder)
         try:
-            if git.is_pristine():
-                return "%s(%s)" % (git.get_branch(), git.get_revision())
+            if not git.is_dirty():
+                return "%s(%s)" % (self.__get_branch(git), git.get_commit())
             else:
-                return "%s(%s)-DIRTY(%032x)" % (git.get_branch(), git.get_revision(), getrandbits(128))
+                return "%s(%s)-DIRTY(%032x)" % (self.__get_branch(git), git.get_commit(), getrandbits(128))
         except:
-            return "Unknown"
+            return "unknown"
 
-    def __install_bin(self, name):
-        copy(self, name, dst=self.__dest, src=self.source_folder + "/bin")
+    def __install_bin(self, name, package):
+        copy(self, pattern=name, dst=self.__dest, src=str(package.package_folder) + "/bin", keep_path=False)
 
-    def __install_lib(self, name):
-        copy(self, name, dst=self.__dest, src=self.source_folder + "/lib")
+    def __install_lib(self, name, package):
+        copy(self, pattern=name, dst=self.__dest, src=str(package.package_folder) + "/lib", keep_path=False)
 
     def __install_folder(self, src, dst):
         copytree(self.recipe_folder + src, self.__dest + dst, dirs_exist_ok=True)

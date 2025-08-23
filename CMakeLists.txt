@@ -19,12 +19,10 @@ if (NOT WIN32)
 endif()
 
 ### Set up output paths
-set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR})
-set(CMAKE_RUNTIME_OUTPUT_DIRECTORY_RELEASE ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/Release)
-set(CMAKE_RUNTIME_OUTPUT_DIRECTORY_DEBUG ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/Debug)
+set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/bin)
 normalize_booleans(STORM_ENABLE_CRASH_REPORTS STORM_ENABLE_STEAM STORM_USE_CONAN_SDL)
 
-set(STORM_WATERMARK_FILE ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/watermark.hpp CACHE FILEPATH "Include file containing build revision, etc." FORCE)
+set(STORM_WATERMARK_FILE ${CMAKE_CURRENT_BINARY_DIR}/watermark.hpp CACHE FILEPATH "Include file containing build revision, etc." FORCE)
 
 if (WIN32)
     set(SDL2_LIBRARIES "sdl")
@@ -33,7 +31,7 @@ else()
 endif()
 
 set(CONAN_INSTALL_ARGS ${CONAN_INSTALL_ARGS}
-        "-o output_directory=${CMAKE_BINARY_DIR}"
+        "-o output_directory=${CMAKE_CURRENT_BINARY_DIR}"
         "-o watermark_file=${STORM_WATERMARK_FILE}"
         "-o crash_reports=${STORM_ENABLE_CRASH_REPORTS}"
         "-o steam=${STORM_ENABLE_STEAM}"
