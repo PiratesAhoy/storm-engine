@@ -1,6 +1,6 @@
 #include "options_parser.hpp"
 
-#include <catch2/catch.hpp>
+#include <catch2/catch_all.hpp>
 
 namespace
 {

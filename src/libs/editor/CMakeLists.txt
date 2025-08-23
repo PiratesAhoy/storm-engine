@@ -6,7 +6,6 @@ STORM_SETUP(
         TARGET_NAME editor
         TYPE storm_module
         DEPENDENCIES core
-        TEST_DEPENDENCIES catch2
 )
 
 ### ImGui

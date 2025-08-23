@@ -36,9 +36,6 @@ class StormEngine(ConanFile):
         "fmod/2.02.05+1@piratesahoy+storm-engine/stable"
     ]
 
-    # aux dependencies (e.g. for tests)
-    build_requires = "catch2/3.9.1"
-
     # optional dependencies
     def requirements(self):
         if self.settings.os == "Windows":
@@ -53,6 +50,8 @@ class StormEngine(ConanFile):
             self.requires("steamworks/1.5.1@storm/prebuilt")
         if self.options.conan_sdl:
             self.requires("sdl/2.32.2")
+
+        self.test_requires("catch2/3.9.1")
 
     generators = "CMakeDeps"
 

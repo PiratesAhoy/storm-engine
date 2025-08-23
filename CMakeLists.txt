@@ -60,7 +60,7 @@ find_package(Microsoft.GSL REQUIRED)
 find_package(ImGui REQUIRED)
 find_package(SDL2 REQUIRED)
 
-find_package(Catch2)
+find_package(Catch2 REQUIRED)
 
 ### Define library ALIASes for use without CONAN_PKG:: prefix
 foreach (conan_target ${CONAN_TARGETS})
