@@ -737,7 +737,7 @@ void RenderConfigEditor()
     ImGui::SameLine();
     ImGui::Checkbox("Advanced Settings", &g_ShowAdvancedSettings);
 
-    if (ImGui::InputTextWithHint("", "Search...", g_SearchInput, sizeof(g_SearchInput), ImGuiInputTextFlags_AutoSelectAll))
+    if (ImGui::InputTextWithHint("##SearchField", "Search...", g_SearchInput, sizeof(g_SearchInput), ImGuiInputTextFlags_AutoSelectAll))
     {
         g_SearchResults.clear();
         std::string searchStr = g_SearchInput;
