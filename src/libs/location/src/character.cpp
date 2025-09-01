@@ -2410,7 +2410,7 @@ void Character::Update(float dltTime)
         isSlide = ptc.isSlide;
         if (ptc.isSlide && isEnableJump)
         {
-            if (fall.name && !isFight && !priorityAction.name)
+            if (jump.name && !isFight && !priorityAction.name)
             {
                 if (TestJump(curPos + CVECTOR(0.001f * sinf(ay), -0.001f, 0.001f * cosf(ay))))
                 {
@@ -2420,7 +2420,7 @@ void Character::Update(float dltTime)
                     jumpSound = SOUND_INVALID_ID;
                     PlaySound("clothes");
                     if (fabsf(curPos.y - osculationPoint.y) > 1.5f)
-                        SetPriorityAction(fall.name);
+                        SetPriorityAction(jump.name);
                     return;
                 }
             }
@@ -4090,10 +4090,10 @@ void Character::UpdateAnimation()
             }
             else if (isJump)
             {
-                if (!SetAction(fall.name, fall.tblend, 0.0f, 0.0f))
+                /*if (!SetAction(fall.name, fall.tblend, 0.0f, 0.0f))
                 {
                     core.Trace("Character animation: not fall action: \"%s\"", fall.name);
-                }
+                }*/
             }
             else if (isMove)
             {
