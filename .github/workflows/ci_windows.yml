@@ -65,6 +65,9 @@ jobs:
       with:
         node-version: '16'
     - name: Upload debug symbols
+      if: env.SENTRY_AUTH_TOKEN
+      env:
+        SENTRY_AUTH_TOKEN: ${{ secrets.SENTRY_AUTH_TOKEN }}
       run: |
         npm install @sentry/cli
         ./node_modules/.bin/sentry-cli --auth-token ${{ secrets.SENTRY_AUTH_TOKEN }} debug-files upload -o piratesahoy -p storm-engine -t pe -t pdb "build/default/${{ matrix.configuration }}"
