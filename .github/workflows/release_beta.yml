@@ -37,12 +37,12 @@ jobs:
       uses: actions/upload-artifact@v4
       with:
         name: storm-engine.${{ matrix.configuration }}-steam-${{ matrix.enable_steam }}
-        path: build/default/bin
+        path: build/default/${{ matrix.configuration }}
         include-hidden-files: true
     - name: Archive release
       uses: papeloto/action-zip@v1
       with:
-        files: build/default/bin
+        files: build/default/${{ matrix.configuration }}
         recursive: true
         dest: storm-engine.${{ matrix.configuration }}-steam-${{ matrix.enable_steam }}.zip
     - name: Publish release
@@ -57,4 +57,4 @@ jobs:
     - name: Upload debug symbols
       run: |
         npm install @sentry/cli
-        ./node_modules/.bin/sentry-cli --auth-token ${{ secrets.SENTRY_AUTH_TOKEN }} debug-files upload -o piratesahoy -p storm-engine -t pe -t pdb "build/default/bin"
+        ./node_modules/.bin/sentry-cli --auth-token ${{ secrets.SENTRY_AUTH_TOKEN }} debug-files upload -o piratesahoy -p storm-engine -t pe -t pdb "build/default/${{ matrix.configuration }}"

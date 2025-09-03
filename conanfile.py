@@ -68,7 +68,7 @@ class StormEngine(ConanFile):
         check_min_cppstd(self, "20")
 
     def generate(self):
-        self.__dest = str(self.options.output_directory) + "/" + getenv("CONAN_IMPORT_PATH", "bin")
+        self.__dest = str(self.options.output_directory) + "/" + str(self.settings.build_type)
         self.__install_folder("/src/techniques", "/resource/techniques")
         self.__install_folder("/src/libs/shared_headers/include/shared", "/resource/shared")
 
