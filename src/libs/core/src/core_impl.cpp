@@ -1048,6 +1048,11 @@ void CoreImpl::collectCrashInfo() const
     Compiler->CollectCallStack();
 }
 
+void CoreImpl::collectCallStack() const
+{
+    Compiler->CollectCallStack();
+}
+
 void CoreImpl::loadCompatibilitySettings(INIFILE &inifile)
 {
     using namespace storm;
