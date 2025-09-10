@@ -107,7 +107,6 @@ class SUNGLOW : public Entity
     reflection_t Reflection;
     COLLIDE *pCollide;
     WEATHER_BASE *pWeather;
-    SKY *pSky;
     VDX9RENDER *pRS;
     int32_t idRectBuf;
 
