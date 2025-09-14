@@ -93,12 +93,10 @@ void CoastFoam::Realize(uint32_t Delta_Time)
 {
     pFrustumPlanes = rs->GetPlanes();
 
+
+    pSea = static_cast<SEA_BASE *>(core.GetEntityPointer(core.GetEntityId("sea")));
     if (pSea == nullptr)
-    {
-        pSea = static_cast<SEA_BASE *>(core.GetEntityPointer(core.GetEntityId("sea")));
-        if (pSea == nullptr)
-            return;
-    }
+        return;
 
     auto fDeltaTime = static_cast<float>(Delta_Time) * 0.001f;
     D3DVIEWPORT9 vp;
