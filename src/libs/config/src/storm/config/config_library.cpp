@@ -102,6 +102,21 @@ uint32_t LoadConfigImpl(VS_STACK *pS) {
     }
 }
 
+uint32_t SaveConfigImpl(VS_STACK *pS) {
+    auto *pString = (VDATA *)pS->Pop();
+    auto* objectPtr = pS->Pop();
+    const Data config_data = *objectPtr->GetVarPointer()->GetAClass();
+    const bool success = SaveConfig(pString->GetString(), config_data);
+    if (success)
+    {
+        return IFUNCRESULT_OK;
+    }
+    else
+    {
+        return IFUNCRESULT_FAILED;
+    }
+}
+
 uint32_t FindConfigImpl(VS_STACK *pS) {
     auto *pString = (VDATA *)pS->Pop();
     const char *file_path_ptr = pString->GetString();
@@ -159,6 +174,12 @@ bool ConfigLibrary::Init()
     sIFuncInfo.pFuncName = "LoadConfig";
     sIFuncInfo.pReturnValueName = "void";
     sIFuncInfo.pFuncAddress = LoadConfigImpl;
+    core.SetScriptFunction(&sIFuncInfo);
+
+    sIFuncInfo.nArguments = 2;
+    sIFuncInfo.pFuncName = "SaveConfig";
+    sIFuncInfo.pReturnValueName = "void";
+    sIFuncInfo.pFuncAddress = SaveConfigImpl;
     core.SetScriptFunction(&sIFuncInfo);
 
     sIFuncInfo = {};

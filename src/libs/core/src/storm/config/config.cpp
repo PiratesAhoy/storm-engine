@@ -1,6 +1,7 @@
 #include "storm/config/config.hpp"
 #include "file_service.h"
 
+#include <spdlog/spdlog.h>
 #include <toml++/toml.h>
 
 namespace storm
@@ -99,6 +100,76 @@ Data ToConfig(const toml::table &toml)
     return ConvertValue(toml);
 }
 
+std::unique_ptr<toml::node> ToTomlNode(const Data &data)
+{
+    if (data.is_object())
+    {
+        auto table = std::make_unique<toml::table>();
+        for (auto it = data.begin(); it != data.end(); ++it)
+        {
+            auto node = ToTomlNode(it.value());
+            table->insert_or_assign(it.key(), *node);
+        }
+        return table;
+    }
+
+    if (data.is_array())
+    {
+        auto array = std::make_unique<toml::array>();
+        array->reserve(data.size());
+        for (const auto &value : data)
+        {
+            auto node = ToTomlNode(value);
+            array->push_back(*node);
+        }
+    }
+
+    if (data.is_boolean())
+    {
+        return std::make_unique<toml::value<bool>>(data.get<bool>());
+    }
+
+    if (data.is_number_integer())
+    {
+        return std::make_unique<toml::value<int64_t>>(static_cast<int64_t>(data.get<nlohmann::json::number_integer_t>()));
+    }
+
+    if (data.is_number_unsigned())
+    {
+        const auto value = data.get<nlohmann::json::number_unsigned_t>();
+        if (value <= static_cast<nlohmann::json::number_unsigned_t>(std::numeric_limits<int64_t>::max()))
+            return std::make_unique<toml::value<int64_t>>(static_cast<int64_t>(value));
+        return std::make_unique<toml::value<double>>(static_cast<double>(value));
+    }
+
+    if (data.is_number_float())
+    {
+        return std::make_unique<toml::value<double>>(data.get<double>());
+    }
+
+    if (data.is_string())
+    {
+        return std::make_unique<toml::value<std::string>>(data.get<std::string>());
+    }
+
+    return std::make_unique<toml::table>();
+}
+
+toml::table ToTomlTable(const Data &config)
+{
+    if (!config.is_object())
+    {
+        throw std::invalid_argument("ToTomlTable expects an object");
+    }
+    toml::table result;
+    for (auto it = config.begin(); it != config.end(); ++it)
+    {
+        auto node = ToTomlNode(it.value());
+        result.insert_or_assign(it.key(), *node);
+    }
+    return result;
+}
+
 } // namespace
 
 std::optional<FindConfigResult> FindConfigFile(const std::filesystem::path &source_path)
@@ -158,6 +229,20 @@ std::optional<Data> LoadConfig(const std::filesystem::path &file_path)
     default:
         return {};
     }
+}
+
+bool SaveConfig(const std::filesystem::path &file_path, const Data &data)
+{
+    if (!data.is_object())
+    {
+        spdlog::trace("Can only save object to config file");
+        return false;
+    }
+
+    std::fstream file(file_path, std::ios::out);
+    file << ToTomlTable(data);
+
+    return true;
 }
 
 namespace config {

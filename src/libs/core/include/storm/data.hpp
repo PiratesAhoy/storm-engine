@@ -22,3 +22,6 @@ template <typename U, typename V, typename... Args> using DataObject = std::map<
 using Data = nlohmann::basic_json<DataObject>;
 
 } // namespace storm
+
+class ATTRIBUTES;
+void to_json(storm::Data &data, const ATTRIBUTES &attributes);

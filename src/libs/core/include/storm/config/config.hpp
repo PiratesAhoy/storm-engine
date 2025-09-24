@@ -22,6 +22,8 @@ struct FindConfigResult
 
 [[nodiscard]] std::optional<Data> LoadConfig(const std::filesystem::path &file_path);
 
+[[nodiscard]] bool SaveConfig(const std::filesystem::path &file_path, const Data &data);
+
 namespace config {
 
 std::optional<uint32_t> GetColor(const Data &node);
