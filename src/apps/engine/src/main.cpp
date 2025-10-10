@@ -199,39 +199,29 @@ int main(int argc, char *argv[])
     core_private->EnableEditor(enable_editor);
     core_private->Init();
 
-
-    uint32_t dwMaxFPS = 0;
-    bool bSteam = false;
-    int width = 1024, height = 768;
-    int preferred_display = 0;
-    bool fullscreen = false;
-    bool show_borders = false;
-    bool run_in_background = false;
-
-    if (ini)
+    uint32_t dwMaxFPS = static_cast<uint32_t>(ini->GetInt(nullptr, "max_fps", 0));
+    auto bDebugWindow = ini->GetInt(nullptr, "DebugWindow", 0) == 1;
+    auto bAcceleration = ini->GetInt(nullptr, "Acceleration", 0) == 1;
+    if (ini->GetInt(nullptr, "logs", 1) == 0) // disable logging
     {
-        dwMaxFPS = static_cast<uint32_t>(ini->GetInt(nullptr, "max_fps", 0));
-        auto bDebugWindow = ini->GetInt(nullptr, "DebugWindow", 0) == 1;
-        auto bAcceleration = ini->GetInt(nullptr, "Acceleration", 0) == 1;
-        if (ini->GetInt(nullptr, "logs", 1) == 0) // disable logging
-        {
-            spdlog::set_level(spdlog::level::off);
-        }
-        width = ini->GetInt(nullptr, "screen_x", 1024);
-        height = ini->GetInt(nullptr, "screen_y", 768);
-        preferred_display = ini->GetInt(nullptr, "display", 0);
-        fullscreen = ini->GetInt(nullptr, "full_screen", false);
-        show_borders = ini->GetInt(nullptr, "window_borders", false);
-        run_in_background = ini->GetInt(nullptr, "run_in_background", false);
-        if (run_in_background) {
-            bSoundInBackground = ini->GetInt(nullptr, "sound_in_background", true);
-        }
-        else {
-            bSoundInBackground = false;
-        }
-        bSteam = ini->GetInt(nullptr, "Steam", 1) != 0;
+        spdlog::set_level(spdlog::level::off);
     }
-
+    int width = ini->GetInt(nullptr, "screen_x", 1024);
+    int height = ini->GetInt(nullptr, "screen_y", 768);
+    int preferred_display = ini->GetInt(nullptr, "display", 0);
+    bool fullscreen = ini->GetInt(nullptr, "full_screen", false);
+    bool show_borders = ini->GetInt(nullptr, "window_borders", false);
+    bool run_in_background = ini->GetInt(nullptr, "run_in_background", false);
+    if (run_in_background) 
+    {
+        bSoundInBackground = ini->GetInt(nullptr, "sound_in_background", true);
+    }
+    else 
+    {
+        bSoundInBackground = false;
+    }
+    bool bSteam = ini->GetInt(nullptr, "Steam", 1) != 0;
+    
     // initialize SteamApi through evaluating its singleton
     try
     {
