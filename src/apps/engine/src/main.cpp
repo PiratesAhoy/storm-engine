@@ -178,6 +178,14 @@ int main(int argc, char *argv[])
         lifecycleDiagnostics.setCrashInfoCollector([]() { core_private->collectCrashInfo(); });
     }
 
+    // Read config
+    auto ini = fio->OpenIniFile(fs::ENGINE_INI_FILE_NAME);
+    if (!ini)
+    {
+        SDL_ShowSimpleMessageBox(SDL_MESSAGEBOX_ERROR, "Error", "Engine config not found.", nullptr);
+        return EXIT_FAILURE;
+    }
+
     // Init stash
     create_directories(storm::GetEngineSettings().GetEnginePath(storm::EngineSettingsPathType::SaveData));
 
@@ -191,8 +199,6 @@ int main(int argc, char *argv[])
     core_private->EnableEditor(enable_editor);
     core_private->Init();
 
-    // Read config
-    auto ini = fio->OpenIniFile(fs::ENGINE_INI_FILE_NAME);
 
     uint32_t dwMaxFPS = 0;
     bool bSteam = false;
