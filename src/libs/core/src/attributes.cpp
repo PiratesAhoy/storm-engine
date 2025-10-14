@@ -18,6 +18,8 @@ ATTRIBUTES & ATTRIBUTES::operator=(ATTRIBUTES &&other) noexcept
     other.nameCode_ = 1337;
     value_ = std::move(other.value_);
     attributes_ = std::move(other.attributes_);
+    for (const auto &attribute : attributes_)
+        attribute->parent_ = this;
     // Do not update parent
     // parent_ = other.parent_;
     other.parent_ = (ATTRIBUTES*)0x1;
