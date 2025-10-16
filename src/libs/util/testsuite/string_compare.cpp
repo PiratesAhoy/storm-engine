@@ -1,6 +1,6 @@
 #include "string_compare.hpp"
 
-#include <catch2/catch.hpp>
+#include <catch2/catch_all.hpp>
 
 TEST_CASE("Case-insensitive string comparison", "[utils]")
 {

@@ -102,7 +102,6 @@ class CoastFoam : public Entity
     bool bEditMode, bMoved, bCanEdit;
     float fCursorPosX, fCursorPosY;
     int32_t iFoamTexture, iCursorTex;
-    SEA_BASE *pSea;
     std::vector<Foam *> aFoams;
     int32_t iVBuffer, iIBuffer;
     PLANE *pFrustumPlanes;
@@ -124,6 +123,6 @@ class CoastFoam : public Entity
 
     void InitNewFoam(Foam *pF);
     void RecalculateFoam(int32_t iFoam);
-    void ExecuteFoamType2(Foam *pF, float fDeltaTime);
-    void ExecuteFoamType1(Foam *pF, float fDeltaTime);
+    void ExecuteFoamType2(Foam *pF, float fDeltaTime, SEA_BASE &Sea);
+    void ExecuteFoamType1(Foam *pF, float fDeltaTime, SEA_BASE &Sea);
 };

@@ -7,5 +7,5 @@ endif()
 STORM_SETUP(
     TARGET_NAME renderer
     TYPE storm_module
-    DEPENDENCIES core config directx util ${SYSTEM_DEPS}
+    DEPENDENCIES core config directx::directx util ${SYSTEM_DEPS}
 )

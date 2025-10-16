@@ -66,11 +66,6 @@ void SUNGLOW::SetDevice()
     pWeather = static_cast<WEATHER_BASE *>(core.GetEntityPointer(ent));
     Assert(pWeather);
 
-    if (ent = core.GetEntityId("sky"))
-        pSky = static_cast<SKY *>(core.GetEntityPointer(ent));
-    else
-        pSky = nullptr;
-
     if (idRectBuf == -1)
         idRectBuf = pRS->CreateVertexBuffer(SUNGLOWVERTEX_FORMAT, sizeof(SUNGLOWVERTEX) * 8, D3DUSAGE_WRITEONLY);
 }
@@ -743,9 +738,6 @@ void SUNGLOW::DrawRect(uint32_t dwColor, const CVECTOR &pos, float fSize, float 
 float SUNGLOW::GetSunFadeoutFactor(const CVECTOR &vSunPos, float fSunSize)
 {
     // get a pointer to the sky
-    if (!pSky)
-    {
-        pSky = static_cast<SKY *>(core.GetEntityPointer(core.GetEntityId("sky")));
-    }
-    return pSky ? pSky->CalculateAlphaForSun(vSunPos, fSunSize) : 1.0f;
+    auto* sky = static_cast<SKY *>(core.GetEntityPointerSafe(core.GetEntityId("sky")));
+    return sky ? sky->CalculateAlphaForSun(vSunPos, fSunSize) : 1.0f;
 }
