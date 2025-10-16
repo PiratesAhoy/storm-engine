@@ -168,7 +168,7 @@ uint64_t ILogAndActions::ProcessMessage(MESSAGE &message)
     break;
     case LI_SET_VISIBLE:
         m_bDontShowAll = (message.Long() == 0);
-        break;
+    break;
     case LI_CLEAR_STRINGS:
         while (m_sRoot != nullptr)
         {
@@ -177,7 +177,7 @@ uint64_t ILogAndActions::ProcessMessage(MESSAGE &message)
             STORM_DELETE(p->str);
             delete p;
         }
-        break;
+    break;
     case LI_OTHER_MSG: {
         const std::string &param = message.String();
         if (storm::iEquals(param, "SetTimeScale"))
@@ -185,6 +185,8 @@ uint64_t ILogAndActions::ProcessMessage(MESSAGE &message)
             core.SetTimeScale(message.Float());
         }
     }
+    case LOG_TRACE_SCRIPT_STACK:
+        core.collectCallStack();
     break;
     }
     return 0;

@@ -140,6 +140,8 @@ class CoreImpl final : public CorePrivate
 
     void collectCrashInfo() const override;
 
+    void collectCallStack() const override;
+
     [[nodiscard]] bool initialized() const override
     {
         return Initialized;

@@ -23,7 +23,7 @@ jobs:
         submodules: 'recursive'
     - uses: ilammy/msvc-dev-cmd@v1
     - name: Install Conan
-      run: pip install conan==1.62.0
+      run: pip install conan==2.12.2
     - uses: lukka/get-cmake@latest
     - name: Configure CMake w/ Conan
       run: |
