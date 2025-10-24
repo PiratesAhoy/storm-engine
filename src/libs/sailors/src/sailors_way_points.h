@@ -34,68 +34,46 @@ enum PointType
 //-----------------------------------------------------------------------------------------------
 struct Path
 {
-    uint8_t length;            // path length (number of elements)
-    float min;                 // Path value
-    uint8_t point[MAX_POINTS]; // Walking sequence
-    int currentPointPosition;  // Current position on the way
-
-    Path()
-    {
-        length = 0;
-        min = -1;
-        currentPointPosition = -1;
-    };
+    uint8_t length{};            // path length (number of elements)
+    float min{-1};                 // Path value
+    uint8_t point[MAX_POINTS]{}; // Walking sequence
+    int currentPointPosition{-1};  // Current position on the way
 };
 
 //-----------------------------------------------------------------------------------------------
 struct Link
 {
-    int first, next;
+    int first{};
+    int next{};
 };
 
 //-----------------------------------------------------------------------------------------------
 
 class Links
 {
-  public:
+public:
     std::vector<Link> link;
-    int selected;
-    int count;
+    int selected{-1};
+    int count{};
 
     void Add();
     void Delete(int Index);
-
-    Links()
-    {
-        selected = -1;
-        count = 0;
-    };
 };
 
 //-----------------------------------------------------------------------------------------------
 
 struct Point
 {
-    float x, y, z;
-    PointType pointType;
+    float x{};
+    float y{8};
+    float z{};
+    PointType pointType{PT_TYPE_NORMAL};
 
-    bool buisy;
-    bool disabled;
-    bool cannonReloaded;
+    bool buisy{};
+    bool disabled{};
+    bool cannonReloaded{true};
 
-    int climbPosition; // If there is more than one person on the mast
-
-    Point()
-    {
-        pointType = PT_TYPE_NORMAL;
-        buisy = false;
-        disabled = false;
-        cannonReloaded = true;
-        climbPosition = 0;
-        x = 0;
-        y = 8;
-        z = 0;
-    };
+    int climbPosition{}; // If there is more than one person on the mast
 
     bool IsMast() const;
     bool IsCannon() const;
@@ -108,17 +86,11 @@ struct Points
 {
     std::vector<Point> point;
 
-    int count;
-    int selected;
+    int count{};
+    int selected{-1};
 
     void Add();
     void Delete(int Index);
-
-    Points()
-    {
-        count = 0;
-        selected = -1;
-    }
 };
 
 //-----------------------------------------------------------------------------------------------
@@ -126,10 +98,9 @@ struct Points
 class SailorsPoints
 {
   private:
-    bool PointsPassed[MAX_POINTS];        // tmp mark of passed points (for finding a path)
-    float matrix[MAX_POINTS][MAX_POINTS]; // Matrix for fast path finding
+    bool PointsPassed[MAX_POINTS]{};        // tmp mark of passed points (for finding a path)
+    float matrix[MAX_POINTS][MAX_POINTS]{}; // Matrix for fast path finding
 
-    Path getPath(int src, int dst, int l); // Finding a way
 
   public:
     Points points;
@@ -140,6 +111,7 @@ class SailorsPoints
     void DrawLinks(VDX9RENDER *rs);
 
     Path findPath(Path &path, int from, int to); // Calculate the path
+    Path getPath(int src, int dst, int l); // Finding a way
 
     void UpdateLinks(); // Refresh pathfinder matrix
 

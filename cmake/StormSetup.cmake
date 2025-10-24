@@ -210,7 +210,7 @@ macro(STORM_SETUP)
       TARGET ${test_target}
       COMMENT "Run ${test_target}"
       POST_BUILD
-      COMMAND ${test_target})
+      COMMAND ${test_target} "[sanity]" --allow-running-no-tests)
   endif()
 
   set_target_properties(
