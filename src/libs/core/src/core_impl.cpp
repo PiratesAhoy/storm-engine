@@ -312,9 +312,15 @@ void CoreImpl::ProcessEngineIniFile()
     if (res)
     {
         if (!Compiler->CreateProgram(String))
+        {
+            SDL_ShowSimpleMessageBox(SDL_MESSAGEBOX_ERROR, "Error", "Failed to compile program.", nullptr);
             throw std::runtime_error("fail to create program");
+        }
         if (!Compiler->Run())
+        {
+            SDL_ShowSimpleMessageBox(SDL_MESSAGEBOX_ERROR, "Error", "Failed to run program.", nullptr);
             throw std::runtime_error("fail to run program");
+        }
 
         // Script version test
         if (targetVersion_ == storm::ENGINE_VERSION::TO_EACH_HIS_OWN)
