@@ -555,10 +555,10 @@ private:
     bool bPostProcessEnabled;
     bool bPostProcessError;
 
-    bool bSeaEffect;
-    float fSeaEffectSize;
-    float fSeaEffectSpeed;
-    uint32_t dwBackColor;
+    bool bSeaEffect = false;
+    float fSeaEffectSize = 0;
+    float fSeaEffectSpeed = 0;
+    uint32_t dwBackColor = 0;
 
     //-------- post process
 

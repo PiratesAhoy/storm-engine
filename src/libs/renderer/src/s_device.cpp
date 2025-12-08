@@ -614,11 +614,13 @@ bool DX9RENDER::Init()
 
         CreateSphere();
         auto *pScriptRender = static_cast<VDATA *>(core.GetScriptVariable("Render"));
-        ATTRIBUTES *pARender = pScriptRender->GetAClass();
-
-        pARender->SetAttributeUseDword("full_screen", !bWindow);
-        pARender->SetAttributeUseDword("screen_x", screen_size.x);
-        pARender->SetAttributeUseDword("screen_y", screen_size.y);
+        if (pScriptRender != nullptr)
+        {
+            ATTRIBUTES *pARender = pScriptRender->GetAClass();
+            pARender->SetAttributeUseDword("full_screen", !bWindow);
+            pARender->SetAttributeUseDword("screen_x", screen_size.x);
+            pARender->SetAttributeUseDword("screen_y", screen_size.y);
+        }
     }
 
     pDropConveyorVBuffer = nullptr;
@@ -2691,12 +2693,14 @@ void DX9RENDER::SetGLOWParams(float _fBlurBrushSize, int32_t _GlowIntensity, int
 void DX9RENDER::RunStart()
 {
     auto *pScriptRender = static_cast<VDATA *>(core.GetScriptVariable("Render"));
-    ATTRIBUTES *pARender = pScriptRender->GetAClass();
-
-    bSeaEffect = pARender->GetAttributeAsDword("SeaEffect", 0) != 0;
-    fSeaEffectSize = pARender->GetAttributeAsFloat("SeaEffectSize", 0.0f);
-    fSeaEffectSpeed = pARender->GetAttributeAsFloat("SeaEffectSpeed", 0.0f);
-    dwBackColor = pARender->GetAttributeAsDword("BackColor", 0);
+    if (pScriptRender != nullptr)
+    {
+        ATTRIBUTES *pARender = pScriptRender->GetAClass();
+        bSeaEffect = pARender->GetAttributeAsDword("SeaEffect", 0) != 0;
+        fSeaEffectSize = pARender->GetAttributeAsFloat("SeaEffectSize", 0.0f);
+        fSeaEffectSpeed = pARender->GetAttributeAsFloat("SeaEffectSpeed", 0.0f);
+        dwBackColor = pARender->GetAttributeAsDword("BackColor", 0);
+    }
 
     if (bSeaEffect)
     {
