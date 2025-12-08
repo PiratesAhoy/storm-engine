@@ -159,6 +159,8 @@ S_KEYWORD Keywords[] = {
     "#event_handler",
     INCLUDE_LIBRIARY,
     "#libriary",
+    INCLUDE_LIBRIARY,
+    "#library",
     VAR_INTEGER,
     "int",
     VAR_PTR,
