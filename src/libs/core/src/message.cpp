@@ -1,5 +1,7 @@
 #include "message.h"
 
+#include "storm/errors/InvalidMessageFormatError.hpp"
+
 #include <algorithm>
 
 #include <fmt/format.h>
@@ -133,9 +135,9 @@ bool MESSAGE::Set(ATTRIBUTES *value)
 void MESSAGE::ValidateFormat(char c)
 {
     if (format_.empty())
-        throw std::runtime_error("Read from empty message");
+        throw storm::InvalidMessageFormatError("Read from empty message");
     if (format_[index] != c)
-        throw std::runtime_error("Incorrect message data");
+        throw storm::InvalidMessageFormatError("Incorrect message data");
     index++;
 }
 

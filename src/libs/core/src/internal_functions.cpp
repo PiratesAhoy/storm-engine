@@ -2,6 +2,7 @@
 #include "core_impl.h"
 #include "debug-trap.h"
 #include "math_common.hpp"
+#include "storm/errors/InvalidMessageFormatError.hpp"
 
 #include <execution>
 
@@ -1462,7 +1463,11 @@ DATA *COMPILER::BC_CallIntFunction(uint32_t func_code, DATA *&pVResult, uint32_t
             SetError(INVALID_FA);
             break;
         }
-        pV->Get(TempLong2);
+        if (!pV->Get(TempLong2) )
+        {
+            SetError(INVALID_FA ", layer index not valid");
+            break;
+        }
         pV2->Get(TempEid);
         pV3->Get(TempLong1);
         core.AddToLayer(TempLong2, TempEid, TempLong1);
@@ -1868,7 +1873,17 @@ DATA *COMPILER::BC_CallIntFunction(uint32_t func_code, DATA *&pVResult, uint32_t
         if (pE)
         {
             ms.Move2Start();
+            try
+            {
+
             mresult = pE->ProcessMessage(ms);
+            }
+            catch (const storm::InvalidMessageFormatError &e)
+            {
+                std::string err = fmt::format("Failed to send message: '{}'", e.what());
+                SetError(err.c_str());
+                break;
+            }
         }
         for (n = 0; n < arguments; n++)
         {
