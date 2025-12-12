@@ -739,6 +739,13 @@ uint32_t SKY::GetPixelColor(IDirect3DTexture9 *pTex, float fu, float fv) const
 
     D3DSURFACE_DESC texdesc;
     pRS->GetLevelDesc(pTex, 0, &texdesc);
+
+    if (texdesc.Format != D3DFMT_A8R8G8B8)
+    {
+        core.Trace("Sky: Failed to get pixel color for compressed texture");
+        return dwCol;
+    }
+
     const auto x = static_cast<int32_t>(Bring2Range(0.0f, static_cast<float>(texdesc.Width - 1), 0.0f,
                                                  static_cast<float>(texdesc.Width), texdesc.Width * fu));
     const auto y = static_cast<int32_t>(Bring2Range(0.0f, static_cast<float>(texdesc.Height - 1), 0.0f,
