@@ -1471,7 +1471,7 @@ bool DX9RENDER::TextureLoad(int32_t t)
         }
         if (bTrace)
         {
-            core.Trace("Can't load texture %s", path_to_tex);
+            core.Trace("Can't load texture %s", path_to_tex.c_str());
         }
         delete Textures[t].name;
         Textures[t].name = nullptr;
