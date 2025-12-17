@@ -1866,7 +1866,11 @@ DATA *COMPILER::BC_CallIntFunction(uint32_t func_code, DATA *&pVResult, uint32_t
         }
         pV->Get(ent);
 
-        CreateMessage(&ms, s_off, 1);
+        const bool message_created = CreateMessage(&ms, s_off, 1);
+        if (!message_created)
+        {
+            break;
+        }
 
         uint64_t mresult = 0;
         pE = core.GetEntityPointerSafe(ent);

@@ -137,7 +137,8 @@ void MESSAGE::ValidateFormat(char c)
     if (format_.empty())
         throw storm::InvalidMessageFormatError("Read from empty message");
     if (format_[index] != c)
-        throw storm::InvalidMessageFormatError("Incorrect message data");
+        throw storm::InvalidMessageFormatError(
+            fmt::format("Incorrect message data: expected '{}', but got '{}'", c, format_[index]));
     index++;
 }
 
