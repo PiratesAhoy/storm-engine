@@ -184,10 +184,17 @@ uint64_t FLAG::ProcessMessage(MESSAGE &message)
 
         if (message.GetFormat().size() >= 4)
         {
-            entid_t eidShip = message.EntityID();
-            gdata[groupQuantity - 1].ship_id = eidShip;
-            gdata[groupQuantity - 1].char_attributes =
-                ((VAI_OBJBASE *)core.GetEntityPointer(gdata[groupQuantity - 1].ship_id))->GetACharacter();
+            if (message.GetCurrentFormatType() == 'i')
+            {
+                entid_t eidShip = message.EntityID();
+                gdata[groupQuantity - 1].ship_id = eidShip;
+                gdata[groupQuantity - 1].char_attributes =
+                    ((VAI_OBJBASE *)core.GetEntityPointer(gdata[groupQuantity - 1].ship_id))->GetACharacter();
+            }
+            else if (message.GetCurrentFormatType() == 'a')
+            {
+                gdata[groupQuantity - 1].char_attributes = message.AttributePointer();
+            }
         }
 
         NODE *nod;
