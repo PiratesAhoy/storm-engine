@@ -51,9 +51,9 @@ jobs:
         draft: contains(github.ref, 'beta')
         files: storm-engine.${{ matrix.configuration }}-steam-${{ matrix.enable_steam }}.zip
     - name: Setup Node.js
-      uses: actions/setup-node@v2
+      uses: actions/setup-node@v4
       with:
-        node-version: '16'
+        node-version: '20'
     - name: Upload debug symbols
       run: |
         npm install @sentry/cli
