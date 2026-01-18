@@ -232,6 +232,8 @@ class AnimationEventListener
 class AnimationService : public SERVICE
 {
   public:
+    constexpr static const char *ServiceName = "AnimationServiceImp";
+
     ~AnimationService() override
     {
     }

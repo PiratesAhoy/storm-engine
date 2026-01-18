@@ -17,6 +17,8 @@ using VERTEX_TRANSFORM = void *(*)(void *vb, int32_t startVrt, int32_t nVerts, i
 class VGEOMETRY : public SERVICE
 {
   public:
+    constexpr static const char *ServiceName = "geometry";
+
     class ANIMATION_VB
     {
       public:

@@ -26,6 +26,8 @@ class LOCAL_COLLIDE
 class COLLIDE : public SERVICE
 {
   public:
+    constexpr static const char *ServiceName = "coll";
+
     ~COLLIDE() override = default;
 
     // creates LocalCollide object which must be deleted after use

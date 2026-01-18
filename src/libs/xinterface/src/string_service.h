@@ -6,6 +6,8 @@
 class VSTRSERVICE : public SERVICE
 {
   public:
+    constexpr static const char* ServiceName = "STRSERVICE";
+
     bool Init() override = 0;
     bool LoadState(ENTITY_STATE *state) override = 0;
     bool CreateState(ENTITY_STATE_GEN *state_gen) override = 0;

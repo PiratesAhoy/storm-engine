@@ -17,6 +17,8 @@ class IParticleManager;
 class IParticleService : public SERVICE
 {
   public:
+    constexpr static const char *ServiceName = "ParticleService";
+
     // Constructor / destructor
     IParticleService(){};
 

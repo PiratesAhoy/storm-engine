@@ -102,6 +102,8 @@ DX9RENDER *DX9RENDER::pRS = nullptr;
 
 class LostDeviceSentinel : public SERVICE
 {
+    constexpr static const char *ServiceName = "LostDeviceSentinel";
+
     void RunStart() override
     {
         if (auto d3d9 = static_cast<IDirect3DDevice9 *>(DX9RENDER::pRS->GetD3DDevice()))
