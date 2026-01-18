@@ -91,7 +91,7 @@ class WalkGraph
             return chosen[rand() % chosen.size()];
         }
 
-        return -1;
+        return source;
     }
 
     long FindRandomLinkedWithoutType(const int source, const int type)
@@ -121,7 +121,7 @@ class WalkGraph
             return chosen[rand() % chosen.size()];
         }
 
-        return -1;
+        return source;
     }
 
     long FindRandomLinkedAnyType(const int source)
@@ -151,7 +151,7 @@ class WalkGraph
             return chosen[rand() % chosen.size()];
         }
 
-        return -1;
+        return source;
     }
 
   private:

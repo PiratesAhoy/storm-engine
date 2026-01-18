@@ -66,6 +66,7 @@ class LegacySailors : public EntityWithRenderer
 {
   public:
     LegacySailors();
+    ~LegacySailors() override;
 
     bool Init() override;
     void ProcessStage(Stage stage, uint32_t delta) override;
@@ -90,6 +91,6 @@ class LegacySailors : public EntityWithRenderer
     float approachDistance_{};
 
     bool cameraOnDeck_ = false;
-    bool hidePeopleOnDeck_ = false;
+    bool hidePeopleOnDeck_ = true;
     bool isNight_ = false;
 };

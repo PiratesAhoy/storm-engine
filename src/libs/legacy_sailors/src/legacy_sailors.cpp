@@ -6,6 +6,7 @@
 #include "rands.h"
 #include "shared/messages.h"
 #include "shared/sea_ai/script_defines.h"
+#include "shared/sea_ai/sea_people.h"
 #include "string_compare.hpp"
 #include "vma.hpp"
 
@@ -58,6 +59,20 @@ float Vector2Angle(const CVECTOR &_v)
 }
 
 LegacySailors::LegacySailors() = default;
+
+LegacySailors::~LegacySailors()
+{
+    for (auto &walk : shipWalks_)
+    {
+        for (size_t man = 0; man < walk.crewCount; ++man)
+        {
+            if (walk.crew[man].modelID)
+            {
+                core.EraseEntity(walk.crew[man].modelID);
+            }
+        }
+    }
+}
 
 bool LegacySailors::Init()
 {
@@ -121,8 +136,14 @@ uint64_t LegacySailors::ProcessMessage(MESSAGE &message)
     case MSG_SHIP_DELETE: {
         if (auto *const attrs = message.AttributePointer())
         {
-            std::erase_if(shipWalks_,
-                          [attrs](const tShipWalk &walk) { return walk.ship && walk.ship->GetACharacter() == attrs; });
+            for (auto &walk : shipWalks_)
+            {
+                if (walk.ship && walk.ship->GetACharacter() == attrs)
+                {
+                    walk.enabled = false;
+                    break;
+                }
+            }
         }
         break;
     }
@@ -161,9 +182,9 @@ void LegacySailors::SetShipState(tShipWalk &walk, int state)
                 break;
             }
         }
-        for (vert_index_2 = walk.verts.size(); vert_index_2 >= 0; --vert_index_2)
+        for (vert_index_2 = static_cast<int>(walk.verts.size()) - 1; vert_index_2 >= 0; --vert_index_2)
         {
-            if (walk.vertTypes[vert_index_2] == LOCATOR_SPAWN)
+            if (walk.vertTypes[static_cast<size_t>(vert_index_2)] == LOCATOR_SPAWN)
             {
                 break;
             }
@@ -186,11 +207,11 @@ void LegacySailors::SetShipState(tShipWalk &walk, int state)
                 vert_index = walk.graph.FindRandomWithType(LOCATOR_WALK);
             }
             walk.crew[i].sourceI = vert_index;
-            walk.crew[i].destI = walk.graph.FindRandomWithType(LOCATOR_WALK);
+            walk.crew[i].destI = walk.graph.FindRandomLinkedAnyType(vert_index);
             walk.crew[i].pos = walk.verts[vert_index];
             walk.crew[i].dir = !(walk.verts[walk.crew[i].destI] - walk.crew[i].pos);
             walk.crew[i].ang = Vector2Angle(walk.crew[i].dir);
-            walk.crew[i].speed = manSpeed_ * randCentered((manSpeed_ * MAN_SPEED_DEVIATION_K));
+            walk.crew[i].speed = manSpeed_ + randCentered((manSpeed_ * MAN_SPEED_DEVIATION_K));
             walk.crew[i].state = MAN_RUN;
             // walk.crew[i].destI = vert_index;
             ChooseNewAction(walk, walk.crew[i]);
@@ -265,7 +286,7 @@ void LegacySailors::AddShipWalk(entid_t ship_id, int vertex_count, VDATA *vertex
     ship_walk.showCount = 0;
     ship_walk.enabled = true;
 
-    // TODO: SetShipState
+    SetShipState(ship_walk, SHIP_SAIL);
 }
 
 void LegacySailors::InitShipMan(tShipWalk& walk, int man)
