@@ -85,7 +85,7 @@ bool BATTLE_INTERFACE::Init()
 {
     BIUtils::idBattleInterface = GetId();
 
-    if ((rs = static_cast<VDX9RENDER *>(core.GetService("dx9render"))) == nullptr)
+    if ((rs = core.GetServiceX<VDX9RENDER>()) == nullptr)
     {
         throw std::runtime_error("Can`t create render service");
     }

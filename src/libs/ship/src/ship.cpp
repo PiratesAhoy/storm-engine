@@ -165,11 +165,11 @@ void SHIP::LoadServices()
     pRS = nullptr;
     pGS = nullptr;
 
-    pGS = static_cast<VGEOMETRY *>(core.GetService("geometry"));
+    pGS = core.GetServiceX<VGEOMETRY>();
     Assert(pGS);
-    pRS = static_cast<VDX9RENDER *>(core.GetService("dx9render"));
+    pRS = core.GetServiceX<VDX9RENDER>();
     Assert(pRS);
-    pCollide = static_cast<COLLIDE *>(core.GetService("coll"));
+    pCollide = core.GetServiceX<COLLIDE>();
     Assert(pCollide);
 
     touch_id = core.GetEntityId("touch");

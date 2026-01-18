@@ -79,7 +79,7 @@ bool SoundService::Init()
 {
     initialized = false;
 
-    rs = static_cast<VDX9RENDER *>(core.GetService("DX9RENDER"));
+    rs = core.GetServiceX<VDX9RENDER>();
 
     if (rs == nullptr)
     {

@@ -102,6 +102,7 @@ DX9RENDER *DX9RENDER::pRS = nullptr;
 
 class LostDeviceSentinel : public SERVICE
 {
+  public:
     constexpr static const char *ServiceName = "LostDeviceSentinel";
 
     void RunStart() override
@@ -137,7 +138,7 @@ uint32_t DX9SetTexturePath(VS_STACK *pS)
 
     if (!DX9RENDER::pRS)
     {
-        core.GetService("dx9render");
+        core.GetServiceX<VDX9RENDER>();
         Assert(DX9RENDER::pRS);
     }
 
@@ -474,7 +475,7 @@ static float fSin = 0.0f;
 
 bool DX9RENDER::Init()
 {
-    if (auto *sentinelService = core.GetService("LostDeviceSentinel"); !sentinelService)
+    if (auto *sentinelService = core.GetServiceX<LostDeviceSentinel>(); !sentinelService)
     {
         throw std::runtime_error("Cannot create LostDeviceSentinel! Abort");
     }

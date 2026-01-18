@@ -225,7 +225,7 @@ uint32_t slNativeSetReloadBackImage(VS_STACK *pS)
     if (!pStr->Get(nm))
         return IFUNCRESULT_FAILED;
     // Setting the picture
-    auto rs = static_cast<VDX9RENDER *>(core.GetService("dx9render"));
+    auto rs = core.GetServiceX<VDX9RENDER>();
     if (rs)
     {
         rs->SetProgressImage(nm);
@@ -235,7 +235,7 @@ uint32_t slNativeSetReloadBackImage(VS_STACK *pS)
 
 uint32_t slNativeReloadProgressStart(VS_STACK *pS)
 {
-    auto rs = static_cast<VDX9RENDER *>(core.GetService("dx9render"));
+    auto rs = core.GetServiceX<VDX9RENDER>();
     if (rs)
         rs->StartProgressView();
     return IFUNCRESULT_OK;
@@ -243,7 +243,7 @@ uint32_t slNativeReloadProgressStart(VS_STACK *pS)
 
 uint32_t slNativeReloadProgressUpdate(VS_STACK *pS)
 {
-    auto rs = static_cast<VDX9RENDER *>(core.GetService("dx9render"));
+    auto rs = core.GetServiceX<VDX9RENDER>();
     if (rs)
         rs->ProgressView();
     return IFUNCRESULT_OK;
@@ -251,7 +251,7 @@ uint32_t slNativeReloadProgressUpdate(VS_STACK *pS)
 
 uint32_t slNativeReloadProgressEnd(VS_STACK *pS)
 {
-    auto *rs = static_cast<VDX9RENDER *>(core.GetService("dx9render"));
+    auto *rs = core.GetServiceX<VDX9RENDER>();
     if (rs)
         rs->EndProgressView();
     return IFUNCRESULT_OK;
@@ -280,7 +280,7 @@ uint32_t slNativeExecuteTechnique(VS_STACK *pS)
     // Execute technique
     if (nm && nm[0])
     {
-        auto *rs = static_cast<VDX9RENDER *>(core.GetService("dx9render"));
+        auto *rs = core.GetServiceX<VDX9RENDER>();
         rs->TechniqueExecuteStart(nm);
         while (rs->TechniqueExecuteNext())
             ;

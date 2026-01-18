@@ -42,7 +42,7 @@ bool LocLife::Init(Location *loc)
         return false;
     core.AddToLayer(REALIZE, model, 20);
     // Path to textures
-    auto *gs = static_cast<VGEOMETRY *>(core.GetService("geometry"));
+    auto *gs = core.GetServiceX<VGEOMETRY>();
     if (!gs)
     {
         core.Trace("Can't create geometry service!");

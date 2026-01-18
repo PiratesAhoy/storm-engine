@@ -30,10 +30,10 @@ Blood::~Blood()
 // Initialization
 bool Blood::Init()
 {
-    pRS = static_cast<VDX9RENDER *>(core.GetService("dx9render"));
+    pRS = core.GetServiceX<VDX9RENDER>();
     Assert(pRS);
 
-    pCol = static_cast<COLLIDE *>(core.GetService("coll"));
+    pCol = core.GetServiceX<COLLIDE>();
     Assert(pCol);
 
     texID = pRS->TextureCreate("blood.tga");

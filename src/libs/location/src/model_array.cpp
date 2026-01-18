@@ -45,7 +45,7 @@ int32_t ModelArray::CreateModel(const char *modelName, const char *technique, in
     // Path to the model
     resPath = modelspath + modelName;
     // Path to textures
-    auto *gs = static_cast<VGEOMETRY *>(core.GetService("geometry"));
+    auto *gs = core.GetServiceX<VGEOMETRY>();
     if (!gs)
     {
         core.Trace("Can't create geometry service!");

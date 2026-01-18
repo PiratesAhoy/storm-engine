@@ -26,7 +26,7 @@ WM_INTERFACE::~WM_INTERFACE()
 
 bool WM_INTERFACE::Init()
 {
-    rs = static_cast<VDX9RENDER *>(core.GetService("DX9RENDER"));
+    rs = core.GetServiceX<VDX9RENDER>();
     Assert(rs);
 
     LoadIniFile();

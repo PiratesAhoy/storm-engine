@@ -4,7 +4,7 @@
 LCOLL::LCOLL(layer_index_t idx) : boxRadius(0)
 {
     layerIndex_ = idx;
-    col = static_cast<COLLIDE *>(core.GetService("coll"));
+    col = core.GetServiceX<COLLIDE>();
     if (!col)
         throw std::runtime_error("No service: collide");
 }

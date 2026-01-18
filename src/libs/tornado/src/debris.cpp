@@ -51,7 +51,7 @@ void Debris::Init()
     AddModel("Tornado\\Flotsam6", 5, 1.1f);
     AddModel("Tornado\\Flotsam7", 5, 1.2f);
     NormalazedModels();
-    soundService = static_cast<VSoundService *>(core.GetService("SoundService"));
+    soundService = core.GetServiceX<VSoundService>();
 }
 
 void Debris::Update(float dltTime)
@@ -166,7 +166,7 @@ void Debris::AddModel(const char *modelName, float prt, float spd)
     if (!m)
         return;
     // Path to textures
-    auto *gs = static_cast<VGEOMETRY *>(core.GetService("geometry"));
+    auto *gs = core.GetServiceX<VGEOMETRY>();
     if (!gs)
         return;
     gs->SetTexturePath("Tornado\\");

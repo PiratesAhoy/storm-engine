@@ -24,9 +24,9 @@ bool Astronomy::Init()
 
 void Astronomy::SetDevice()
 {
-    pRS = static_cast<VDX9RENDER *>(core.GetService("dx9render"));
+    pRS = core.GetServiceX<VDX9RENDER>();
     Assert(pRS);
-    pGS = static_cast<VGEOMETRY *>(core.GetService("geometry"));
+    pGS = core.GetServiceX<VGEOMETRY>();
 }
 
 void Astronomy::Realize(uint32_t Delta_Time)

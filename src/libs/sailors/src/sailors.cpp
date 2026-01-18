@@ -947,7 +947,7 @@ Sailors::Sailors()
 
 bool Sailors::Init()
 {
-    rs = static_cast<VDX9RENDER *>(core.GetService("dx9render"));
+    rs = core.GetServiceX<VDX9RENDER>();
 
     core.SetLayerType(SEA_REALIZE, layer_type_t::realize);
     core.AddToLayer(SEA_REALIZE, GetId(), 65530);

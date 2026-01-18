@@ -26,7 +26,7 @@ ModelProcessor::ModelProcessor(ParticleManager *pManager)
         pMemArray[n].Free = true;
     }
 
-    pRS = static_cast<VDX9RENDER *>(core.GetService("DX9Render"));
+    pRS = core.GetServiceX<VDX9RENDER>();
     Assert(pRS);
 }
 

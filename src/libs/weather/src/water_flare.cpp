@@ -44,7 +44,7 @@ void WATERFLARE::SetDevice()
 {
     // GUARD(void WATERFLARE::SetDevice())
 
-    RS = static_cast<VDX9RENDER *>(core.GetService("dx9render"));
+    RS = core.GetServiceX<VDX9RENDER>();
     if (!RS)
         throw std::runtime_error("No service: dx9render");
 
