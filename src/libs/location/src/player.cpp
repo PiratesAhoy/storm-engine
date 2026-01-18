@@ -738,7 +738,7 @@ void Player::FireFromShootgun()
     core.Send_Message(effects, "sffffff", "SGFireParticles", src.x, src.y - 0.35f, src.z, mtx.Vz().x, mtx.Vz().y,
                       mtx.Vz().z);
 
-    auto *collide = static_cast<COLLIDE *>(core.GetService("COLL"));
+    auto *collide = core.GetServiceX<COLLIDE>();
     if (!collide)
     {
         return;

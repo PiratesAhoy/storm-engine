@@ -99,7 +99,7 @@ void HandleWindowEvent(const storm::OSWindow::Event &event)
         if (core_private->initialized())
         {
             core_private->AppState(bActive);
-            if (const auto soundService = static_cast<VSoundService *>(core.GetService("SoundService"));
+            if (const auto soundService = core.GetServiceX<VSoundService>();
                 soundService && !bSoundInBackground)
             {
                 soundService->SetActiveWithFade(true);
@@ -112,7 +112,7 @@ void HandleWindowEvent(const storm::OSWindow::Event &event)
         if (core_private->initialized())
         {
             core_private->AppState(bActive);
-            if (const auto soundService = static_cast<VSoundService *>(core.GetService("SoundService"));
+            if (const auto soundService = core.GetServiceX<VSoundService>();
                 soundService && !bSoundInBackground)
             {
                 soundService->SetActiveWithFade(false);

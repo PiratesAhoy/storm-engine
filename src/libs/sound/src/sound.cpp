@@ -26,11 +26,11 @@ bool SOUND::Init()
 {
     // GUARD(SOUND::Init)
 
-    soundService = static_cast<VSoundService *>(core.GetService("SoundService"));
+    soundService = core.GetServiceX<VSoundService>();
     if (!soundService)
         core.Trace("!SOUND: Can`t create sound service");
 
-    renderer = static_cast<VDX9RENDER *>(core.GetService("dx9render"));
+    renderer = core.GetServiceX<VDX9RENDER>();
     core.AddToLayer(REALIZE, GetId(), -1);
 
     return true;

@@ -54,7 +54,7 @@ bool SCRSHOTER::Init()
 void SCRSHOTER::SetDevice()
 {
     // get render service
-    rs = static_cast<VDX9RENDER *>(core.GetService("dx9render"));
+    rs = core.GetServiceX<VDX9RENDER>();
     if (!rs)
         throw std::runtime_error("No service: dx9render");
 }

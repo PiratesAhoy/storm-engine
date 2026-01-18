@@ -183,13 +183,13 @@ void XINTERFACE::SetDevice()
     m_UtilContainer.Init();
 
     // get render service
-    pRenderService = static_cast<VDX9RENDER *>(core.GetService("dx9render"));
+    pRenderService = core.GetServiceX<VDX9RENDER>();
     if (!pRenderService)
     {
         throw std::runtime_error("No service: dx9render");
     }
 
-    pStringService = static_cast<VSTRSERVICE *>(core.GetService("STRSERVICE"));
+    pStringService = core.GetServiceX<VSTRSERVICE>();
     if (!pStringService)
     {
         throw std::runtime_error("No service: strservice");

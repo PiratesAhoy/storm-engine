@@ -86,7 +86,7 @@ void InterfaceBackScene::MenuDescr::Set(CMatrix *pMtx, const char *pcActiveName,
     if (!pcTechniqueName)
         pcTechniqueName = "InterfaceBackScene_Menu";
     sEventName = pcEvent;
-    auto *pGeo = static_cast<VGEOMETRY *>(core.GetService("Geometry"));
+    auto *pGeo = core.GetServiceX<VGEOMETRY>();
     if (pGeo)
         if (pcPathName && pcPathName[0])
             pGeo->SetTexturePath((std::string("MainMenu\\") + pcPathName + "\\").c_str());
@@ -185,7 +185,7 @@ bool InterfaceBackScene::Init()
     {
         texturePath_ = to_string(AttributesPointer->GetAttribute("texturePath") );
     }
-    m_pRS = static_cast<VDX9RENDER *>(core.GetService("dx9render"));
+    m_pRS = core.GetServiceX<VDX9RENDER>();
     Assert(m_pRS);
     flyTex = m_pRS->TextureCreate("LocEfx\\firefly.tga");
     m_nFlareTexture = m_pRS->TextureCreate("ShipsFlares\\corona.tga");
@@ -420,7 +420,7 @@ void InterfaceBackScene::LoadModel(const char *pcModelName)
         core.EraseEntity(m_eiLocators);
         m_pLocators = nullptr;
     }
-    auto *pGeo = static_cast<VGEOMETRY *>(core.GetService("Geometry"));
+    auto *pGeo = core.GetServiceX<VGEOMETRY>();
     if (pGeo)
         pGeo->SetTexturePath(
             (texturePath_ + XINTERFACE::pThis->StringService()->GetLanguage() + "\\").c_str());
@@ -711,7 +711,7 @@ void InterfaceBackScene::InitLight(ATTRIBUTES *pAParam)
     const char *pcFonarModel = pAParam->GetAttribute("model");
     if (pcFonarModel)
     {
-        auto pGeo = static_cast<VGEOMETRY *>(core.GetService("Geometry"));
+        auto pGeo = core.GetServiceX<VGEOMETRY>();
         if (pGeo)
             pGeo->SetTexturePath(texturePath_.c_str());
         // create model
@@ -913,8 +913,8 @@ void InterfaceBackScene::InitAniModel(ATTRIBUTES *pAParam)
     auto *pObj = new AniModelDescr;
     Assert(pObj);
 
-    auto *pAniService = static_cast<ANIMATION *>(core.GetService("AnimationServiceImp"));
-    auto *pGeo = static_cast<VGEOMETRY *>(core.GetService("Geometry"));
+    auto *pAniService = core.GetServiceX<AnimationService>();
+    auto *pGeo = core.GetServiceX<VGEOMETRY>();
     if (pGeo)
         pGeo->SetTexturePath(texturePath_.c_str());
     // create model
@@ -964,7 +964,7 @@ void InterfaceBackScene::InitStaticModel(ATTRIBUTES *pAParam)
     auto *pObj = new AniModelDescr;
     Assert(pObj);
 
-    auto *pGeo = static_cast<VGEOMETRY *>(core.GetService("Geometry"));
+    auto *pGeo = core.GetServiceX<VGEOMETRY>();
     if (pGeo)
         pGeo->SetTexturePath(texturePath_.c_str());
     // create model

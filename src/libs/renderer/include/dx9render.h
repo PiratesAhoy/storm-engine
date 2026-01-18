@@ -172,6 +172,8 @@ class CVideoTexture;
 class VDX9RENDER : public SERVICE
 {
   public:
+    constexpr static const char *ServiceName = "dx9render";
+
     // DX9Render: Construct/Destruct
     ~VDX9RENDER() override{};
 

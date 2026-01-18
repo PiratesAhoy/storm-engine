@@ -585,10 +585,10 @@ bool DIALOG::Init()
     core.SetTimeScale(0.f);
     unfadeTime = 0;
 
-    RenderService = static_cast<VDX9RENDER *>(core.GetService("dx9render"));
+    RenderService = core.GetServiceX<VDX9RENDER>();
     Assert(RenderService);
 
-    snd = static_cast<VSoundService *>(core.GetService("SoundService"));
+    snd = core.GetServiceX<VSoundService>();
     // Assert( snd );
 
     //----------------------------------------------------------

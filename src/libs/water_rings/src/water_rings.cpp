@@ -31,7 +31,7 @@ bool WaterRings::Init()
     const auto seaID = core.GetEntityId("sea");
     sea = static_cast<SEA_BASE *>(core.GetEntityPointer(seaID));
 
-    renderService = static_cast<VDX9RENDER *>(core.GetService("dx9render"));
+    renderService = core.GetServiceX<VDX9RENDER>();
     if (!renderService)
         throw std::runtime_error("No service: dx9render");
 

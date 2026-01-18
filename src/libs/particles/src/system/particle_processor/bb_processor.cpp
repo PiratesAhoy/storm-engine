@@ -41,7 +41,7 @@ BillBoardProcessor::BillBoardProcessor()
         pMemArray[n].Free = true;
     }
 
-    pRS = static_cast<VDX9RENDER *>(core.GetService("DX9Render"));
+    pRS = core.GetServiceX<VDX9RENDER>();
     Assert(pRS);
 
     CreateVertexDeclaration();
@@ -72,7 +72,7 @@ BillBoardProcessor::~BillBoardProcessor()
 {
     delete pMemArray;
 
-    pRS = static_cast<VDX9RENDER *>(core.GetService("DX9Render"));
+    pRS = core.GetServiceX<VDX9RENDER>();
     if (pRS != nullptr)
     {
         pRS->ReleaseVertexBuffer(pVBuffer);

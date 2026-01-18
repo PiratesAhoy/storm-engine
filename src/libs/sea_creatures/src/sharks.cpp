@@ -87,7 +87,7 @@ bool Sharks::Shark::Init(float vp_x, float vp_z, bool isLoadModel)
     if (!(model = core.CreateEntity("modelr")))
         return false;
     // Path to textures
-    auto *gs = static_cast<VGEOMETRY *>(core.GetService("geometry"));
+    auto *gs = core.GetServiceX<VGEOMETRY>();
     if (!gs)
     {
         core.Trace("Can't create geometry service!");
@@ -530,7 +530,7 @@ Sharks::~Sharks()
 // Initialization
 bool Sharks::Init()
 {
-    rs = static_cast<VDX9RENDER *>(core.GetService("dx9render"));
+    rs = core.GetServiceX<VDX9RENDER>();
     if (!rs)
         throw std::runtime_error("No service: dx9render");
     for (int32_t i = 0; i < numShakes; i++)
@@ -697,7 +697,7 @@ bool Sharks::LoadPeriscopeModel()
 {
     if (!(periscope.model = core.CreateEntity("modelr")))
         return false;
-    auto *gs = static_cast<VGEOMETRY *>(core.GetService("geometry"));
+    auto *gs = core.GetServiceX<VGEOMETRY>();
     if (!gs)
         return false;
     gs->SetTexturePath("Animals\\");

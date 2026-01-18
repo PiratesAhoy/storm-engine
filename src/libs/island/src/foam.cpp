@@ -45,7 +45,7 @@ CoastFoam::~CoastFoam()
 
 bool CoastFoam::Init()
 {
-    rs = static_cast<VDX9RENDER *>(core.GetService("dx9render"));
+    rs = core.GetServiceX<VDX9RENDER>();
 
     iVBuffer = rs->CreateVertexBuffer(D3DFVF_XYZ | D3DFVF_DIFFUSE | D3DFVF_TEX1 | D3DFVF_TEXTUREFORMAT2,
                                       sizeof(FoamVertex) * MAX_FOAM_VERTICES, D3DUSAGE_DYNAMIC | D3DUSAGE_WRITEONLY);

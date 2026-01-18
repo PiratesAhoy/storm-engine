@@ -38,11 +38,11 @@ void TButterflies::Init()
 {
     LoadSettings();
 
-    renderService = static_cast<VDX9RENDER *>(core.GetService("dx9render"));
+    renderService = core.GetServiceX<VDX9RENDER>();
     if (!renderService)
         throw std::runtime_error("!Butterflies: No service 'dx9render'");
 
-    collide = static_cast<COLLIDE *>(core.GetService("coll"));
+    collide = core.GetServiceX<COLLIDE>();
     if (!collide)
         throw std::runtime_error("!Butterflies: No service COLLIDE");
 

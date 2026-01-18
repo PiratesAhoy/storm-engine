@@ -41,7 +41,7 @@ AIBalls::~AIBalls()
 
 bool AIBalls::Init()
 {
-    rs = static_cast<VDX9RENDER *>(core.GetService("dx9render"));
+    rs = core.GetServiceX<VDX9RENDER>();
     SetDevice();
     return true;
 }

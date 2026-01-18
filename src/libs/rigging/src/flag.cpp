@@ -52,7 +52,7 @@ bool FLAG::Init()
 void FLAG::SetDevice()
 {
     // get render service
-    RenderService = static_cast<VDX9RENDER *>(core.GetService("dx9render"));
+    RenderService = core.GetServiceX<VDX9RENDER>();
     if (!RenderService)
     {
         throw std::runtime_error("No service: dx9render");

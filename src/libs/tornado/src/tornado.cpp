@@ -62,7 +62,7 @@ bool Tornado::Init()
     core.AddToLayer(REALIZE, GetId(), 70000);
 
     // DX9 render
-    rs = static_cast<VDX9RENDER *>(core.GetService("dx9render"));
+    rs = core.GetServiceX<VDX9RENDER>();
     if (!rs)
         throw std::runtime_error("No service: dx9render");
 
@@ -86,7 +86,7 @@ bool Tornado::Init()
     particles.Update(0.0f);
     debris.Init();
     // Create sound
-    soundService = static_cast<VSoundService *>(core.GetService("SoundService"));
+    soundService = core.GetServiceX<VSoundService>();
     if (soundService)
     {
         const auto pos = CVECTOR(pillar.GetX(0.0f), 0.0f, pillar.GetZ(0.0f));

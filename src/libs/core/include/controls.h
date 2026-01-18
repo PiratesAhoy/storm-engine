@@ -2,6 +2,7 @@
 
 #include <shared/controls.h>
 
+#include "service.h"
 #include "utf8.h"
 #include <cstdint>
 
@@ -75,9 +76,11 @@ struct KeyDescr
     bool bSystem;
 };
 
-class CONTROLS
+class CONTROLS : public SERVICE
 {
   public:
+    constexpr static const char *ServiceName = "PCS_CONTROLS";
+
     CONTROLS(){};
 
     virtual ~CONTROLS(){};

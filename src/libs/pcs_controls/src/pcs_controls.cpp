@@ -51,6 +51,11 @@ PCS_CONTROLS::~PCS_CONTROLS()
     // ClipCursor(0);
 }
 
+bool PCS_CONTROLS::Init()
+{
+    return true;
+}
+
 void PCS_CONTROLS::AppState(bool state)
 {
     updateCursor_ = state;

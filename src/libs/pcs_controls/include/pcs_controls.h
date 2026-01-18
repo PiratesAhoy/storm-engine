@@ -50,6 +50,7 @@ class PCS_CONTROLS : public CONTROLS
   public:
     PCS_CONTROLS();
     ~PCS_CONTROLS() override;
+    bool Init() override;
 
     void Update(uint32_t DeltaTime) override;
     int32_t GetSystemControlsNum() override;

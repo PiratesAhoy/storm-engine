@@ -146,10 +146,10 @@ LegacyDialog::~LegacyDialog() noexcept
 
 bool LegacyDialog::Init()
 {
-    RenderService = static_cast<VDX9RENDER *>(core.GetService("dx9render"));
+    RenderService = core.GetServiceX<VDX9RENDER>();
     Assert(RenderService != nullptr);
 
-    soundService_ = static_cast<VSoundService *>(core.GetService("SoundService"));
+    soundService_ = core.GetServiceX<VSoundService>();
 
     core.SetTimeScale(0.f);
 
@@ -519,7 +519,7 @@ void LegacyDialog::UpdateHeadModel(const std::string &headModelPath)
         }
 
         headModel_ = core.CreateEntity("MODELR");
-        auto gs = static_cast<VGEOMETRY *>(core.GetService("geometry"));
+        auto gs = core.GetServiceX<VGEOMETRY>();
         gs->SetTexturePath("characters\\");
 
         core.Send_Message(headModel_, "ls", MSG_MODEL_LOAD_GEO, headModelPath_.c_str());

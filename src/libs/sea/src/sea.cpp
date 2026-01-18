@@ -190,7 +190,7 @@ void SEA::CreateVertexDeclaration()
 
 bool SEA::Init()
 {
-    rs = static_cast<VDX9RENDER *>(core.GetService("dx9render"));
+    rs = core.GetServiceX<VDX9RENDER>();
     CreateVertexDeclaration();
     {
         auto pEngineIni = fio->OpenIniFile(core.EngineIniFileName());
