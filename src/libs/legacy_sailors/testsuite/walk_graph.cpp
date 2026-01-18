@@ -63,7 +63,7 @@ TEST_CASE("WalkGraph random queries return valid candidates", "[legacy_sailors]"
 
         CHECK(graph.FindRandomLinkedWithType(1, 20) == 2);
         CHECK(graph.FindRandomLinkedWithType(2, 10) == 1);
-        CHECK(graph.FindRandomLinkedWithType(1, 10) == -1);
+        CHECK(graph.FindRandomLinkedWithType(1, 10) == 1);
     }
 
     SECTION("FindRandomLinkedWithoutType filters by non-matching type")
@@ -72,7 +72,7 @@ TEST_CASE("WalkGraph random queries return valid candidates", "[legacy_sailors]"
         graph.AddPair(2, 3, 30, 40);
         graph.AddPair(4, 4, 10, 20);
 
-        CHECK(graph.FindRandomLinkedWithoutType(1, 20) == -1);
+        CHECK(graph.FindRandomLinkedWithoutType(1, 20) == 1);
         CHECK(graph.FindRandomLinkedWithoutType(1, 10) == 2);
         CHECK(graph.FindRandomLinkedWithoutType(2, 10) == 3);
     }

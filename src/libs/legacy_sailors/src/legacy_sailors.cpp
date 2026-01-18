@@ -1,5 +1,7 @@
 #include "legacy_sailors.hpp"
 
+#include <cstdlib>
+
 #include "animation.h"
 #include "core.h"
 #include "math_inlines.h"
@@ -32,6 +34,15 @@ constexpr float CREW_PART[] = {0.3f, 0.5f, 0.1f, 1.0f};
 constexpr auto MAN_SPEED_DEVIATION_K = 0.35f;
 constexpr auto MAN_MIN_TURN = 0.35f;
 constexpr auto MAX_VIEW_DISTANCE = 150.0f;
+constexpr auto MAN_STATE_COUNT = 10;
+constexpr auto SHIP_STATE_COUNT = 4;
+
+constexpr float CREW_PART_PROBS[SHIP_STATE_COUNT][MAN_STATE_COUNT] = {
+    {0.7f, 0.0f, 0.0f, 0.1f, 0.05f, 0.05f, 0.05f, 0.05f, 0.0f, 0.30f}, // SAIL
+    {0.0f, 0.0f, 0.0f, 0.5f, 0.00f, 0.00f, 0.00f, 0.00f, 0.99f, 0.10f}, // WAR
+    {0.1f, 0.0f, 0.0f, 0.9f, 0.00f, 0.00f, 0.00f, 0.00f, 0.00f, 0.05f}, // STORM
+    {0.0f, 0.0f, 0.0f, 1.0f, 0.00f, 0.00f, 0.00f, 0.00f, 0.00f, 0.10f}, // ABORDAGE
+};
 
 enum LOCATOR_TYPE
 {
@@ -44,16 +55,45 @@ enum LOCATOR_TYPE
     LOCATOR_MARS = 6,
 };
 
+constexpr auto PI2 = PI * 2.0f;
+constexpr auto PID2 = PI / 2.0f;
+
 float Vector2Angle(const CVECTOR &_v)
 {
-    auto result = atan2(_v.x, _v.z);
+    return atan2(_v.x, _v.z);
+}
 
-    while (result >= PI * 2)
-        result -= PI * 2;
-    while (result < 0)
-        result += PI * 2;
+bool SphereVisible(const PLANE &plane, const CVECTOR &center, float radius)
+{
+    const CVECTOR plane_vec(plane.Nx, plane.Ny, plane.Nz);
+    return ((plane_vec | center) - plane.D) > -radius;
+}
 
-    return result;
+int GetRandomByProbs(int state, bool allow_crawl)
+{
+    if (!allow_crawl)
+    {
+        const int r = rand() % 100;
+        int n = 0;
+        int i = 0;
+        for (i = 0; i < MAN_STATE_COUNT; ++i)
+        {
+            n += static_cast<int>(100.0f * CREW_PART_PROBS[state][i]);
+            if (r < n)
+            {
+                return i;
+            }
+        }
+        return i;
+    }
+
+    const int r = rand() % 100;
+    if (r < static_cast<int>(100.0f * CREW_PART_PROBS[state][MAN_CRAWL_WALK_VANT]))
+    {
+        return MAN_CRAWL_WALK_VANT;
+    }
+
+    return MAN_RUN;
 }
 
 }
@@ -81,7 +121,79 @@ bool LegacySailors::Init()
 
 void LegacySailors::ProcessStage(Stage stage, uint32_t delta)
 {
-    if (stage == Stage::realize)
+    if (stage == Stage::execute)
+    {
+        for (auto &walk : shipWalks_)
+        {
+            if (!walk.enabled)
+            {
+                continue;
+            }
+
+            ATTRIBUTES *ship_attr = walk.ship->GetACharacter();
+            ATTRIBUTES *ship_mode_attr = ship_attr->FindAClass(ship_attr, "ship.POS.mode");
+            if (ship_mode_attr)
+            {
+                const int ship_mode = ship_mode_attr->GetAttributeAsDword();
+                SetShipState(walk, ship_mode);
+            }
+            else
+            {
+                SetShipState(walk, SHIP_WAR);
+            }
+
+            for (int man = 0; man < static_cast<int>(walk.showCount); ++man)
+            {
+                switch (walk.crew[man].state)
+                {
+                case MAN_WALK:
+                    if (!ProcessManWalk(walk, walk.crew[man], delta))
+                    {
+                        ChooseNewAction(walk, walk.crew[man]);
+                    }
+                    break;
+                case MAN_CRAWL_WALK_VANT:
+                case MAN_CRAWL_VANT_TOP:
+                case MAN_CRAWL_TOP_MARS:
+                case MAN_CRAWL_MARS:
+                case MAN_CRAWL_MARS_TOP:
+                case MAN_CRAWL_TOP_VANT:
+                case MAN_CRAWL_VANT_WALK:
+                    if (!ProcessManCrawl(walk, walk.crew[man], delta))
+                    {
+                        ChooseNewAction(walk, walk.crew[man]);
+                    }
+                    break;
+                case MAN_TURN_LEFT:
+                case MAN_TURN_RIGHT:
+                    if (!ProcessManTurn(walk, walk.crew[man], delta))
+                    {
+                        ChooseNewAction(walk, walk.crew[man]);
+                    }
+                    break;
+                case MAN_RUN:
+                    if (!ProcessManWalk(walk, walk.crew[man], delta))
+                    {
+                        ChooseNewAction(walk, walk.crew[man]);
+                    }
+                    break;
+                case MAN_STAND1:
+                case MAN_STAND2:
+                case MAN_STAND3:
+                case MAN_STAND4:
+                case MAN_RELOAD:
+                    if (!ProcessManStand(walk, walk.crew[man]))
+                    {
+                        ChooseNewAction(walk, walk.crew[man]);
+                    }
+                    break;
+                default:
+                    break;
+                }
+            }
+        }
+    }
+    else if (stage == Stage::realize)
     {
         Realize(delta);
     }
@@ -154,9 +266,166 @@ uint64_t LegacySailors::ProcessMessage(MESSAGE &message)
     return 0;
 }
 
-void LegacySailors::Realize(uint32_t)
+void LegacySailors::Realize(uint32_t delta)
 {
-    // Legacy implementation will be added during the port.
+    CMatrix m;
+    CMatrix m2;
+    const CVECTOR man_center(0.0f, 1.0f, 0.0f);
+    CVECTOR man_pos;
+
+    int people_count = 0;
+
+    CVECTOR ang;
+    float persp = 0.0f;
+    auto *renderer = Renderer();
+    renderer->GetCamera(cameraPosition_, ang, persp);
+
+    // Update frustum
+    PLANE *planes = renderer->GetPlanes();
+    clipPlanes_[0] = planes[0];
+    clipPlanes_[1] = planes[1];
+    clipPlanes_[2] = planes[2];
+    clipPlanes_[3] = planes[3];
+
+    for (auto &walk : shipWalks_)
+    {
+        if (!walk.enabled)
+        {
+            continue;
+        }
+
+        if (hidePeopleOnDeck_)
+        {
+            if (cameraOnDeck_ && walk.myShip)
+            {
+                continue;
+            }
+        }
+
+        walk.ship->SetLights();
+
+        for (int man = 0; man < static_cast<int>(walk.showCount); ++man)
+        {
+            if (!walk.crew[man].model)
+            {
+                continue;
+            }
+
+            m.BuildPosition(walk.crew[man].pos.x, walk.crew[man].pos.y, walk.crew[man].pos.z);
+            m2.BuildRotateY(walk.crew[man].ang);
+            walk.crew[man].model->mtx = m2 * m * walk.shipModel->mtx;
+            man_pos = walk.crew[man].model->mtx * man_center;
+
+            if (tanf(persp * 0.5f) * ~(man_pos - cameraPosition_) > (MAX_VIEW_DISTANCE * MAX_VIEW_DISTANCE))
+            {
+                SetManVisible(walk.crew[man], false);
+                continue;
+            }
+            if (!SphereVisible(clipPlanes_[0], man_pos, 1.0f) ||
+                !SphereVisible(clipPlanes_[1], man_pos, 1.0f) ||
+                !SphereVisible(clipPlanes_[2], man_pos, 1.0f) ||
+                !SphereVisible(clipPlanes_[3], man_pos, 1.0f))
+            {
+                SetManVisible(walk.crew[man], false);
+                continue;
+            }
+
+            SetManVisible(walk.crew[man], true);
+            walk.crew[man].model->ProcessStage(Stage::realize, delta);
+            ++people_count;
+        }
+
+        walk.ship->UnSetLights();
+    }
+}
+
+bool LegacySailors::ProcessManWalk(tShipWalk &walk, TShipMan &man, uint32_t delta)
+{
+    const float d_now = SQR(man.pos.x - walk.verts[man.destI].x) + SQR(man.pos.y - walk.verts[man.destI].y) +
+                        SQR(man.pos.z - walk.verts[man.destI].z);
+    const float dir_vect = man.speed * delta;
+    const float d_future =
+        SQR(man.pos.x + dir_vect * man.dir.x - walk.verts[man.destI].x) +
+        SQR(man.pos.y + dir_vect * man.dir.y - walk.verts[man.destI].y) +
+        SQR(man.pos.z + dir_vect * man.dir.z - walk.verts[man.destI].z);
+
+    if (d_future < d_now)
+    {
+        man.pos += dir_vect * man.dir;
+        return true;
+    }
+
+    man.sourceI = man.destI;
+    return false;
+}
+
+bool LegacySailors::ProcessManCrawl(tShipWalk &walk, TShipMan &man, uint32_t delta)
+{
+    switch (man.state)
+    {
+    case MAN_CRAWL_WALK_VANT:
+    case MAN_CRAWL_VANT_TOP:
+    case MAN_CRAWL_TOP_MARS:
+    case MAN_CRAWL_MARS_TOP:
+    case MAN_CRAWL_TOP_VANT:
+    case MAN_CRAWL_VANT_WALK:
+        return ProcessManWalk(walk, man, delta);
+    case MAN_CRAWL_MARS:
+        return ProcessManStand(walk, man);
+    default:
+        break;
+    }
+
+    return false;
+}
+
+bool LegacySailors::ProcessManTurn(tShipWalk &, TShipMan &man, uint32_t delta)
+{
+    if (fabs(man.ang - man.newAngle) >= MAN_MIN_TURN)
+    {
+        man.ang += man.speed * delta;
+        if (man.ang > PI)
+        {
+            man.ang = -(PI2 - man.ang);
+        }
+        if (man.ang < -PI)
+        {
+            man.ang = PI2 + man.ang;
+        }
+        return true;
+    }
+
+    return false;
+}
+
+bool LegacySailors::ProcessManStand(tShipWalk &walk, TShipMan &man)
+{
+    const bool playing = man.model->GetAnimation()->Player(0).IsPlaying();
+    if (!playing && man.state == MAN_RELOAD)
+    {
+        walk.vertBusy[man.sourceI] = 0;
+    }
+    return playing;
+}
+
+void LegacySailors::SetManVisible(TShipMan &man, bool visible)
+{
+    if (man.visible == visible)
+    {
+        return;
+    }
+
+    auto &player = man.model->GetAnimation()->Player(0);
+    if (!visible)
+    {
+        player.Stop();
+    }
+    else
+    {
+        player.Play();
+    }
+
+    man.visible = visible;
 }
 
 void LegacySailors::SetShipState(tShipWalk &walk, int state)
@@ -213,7 +482,7 @@ void LegacySailors::SetShipState(tShipWalk &walk, int state)
             walk.crew[i].ang = Vector2Angle(walk.crew[i].dir);
             walk.crew[i].speed = manSpeed_ + randCentered((manSpeed_ * MAN_SPEED_DEVIATION_K));
             walk.crew[i].state = MAN_RUN;
-            // walk.crew[i].destI = vert_index;
+            walk.crew[i].destI = vert_index;
             ChooseNewAction(walk, walk.crew[i]);
         }
 
@@ -249,7 +518,7 @@ void LegacySailors::AddShipWalk(entid_t ship_id, int vertex_count, VDATA *vertex
         type_array->Get(vType, i);
         ship_walk.verts.push_back(CVECTOR(x, y, z));
         ship_walk.vertTypes.push_back(vType);
-        ship_walk.vertBusy.push_back(false);
+        ship_walk.vertBusy.push_back(0);
     }
 
     // Getting links between graph vertices
@@ -271,7 +540,7 @@ void LegacySailors::AddShipWalk(entid_t ship_id, int vertex_count, VDATA *vertex
     // Visible crew count
     ATTRIBUTES *attr = ship_walk.ship->GetACharacter();
     ATTRIBUTES *crew_attr = attr->FindAClass(attr, "ship.crew");
-    ship_walk.crewCount = static_cast<size_t>(ceilf(Crew2Visible(crew_attr->GetAttributeAsFloat("quantity", 1))));
+    ship_walk.crewCount = static_cast<size_t>(ceilf(Crew2Visible(crew_attr->GetAttributeAsDword("quantity", 1))));
     if (ship_walk.crewCount > MAX_PEOPLE)
     {
         ship_walk.crewCount = MAX_PEOPLE;
@@ -287,6 +556,219 @@ void LegacySailors::AddShipWalk(entid_t ship_id, int vertex_count, VDATA *vertex
     ship_walk.enabled = true;
 
     SetShipState(ship_walk, SHIP_SAIL);
+}
+
+void LegacySailors::ChooseNewAction(tShipWalk &walk, TShipMan &man)
+{
+    if (man.state == MAN_WALK || man.state == MAN_RUN)
+    {
+        man.state = MAN_TURN_LEFT;
+    }
+    else if (man.state == MAN_CRAWL_WALK_VANT)
+    {
+        man.state = MAN_CRAWL_VANT_TOP;
+    }
+    else if (man.state == MAN_CRAWL_VANT_TOP)
+    {
+        man.state = MAN_CRAWL_TOP_MARS;
+    }
+    else if (man.state == MAN_CRAWL_TOP_MARS)
+    {
+        man.state = MAN_CRAWL_MARS;
+    }
+    else if (man.state == MAN_CRAWL_MARS)
+    {
+        man.state = MAN_CRAWL_MARS_TOP;
+    }
+    else if (man.state == MAN_CRAWL_MARS_TOP)
+    {
+        man.state = MAN_CRAWL_TOP_VANT;
+    }
+    else if (man.state == MAN_CRAWL_TOP_VANT)
+    {
+        man.state = MAN_CRAWL_VANT_WALK;
+    }
+    else
+    {
+        const TManState old_state = man.state;
+        const int dst = walk.graph.FindRandomLinkedAnyType(man.sourceI);
+        if (man.state != MAN_RELOAD)
+        {
+            man.state = static_cast<TManState>(GetRandomByProbs(walk.state, walk.vertTypes[dst] == LOCATOR_VANT));
+        }
+
+        if (man.state == MAN_RELOAD && walk.vertTypes[man.sourceI] == LOCATOR_CANNON && !walk.vertBusy[man.sourceI])
+        {
+            walk.vertBusy[man.sourceI] = reinterpret_cast<std::uintptr_t>(&man);
+            if (man.pos.x < 0.0f)
+            {
+                man.ang = -PID2;
+                man.dir = CVECTOR(-1.0f, 0.0f, 0.0f);
+            }
+            else
+            {
+                man.ang = PID2;
+                man.dir = CVECTOR(1.0f, 0.0f, 0.0f);
+            }
+        }
+        else if (man.state == MAN_CRAWL_WALK_VANT)
+        {
+            // crawl transition handled below
+        }
+        else
+        {
+            while (static_cast<int>(man.state) > static_cast<int>(MAN_STAND4))
+            {
+                man.state = static_cast<TManState>(GetRandomByProbs(walk.state, false));
+            }
+        }
+    }
+
+    switch (man.state)
+    {
+    case MAN_TURN_LEFT: {
+        man.sourceI = man.destI;
+        man.destI = walk.graph.FindRandomLinkedWithoutType(man.sourceI, LOCATOR_VANT);
+        man.newAngle = Vector2Angle(!(walk.verts[man.destI] - man.pos));
+        if (man.newAngle > PI)
+        {
+            man.newAngle = -(PI2 - man.newAngle);
+        }
+        if (man.newAngle < -PI)
+        {
+            man.newAngle = PI2 + man.newAngle;
+        }
+        if ((man.newAngle - man.ang) < 0.0f)
+        {
+            man.speed = -manTurnSpeed_;
+            man.state = MAN_TURN_RIGHT;
+            man.model->GetAnimation()->Player(0).SetAction("turn_left");
+        }
+        else
+        {
+            man.speed = manTurnSpeed_;
+            man.state = MAN_TURN_LEFT;
+            man.model->GetAnimation()->Player(0).SetAction("turn_right");
+        }
+        break;
+    }
+    case MAN_WALK:
+        if (man.destI == -1)
+        {
+            man.visible = false;
+        }
+        man.dir = !(walk.verts[man.destI] - man.pos);
+        man.ang = Vector2Angle(man.dir);
+        man.speed = manSpeed_ + randCentered(manSpeed_ * MAN_SPEED_DEVIATION_K);
+        man.model->GetAnimation()->Player(0).SetAction("walk");
+        break;
+    case MAN_RUN:
+        if (man.destI == -1)
+        {
+            man.visible = false;
+        }
+        man.dir = !(walk.verts[man.destI] - man.pos);
+        man.ang = Vector2Angle(man.dir);
+        man.speed = 2.0f * (manSpeed_ + randCentered(manSpeed_ * MAN_SPEED_DEVIATION_K));
+        man.model->GetAnimation()->Player(0).SetAction("run");
+        break;
+    case MAN_STAND1:
+        man.model->GetAnimation()->Player(0).SetAction("action1");
+        break;
+    case MAN_STAND2:
+        man.model->GetAnimation()->Player(0).SetAction("action2");
+        break;
+    case MAN_STAND3:
+        man.model->GetAnimation()->Player(0).SetAction("action3");
+        break;
+    case MAN_STAND4:
+        man.model->GetAnimation()->Player(0).SetAction("action4");
+        break;
+    case MAN_RELOAD:
+        man.model->GetAnimation()->Player(0).SetAction("reload");
+        break;
+    case MAN_CRAWL_WALK_VANT:
+        man.destI = walk.graph.FindRandomLinkedWithType(man.sourceI, LOCATOR_VANT);
+        if (man.destI == -1)
+        {
+            man.visible = false;
+        }
+        man.dir = !(walk.verts[man.destI] - man.pos);
+        man.ang = Vector2Angle(man.dir);
+        man.speed = 2.0f * (manSpeed_ + randCentered(manSpeed_ * MAN_SPEED_DEVIATION_K));
+        man.model->GetAnimation()->Player(0).SetAction("run");
+        break;
+    case MAN_CRAWL_VANT_TOP:
+        man.destI = walk.graph.FindRandomLinkedWithType(man.sourceI, LOCATOR_TOP);
+        if (man.destI == -1)
+        {
+            man.visible = false;
+        }
+        man.dir = !(walk.verts[man.destI] - man.pos);
+        if (man.pos.x < 0.0f)
+        {
+            man.ang = PID2;
+        }
+        else
+        {
+            man.ang = PI + PID2;
+        }
+        man.speed = 0.5f * (manSpeed_ + randCentered(manSpeed_ * MAN_SPEED_DEVIATION_K));
+        man.model->GetAnimation()->Player(0).SetAction("crawl");
+        break;
+    case MAN_CRAWL_TOP_MARS:
+        man.destI = walk.graph.FindRandomLinkedWithType(man.sourceI, LOCATOR_MARS);
+        if (man.destI == -1)
+        {
+            man.visible = false;
+        }
+        man.dir = !(walk.verts[man.destI] - man.pos);
+        man.ang = Vector2Angle(man.dir);
+        man.model->GetAnimation()->Player(0).SetAction("crawl");
+        break;
+    case MAN_CRAWL_MARS:
+        man.model->GetAnimation()->Player(0).SetAction("action1");
+        break;
+    case MAN_CRAWL_MARS_TOP:
+        man.destI = walk.graph.FindRandomLinkedWithType(man.sourceI, LOCATOR_TOP);
+        if (man.destI == -1)
+        {
+            man.visible = false;
+        }
+        man.dir = !(walk.verts[man.destI] - man.pos);
+        man.ang = PI + PID2 * static_cast<int>(Vector2Angle(man.dir) / PID2);
+        man.model->GetAnimation()->Player(0).SetAction("crawl_down");
+        break;
+    case MAN_CRAWL_TOP_VANT:
+        man.destI = walk.graph.FindRandomLinkedWithType(man.sourceI, LOCATOR_VANT);
+        if (man.destI == -1)
+        {
+            man.visible = false;
+        }
+        man.dir = !(walk.verts[man.destI] - man.pos);
+        man.ang = PI + Vector2Angle(man.dir);
+        man.model->GetAnimation()->Player(0).SetAction("crawl_down");
+        break;
+    case MAN_CRAWL_VANT_WALK:
+        man.destI = walk.graph.FindRandomLinkedWithType(man.sourceI, LOCATOR_WALK);
+        if (man.destI == -1)
+        {
+            man.visible = false;
+        }
+        if (man.destI == man.sourceI)
+        {
+            man.destI = walk.graph.FindRandomLinkedWithType(man.sourceI, LOCATOR_CANNON);
+        }
+        man.dir = !(walk.verts[man.destI] - man.pos);
+        man.ang = Vector2Angle(man.dir);
+        man.speed = 2.0f * (manSpeed_ + randCentered(manSpeed_ * MAN_SPEED_DEVIATION_K));
+        man.model->GetAnimation()->Player(0).SetAction("run");
+        break;
+    default:
+        break;
+    }
+
+    man.visible = false;
 }
 
 void LegacySailors::InitShipMan(tShipWalk& walk, int man)
@@ -305,10 +787,16 @@ void LegacySailors::InitShipMan(tShipWalk& walk, int man)
     if (manSpeed_ == 0)
     {
         const char *walk_speed_data = animation_player.GetData("Walk speed");
-        manSpeed_ = std::stof(walk_speed_data);
+        if (walk_speed_data)
+        {
+            manSpeed_ = std::strtof(walk_speed_data, nullptr);
+        }
 
         const char *turn_speed_data = animation_player.GetData("Turn speed");
-        manTurnSpeed_ = std::stof(turn_speed_data);
+        if (turn_speed_data)
+        {
+            manTurnSpeed_ = std::strtof(turn_speed_data, nullptr);
+        }
 
         manSpeed_ /= 1e3f;
         manTurnSpeed_ /= 1e3f;

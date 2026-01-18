@@ -5,6 +5,9 @@
 #include "ship_base.h"
 #include "walk_graph.hpp"
 
+#include <array>
+#include <cstdint>
+
 constexpr size_t MAX_VERTS = 100;
 constexpr size_t MAX_PEOPLE = 100;
 
@@ -53,7 +56,7 @@ struct tShipWalk
     WalkGraph graph{};
     std::vector<CVECTOR> verts;
     std::vector<uint8_t> vertTypes;
-    std::vector<bool> vertBusy;
+    std::vector<std::uintptr_t> vertBusy;
     size_t crewCount{};
     size_t showCount{};
     TShipMan crew[MAX_PEOPLE]{};
@@ -76,6 +79,12 @@ class LegacySailors : public EntityWithRenderer
   private:
     void Realize(uint32_t delta);
 
+    bool ProcessManCrawl(tShipWalk &walk, TShipMan &man, uint32_t delta);
+    bool ProcessManWalk(tShipWalk &walk, TShipMan &man, uint32_t delta);
+    bool ProcessManTurn(tShipWalk &walk, TShipMan &man, uint32_t delta);
+    bool ProcessManStand(tShipWalk &walk, TShipMan &man);
+    void SetManVisible(TShipMan &man, bool visible);
+
     void SetShipState(tShipWalk &walk, int state);
 
     void ChooseNewAction(tShipWalk &walk, TShipMan &man);
@@ -89,6 +98,9 @@ class LegacySailors : public EntityWithRenderer
     float manRunSpeed_{};
     float manTurnSpeed_{};
     float approachDistance_{};
+
+    std::array<PLANE, 4> clipPlanes_{};
+    CVECTOR cameraPosition_{};
 
     bool cameraOnDeck_ = false;
     bool hidePeopleOnDeck_ = true;
