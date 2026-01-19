@@ -11,7 +11,7 @@
 constexpr size_t MAX_VERTS = 100;
 constexpr size_t MAX_PEOPLE = 100;
 
-enum TManState
+enum LegacyManState
 {
     // common actions (chosen randomly)
     MAN_WALK,
@@ -34,7 +34,7 @@ enum TManState
     MAN_CRAWL_VANT_WALK
 };
 
-struct TShipMan
+struct LegacyShipMan
 {
     int sourceI{};
     int destI{};
@@ -43,13 +43,13 @@ struct TShipMan
     CVECTOR dir{};
     float speed{};
     MODEL *model{};
-    TManState state{};
+    LegacyManState state{};
     float newAngle{};
     bool visible{};
     entid_t modelID{};
 };
 
-struct tShipWalk
+struct LegacyShipWalk
 {
     SHIP_BASE *ship{};
     MODEL *shipModel{};
@@ -59,7 +59,7 @@ struct tShipWalk
     std::vector<std::uintptr_t> vertBusy;
     size_t crewCount{};
     size_t showCount{};
-    TShipMan crew[MAX_PEOPLE]{};
+    LegacyShipMan crew[MAX_PEOPLE]{};
     int state{};
     bool enabled{};
     bool myShip{false};
@@ -79,20 +79,20 @@ class LegacySailors : public EntityWithRenderer
   private:
     void Realize(uint32_t delta);
 
-    bool ProcessManCrawl(tShipWalk &walk, TShipMan &man, uint32_t delta);
-    bool ProcessManWalk(tShipWalk &walk, TShipMan &man, uint32_t delta);
-    bool ProcessManTurn(tShipWalk &walk, TShipMan &man, uint32_t delta);
-    bool ProcessManStand(tShipWalk &walk, TShipMan &man);
-    void SetManVisible(TShipMan &man, bool visible);
+    bool ProcessManCrawl(LegacyShipWalk &walk, LegacyShipMan &man, uint32_t delta);
+    bool ProcessManWalk(LegacyShipWalk &walk, LegacyShipMan &man, uint32_t delta);
+    bool ProcessManTurn(LegacyShipWalk &walk, LegacyShipMan &man, uint32_t delta);
+    bool ProcessManStand(LegacyShipWalk &walk, LegacyShipMan &man);
+    void SetManVisible(LegacyShipMan &man, bool visible);
 
-    void SetShipState(tShipWalk &walk, int state);
+    void SetShipState(LegacyShipWalk &walk, int state);
 
-    void ChooseNewAction(tShipWalk &walk, TShipMan &man);
+    void ChooseNewAction(LegacyShipWalk &walk, LegacyShipMan &man);
 
     void AddShipWalk(entid_t ship_id, int vertex_count, VDATA *vertex_array, VDATA *group_array, VDATA *type_array);
-    void InitShipMan(tShipWalk &walk, int man);
+    void InitShipMan(LegacyShipWalk &walk, int man);
 
-    std::vector<tShipWalk> shipWalks_;
+    std::vector<LegacyShipWalk> shipWalks_;
 
     float manSpeed_{};
     float manRunSpeed_{};

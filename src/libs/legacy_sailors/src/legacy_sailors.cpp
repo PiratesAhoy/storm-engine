@@ -339,7 +339,7 @@ void LegacySailors::Realize(uint32_t delta)
     }
 }
 
-bool LegacySailors::ProcessManWalk(tShipWalk &walk, TShipMan &man, uint32_t delta)
+bool LegacySailors::ProcessManWalk(LegacyShipWalk &walk, LegacyShipMan &man, uint32_t delta)
 {
     const float d_now = SQR(man.pos.x - walk.verts[man.destI].x) + SQR(man.pos.y - walk.verts[man.destI].y) +
                         SQR(man.pos.z - walk.verts[man.destI].z);
@@ -359,7 +359,7 @@ bool LegacySailors::ProcessManWalk(tShipWalk &walk, TShipMan &man, uint32_t delt
     return false;
 }
 
-bool LegacySailors::ProcessManCrawl(tShipWalk &walk, TShipMan &man, uint32_t delta)
+bool LegacySailors::ProcessManCrawl(LegacyShipWalk &walk, LegacyShipMan &man, uint32_t delta)
 {
     switch (man.state)
     {
@@ -379,7 +379,7 @@ bool LegacySailors::ProcessManCrawl(tShipWalk &walk, TShipMan &man, uint32_t del
     return false;
 }
 
-bool LegacySailors::ProcessManTurn(tShipWalk &, TShipMan &man, uint32_t delta)
+bool LegacySailors::ProcessManTurn(LegacyShipWalk &, LegacyShipMan &man, uint32_t delta)
 {
     if (fabs(man.ang - man.newAngle) >= MAN_MIN_TURN)
     {
@@ -398,7 +398,7 @@ bool LegacySailors::ProcessManTurn(tShipWalk &, TShipMan &man, uint32_t delta)
     return false;
 }
 
-bool LegacySailors::ProcessManStand(tShipWalk &walk, TShipMan &man)
+bool LegacySailors::ProcessManStand(LegacyShipWalk &walk, LegacyShipMan &man)
 {
     const bool playing = man.model->GetAnimation()->Player(0).IsPlaying();
     if (!playing && man.state == MAN_RELOAD)
@@ -408,7 +408,7 @@ bool LegacySailors::ProcessManStand(tShipWalk &walk, TShipMan &man)
     return playing;
 }
 
-void LegacySailors::SetManVisible(TShipMan &man, bool visible)
+void LegacySailors::SetManVisible(LegacyShipMan &man, bool visible)
 {
     if (man.visible == visible)
     {
@@ -428,7 +428,7 @@ void LegacySailors::SetManVisible(TShipMan &man, bool visible)
     man.visible = visible;
 }
 
-void LegacySailors::SetShipState(tShipWalk &walk, int state)
+void LegacySailors::SetShipState(LegacyShipWalk &walk, int state)
 {
     if (walk.state == state)
     {
@@ -499,7 +499,7 @@ void LegacySailors::AddShipWalk(entid_t ship_id, int vertex_count, VDATA *vertex
 {
     auto ship_ptr = static_cast<SHIP_BASE *>(core.GetEntityPointer(ship_id));
 
-    shipWalks_.push_back(tShipWalk{
+    shipWalks_.push_back(LegacyShipWalk{
         .ship = ship_ptr,
         .shipModel = ship_ptr->GetModel(),
     });
@@ -558,7 +558,7 @@ void LegacySailors::AddShipWalk(entid_t ship_id, int vertex_count, VDATA *vertex
     SetShipState(ship_walk, SHIP_SAIL);
 }
 
-void LegacySailors::ChooseNewAction(tShipWalk &walk, TShipMan &man)
+void LegacySailors::ChooseNewAction(LegacyShipWalk &walk, LegacyShipMan &man)
 {
     if (man.state == MAN_WALK || man.state == MAN_RUN)
     {
@@ -590,11 +590,11 @@ void LegacySailors::ChooseNewAction(tShipWalk &walk, TShipMan &man)
     }
     else
     {
-        const TManState old_state = man.state;
+        const LegacyManState old_state = man.state;
         const int dst = walk.graph.FindRandomLinkedAnyType(man.sourceI);
         if (man.state != MAN_RELOAD)
         {
-            man.state = static_cast<TManState>(GetRandomByProbs(walk.state, walk.vertTypes[dst] == LOCATOR_VANT));
+            man.state = static_cast<LegacyManState>(GetRandomByProbs(walk.state, walk.vertTypes[dst] == LOCATOR_VANT));
         }
 
         if (man.state == MAN_RELOAD && walk.vertTypes[man.sourceI] == LOCATOR_CANNON && !walk.vertBusy[man.sourceI])
@@ -619,7 +619,7 @@ void LegacySailors::ChooseNewAction(tShipWalk &walk, TShipMan &man)
         {
             while (static_cast<int>(man.state) > static_cast<int>(MAN_STAND4))
             {
-                man.state = static_cast<TManState>(GetRandomByProbs(walk.state, false));
+                man.state = static_cast<LegacyManState>(GetRandomByProbs(walk.state, false));
             }
         }
     }
@@ -771,7 +771,7 @@ void LegacySailors::ChooseNewAction(tShipWalk &walk, TShipMan &man)
     man.visible = false;
 }
 
-void LegacySailors::InitShipMan(tShipWalk& walk, int man)
+void LegacySailors::InitShipMan(LegacyShipWalk& walk, int man)
 {
     walk.crew[man].modelID = core.CreateEntity("MODELR");
 
