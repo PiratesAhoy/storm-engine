@@ -1,5 +1,7 @@
 # Services
 
+For the broader runtime architecture and repository layout, see `docs/architecture.md` and `docs/project-structure.md`.
+
 The engine has a services system. Each service should have a single concrete class that inherits from `SERVICE` (see
 `src/libs/core/include/service.h`) and implements its methods.
 
