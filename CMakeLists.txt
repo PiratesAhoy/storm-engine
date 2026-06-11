@@ -18,6 +18,11 @@ if (NOT WIN32)
     option(STORM_MESA_NINE "Use Gallium Nine from Mesa for native D3D9 API" OFF)
 endif()
 
+conan_add_remote(NAME piratesahoy
+    URL https://gitlab.com/api/v4/projects/54068744/packages/conan
+    VERIFY_SSL True
+)
+
 ### Set up output paths
 set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR})
 set(CMAKE_RUNTIME_OUTPUT_DIRECTORY_RELEASE ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/Release)
@@ -27,25 +32,20 @@ normalize_booleans(STORM_ENABLE_CRASH_REPORTS STORM_ENABLE_STEAM STORM_USE_CONAN
 
 set(STORM_WATERMARK_FILE ${CMAKE_CURRENT_BINARY_DIR}/watermark.hpp CACHE FILEPATH "Include file containing build revision, etc." FORCE)
 
+set(CONAN_INSTALL_ARGS ${CONAN_INSTALL_ARGS}
+        "-o &:output_directory=${CMAKE_RUNTIME_OUTPUT_DIRECTORY}"
+        "-o &:watermark_file=${STORM_WATERMARK_FILE}"
+        "-o &:crash_reports=${STORM_ENABLE_CRASH_REPORTS}"
+        "-o &:steam=${STORM_ENABLE_STEAM}"
+        "-o &:conan_sdl=${STORM_USE_CONAN_SDL}"
+        "-c tools.cmake:cmake_program=${CMAKE_COMMAND}"
+)
+
 if (WIN32)
     set(SDL2_LIBRARIES "sdl")
 else()
     include(linux)
 endif()
-
-set(CONAN_INSTALL_ARGS ${CONAN_INSTALL_ARGS}
-        "-o output_directory=${CMAKE_RUNTIME_OUTPUT_DIRECTORY}"
-        "-o watermark_file=${STORM_WATERMARK_FILE}"
-        "-o crash_reports=${STORM_ENABLE_CRASH_REPORTS}"
-        "-o steam=${STORM_ENABLE_STEAM}"
-        "-o conan_sdl=${STORM_USE_CONAN_SDL}"
-        "-c tools.cmake:cmake_program=${CMAKE_COMMAND}"
-)
-
-conan_add_remote(NAME piratesahoy
-    URL https://gitlab.com/api/v4/projects/54068744/packages/conan
-    VERIFY_SSL True
-)
 
 find_package(zlib REQUIRED)
 find_package(spdlog REQUIRED)
@@ -55,8 +55,16 @@ find_package(sentry REQUIRED)
 find_package(tomlplusplus REQUIRED)
 find_package(nlohmann_json REQUIRED)
 find_package(cli11 REQUIRED)
-find_package(directx REQUIRED)
-find_package(fmod REQUIRED)
+if (WIN32)
+    find_package(directx REQUIRED)
+else()
+    add_library(directx::directx INTERFACE IMPORTED)
+endif()
+if (WIN32)
+    find_package(fmod REQUIRED)
+else()
+    add_library(fmod::fmod INTERFACE IMPORTED)
+endif()
 find_package(Microsoft.GSL REQUIRED)
 find_package(ImGui REQUIRED)
 find_package(SDL2 REQUIRED)
