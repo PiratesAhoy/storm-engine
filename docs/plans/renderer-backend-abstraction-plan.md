@@ -24,6 +24,7 @@ Known coupling points from codebase inspection:
 - The public renderer header exposes D3D9 concepts directly: `D3DMATRIX`, `D3DLIGHT9`, `D3DMATERIAL9`, `D3DPRIMITIVETYPE`, `D3DFORMAT`, `D3DPOOL`, `D3DVIEWPORT9`, `IDirect3DTexture9`, `IDirect3DSurface9`, vertex/pixel shader interfaces, and other D3D types.
 - `src/libs/renderer/include/dx9render.h` has a large public `D3D SECTION` that gives callers direct access to D3D-like device operations.
 - `DX9RENDER::InitDevice` creates the D3D9 object/device in `src/libs/renderer/src/s_device.cpp` and owns presentation, render target, texture, buffer, shader, and state lifetime.
+- Renderer resources are currently exposed as plain `int32_t` table indexes. Textures, vertex buffers, and index buffers are stored in fixed arrays in `src/libs/renderer/src/s_device.h`, and legacy APIs use `-1` as an invalid value in some places while slot `0` is a valid resource. This is a good early target for the strongly typed `storm::Handle<Tag>` template in `src/libs/util/include/handle.hpp`.
 - Non-Windows builds still rely on native D3D9-compatible APIs through Gallium Nine or DXVK Native (`cmake/linux.cmake`) rather than an API-neutral renderer.
 
 ## Goals
@@ -127,7 +128,7 @@ This exact shape can change, but the ownership boundary should remain: engine-fa
 
 Start with small types that can map directly to D3D9 without behavior changes.
 
-Suggested initial header: `src/libs/renderer/include/render/render_types.h`.
+Suggested initial header: `src/libs/renderer/include/renderer/render_types.h`.
 
 Initial enums/value types:
 
@@ -176,12 +177,73 @@ Initial enums/value types:
 Initial handle types:
 
 - `TextureHandle`
-- `BufferHandle`
+- `VertexBufferHandle`
+- `IndexBufferHandle`
+- `BufferHandle` if vertex/index buffers are unified later
 - `RenderTargetHandle`
 - `ShaderHandle` / `ProgramHandle` later
 - `FontHandle` can remain higher-level if font rendering stays in the frontend
 
-Handles should be opaque integer or strong typedef-style values owned by the renderer frontend. They should not expose backend object pointers.
+Handles should use the existing strongly typed integer-compatible handle template from `src/libs/util/include/handle.hpp` rather than raw integers or ad-hoc typedefs. Suggested aliases in `src/libs/renderer/include/renderer/render_handles.h`:
+
+```cpp
+namespace storm::render
+{
+using TextureHandle = storm::Handle<struct TextureHandleTag>;
+using VertexBufferHandle = storm::Handle<struct VertexBufferHandleTag>;
+using IndexBufferHandle = storm::Handle<struct IndexBufferHandleTag>;
+using RenderTargetHandle = storm::Handle<struct RenderTargetHandleTag>;
+using ShaderHandle = storm::Handle<struct ShaderHandleTag>;
+using ProgramHandle = storm::Handle<struct ProgramHandleTag>;
+} // namespace storm::render
+```
+
+The handle value should remain an engine/frontend resource token. It must not expose `IDirect3D*` pointers, OpenGL object names, WebGPU handles, or any backend-native object. Backend-native objects stay in renderer-owned resource tables or backend implementation classes.
+
+## Resource handle and tracking strategy
+
+Typed handles should be the public resource identity for the neutral renderer layer.
+
+Use them to replace or wrap these existing integer IDs first:
+
+- texture IDs returned by `TextureCreate` and consumed by `TextureSet`, `TextureRelease`, `TextureIncReference`, `GetBaseTexture`, `ImageBlt`, and related compatibility paths
+- vertex buffer IDs returned by `CreateVertexBuffer` and consumed by lock/unlock/draw/release calls
+- index buffer IDs returned by `CreateIndexBuffer` and consumed by lock/unlock/draw/release calls
+- render target handles once render targets move from raw surfaces to frontend-owned resources
+
+The immediate migration model can keep the current D3D9 tables. A typed handle's `Value()` can map to the existing slot index while the neutral API grows around it. That gives type safety without forcing a large resource-manager rewrite in the same patch.
+
+Important validity rule: slot `0` is valid. Do not use truthiness to test resource IDs. The handle template uses `std::numeric_limits<uint32_t>::max()` as the invalid sentinel, so callers should use `handle.IsValid()` and reset handles with `handle.Invalidate()` or assignment to `Handle::Invalid()`.
+
+This avoids current legacy pitfalls such as checking `if (vertex_buffer_)` before releasing a buffer. A buffer allocated in slot `0` would be skipped by that pattern. The typed form should be explicit:
+
+```cpp
+if (vertexBuffer_.IsValid())
+{
+    renderer.ReleaseVertexBuffer(vertexBuffer_);
+    vertexBuffer_.Invalidate();
+}
+```
+
+Pair typed handles with resource-table metadata so the frontend can track lifetime and diagnostics independently of the backend API:
+
+- backend resource pointer/object, private to the backend or compatibility layer
+- resource kind and creation parameters needed for diagnostics or device restore
+- reference count or ownership policy
+- debug name/source path
+- estimated memory size
+- loaded/resident state
+- lock/map state where applicable
+
+The current `STEXTURE` table already contains part of this model (`d3dtex`, `name`, `hash`, `ref`, `dwSize`, `isCubeMap`, `loaded`). The first pass should preserve that data and put a typed handle boundary around it. Later, if stale handle detection becomes necessary, add a generation counter or a wider encoded handle value instead of exposing backend pointers.
+
+Do not use typed renderer handles as backend-native object handles. For example:
+
+- D3D9 still owns `IDirect3DBaseTexture9 *` and `IDirect3DVertexBuffer9 *` internally.
+- OpenGL may own `GLuint` names internally.
+- WebGPU may own `WGPUTexture`, `WGPUTextureView`, buffers, bind groups, and pipelines internally.
+
+Only the renderer frontend and neutral interfaces should traffic in `TextureHandle`, `VertexBufferHandle`, `IndexBufferHandle`, and related engine-level handles.
 
 ## Compatibility policy
 
@@ -221,9 +283,11 @@ Purpose: create shared language without changing behavior.
 
 Tasks:
 
-- Add neutral renderer type headers under `src/libs/renderer/include/render/`.
+- Add neutral renderer type headers under `src/libs/renderer/include/renderer/`.
+- Add `src/libs/renderer/include/renderer/render_handles.h` with typed aliases over `storm::Handle<Tag>`.
 - Add D3D9 conversion helpers under `src/libs/renderer/src/backends/d3d9/` or a temporary internal file.
 - Add unit tests for pure conversion functions where practical.
+- Add compile-time checks that renderer handle domains cannot be mixed and that default handles are invalid while `0` remains a valid value.
 - Keep all D3D9 includes out of neutral public headers.
 
 Suggested first conversions:
@@ -247,6 +311,7 @@ Tasks:
 
 - Add neutral overloads to the renderer service/frontend for the smallest useful draw/resource paths.
 - Implement each neutral overload by mapping to the current D3D9 implementation.
+- Use typed handles in the neutral resource overloads; convert to legacy `int32_t` only inside compatibility wrappers or the current D3D9 implementation.
 - Keep legacy methods unchanged.
 
 Good first APIs:
@@ -257,6 +322,7 @@ Good first APIs:
 - `DrawIndexedPrimitiveUP`
 - texture set by existing texture id
 - simple vertex/index buffer create/lock/unlock wrappers
+- texture, vertex buffer, and index buffer release wrappers that call `IsValid()` instead of relying on `-1` or truthiness
 
 Avoid first:
 
@@ -285,11 +351,13 @@ Candidate areas:
 - simple sprite/rect drawing
 - small UI helpers in `battle_interface` or `xinterface`
 - isolated helper functions that currently pass `D3DPT_*`, `D3DFVF_*`, or clear flags
+- isolated renderer helpers that store texture or buffer IDs as `int32_t`, such as font/BMFont texture handles and `IVBufferManager` vertex/index buffer IDs
 
 Tasks:
 
 - Replace D3D constants with neutral enums in selected call sites.
 - Replace raw D3D structs with neutral structs where the mapping is clear.
+- Replace selected raw resource IDs with typed renderer handles, starting with places that already own/release resources locally.
 - Keep changes small enough to review subsystem by subsystem.
 
 Validation:
@@ -313,6 +381,7 @@ Current public APIs that need isolation include:
 Tasks:
 
 - Audit every non-renderer caller of raw D3D pointer APIs.
+- Audit every non-renderer caller that persists renderer resource IDs as `int32_t`.
 - For each caller, decide whether it needs:
   - a new high-level renderer operation,
   - an opaque handle lookup,
@@ -333,7 +402,8 @@ Tasks:
 
 - Introduce `IRenderBackend` with only operations required by the already-neutral frontend paths.
 - Move D3D9 device/context/resource code out of the service/frontend into `D3D9Backend` incrementally.
-- Keep texture/font/resource id management in the frontend unless there is a strong reason to move it.
+- Keep texture/font/resource handle management and resource tracking in the frontend unless there is a strong reason to move it.
+- Let backend implementations own backend-native objects behind frontend-owned typed handles.
 - Let the frontend call backend methods for device creation, resource creation, state application, draw, and present.
 
 Suggested first backend methods:
@@ -347,6 +417,8 @@ Suggested first backend methods:
 - `destroyTexture(...)`
 - `setTexture(stage, handle)`
 - `createBuffer(...)`
+- `destroyBuffer(...)`
+- `mapBuffer(handle, ...)` / `unmapBuffer(handle)`
 - `updateBuffer(...)`
 - `draw(...)`
 - `drawIndexed(...)`
@@ -355,6 +427,7 @@ Validation:
 
 - D3D9 backend produces equivalent behavior.
 - Frontend owns no raw `IDirect3D9`/`IDirect3DDevice9` fields after the moved subset.
+- Backend-native resource objects are not visible in public renderer headers; public APIs use neutral typed handles.
 - No new backend is added until the D3D9 backend seam is demonstrably working.
 
 ### Phase 6: Abstract shader and technique execution
@@ -462,6 +535,8 @@ Plan for these before claiming backend parity:
 - Fixed-function lighting/material/texture-stage behavior.
 - D3D managed/default pool lifetime vs explicit resource lifetime.
 - Device lost/reset handling vs OpenGL/WebGPU context/device loss models.
+- Frontend handle lifetime vs backend-native object lifetime. A valid `TextureHandle` should not imply a currently resident backend object during device loss/reset.
+- Stale handle reuse. The first pass may use table indexes only, but the resource manager should leave room for generation counters or equivalent validation if reuse bugs appear.
 - Shader constants/registers vs uniforms/bind groups.
 - Render state mutability vs pipeline object models, especially for WebGPU.
 - Lock/unlock buffer and texture APIs vs mapped/staging/update APIs.
@@ -472,16 +547,35 @@ Plan for these before claiming backend parity:
 
 Files likely touched:
 
-- add `src/libs/renderer/include/render/render_types.h`
-- add `src/libs/renderer/include/render/render_handles.h`
+- add `src/libs/renderer/include/renderer/render_types.h`
+- add `src/libs/renderer/include/renderer/render_handles.h`
+- use `src/libs/util/include/handle.hpp` for all neutral renderer handle aliases
 - add internal D3D9 conversion helpers under `src/libs/renderer/src/`
 - add small conversion tests if the test structure supports it
 
 Acceptance criteria:
 
 - Neutral headers do not include `<d3d9.h>`.
+- Renderer handles are strongly typed, default-invalid, and do not implicitly convert to raw integers.
+- `0` remains a valid handle value; invalid is the handle template's sentinel value.
 - D3D9 renderer still builds.
 - No gameplay call site migration yet unless needed for compile coverage.
+
+### PR 1b: First typed resource-handle wrappers
+
+Files likely touched:
+
+- `src/libs/renderer/include/dx9render.h` or a new neutral service header
+- `src/libs/renderer/src/s_device.h`
+- `src/libs/renderer/src/s_device.cpp`
+- one small local owner such as `src/libs/renderer/src/iv_buffer_manager.*` or font/BMFont texture ownership code
+
+Acceptance criteria:
+
+- Neutral overloads accept `TextureHandle`, `VertexBufferHandle`, and/or `IndexBufferHandle` while legacy `int32_t` methods remain available.
+- Compatibility wrappers validate handles with `IsValid()` and convert to raw slot indexes only inside renderer implementation code.
+- At least one local owner stops using truthiness/`-1` checks for a migrated resource and invalidates the handle after release.
+- Existing D3D9 behavior remains unchanged.
 
 ### PR 2: Neutral clear/viewport/draw-UP path
 
@@ -536,6 +630,8 @@ Track these periodically to avoid losing sight of progress:
 - total `IDirect3D*` references outside `src/libs/renderer`
 - number of non-renderer files including `<d3d9.h>` or `<d3dx9.h>`
 - number of callers using raw `GetD3DDevice()` or raw D3D texture/surface/buffer APIs
+- number of public renderer APIs that still expose resource IDs as raw `int32_t`
+- number of non-renderer/resource-owner fields storing texture, vertex buffer, index buffer, or render target IDs as raw integers
 - number of technique/effect files with backend-specific assumptions
 
 The useful trend is not immediate zero. The useful trend is that backend-specific references move inward toward `src/libs/renderer/src/backends/d3d9/` and out of public engine-facing headers.
