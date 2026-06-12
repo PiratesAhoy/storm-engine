@@ -93,7 +93,7 @@ Conan generation (`conanfile.py`) copies runtime resources and third-party binar
 ## Documentation map
 
 - `docs/architecture.md` - high-level runtime architecture and rendering migration notes.
-- `docs/renderer-backend-abstraction-plan.md` - staged plan for abstracting DirectX 9 behind a backend-neutral renderer API.
+- `docs/plans/renderer-backend-abstraction-plan.md` - staged plan for abstracting DirectX 9 behind a backend-neutral renderer API.
 - `docs/coding-guidelines.md` - coding conventions inferred from historical changes.
 - `docs/project-structure.md` - this file.
 - `docs/services.md` - service registration and known service overview.

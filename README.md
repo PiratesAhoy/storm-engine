@@ -31,7 +31,7 @@ You will also need assets from one of the supported games.
 ## Architecture documentation
 - [Project structure](docs/project-structure.md): repository layout, build organization, modules, resources, and documentation map.
 - [Architecture overview](docs/architecture.md): runtime entry point, core/entity/service model, module registration, current renderer architecture, and migration notes.
-- [Renderer backend abstraction plan](docs/renderer-backend-abstraction-plan.md): staged plan for moving DirectX 9 behind a backend-neutral renderer API so OpenGL/WebGPU backends can be added later.
+- [Renderer backend abstraction plan](docs/plans/renderer-backend-abstraction-plan.md): staged plan for moving DirectX 9 behind a backend-neutral renderer API so OpenGL/WebGPU backends can be added later.
 - [Coding guidelines](docs/coding-guidelines.md): conventions inferred from repository history for style, safety, services, build/test work, configuration, and renderer changes.
 - [Services](docs/services.md): service registration convention and known service overview.
 

@@ -144,7 +144,7 @@ Both paths provide D3D9-compatible headers/libraries to the existing DX9 rendere
 
 A future OpenGL renderer should not start as a direct replacement of `s_device.cpp`. The public renderer interface must first stop leaking D3D9-specific types into the rest of the engine.
 
-See `docs/renderer-backend-abstraction-plan.md` for the staged implementation plan, neutral type list, compatibility policy, and suggested first PRs.
+See `docs/plans/renderer-backend-abstraction-plan.md` for the staged implementation plan, neutral type list, compatibility policy, and suggested first PRs.
 
 Recommended migration direction:
 

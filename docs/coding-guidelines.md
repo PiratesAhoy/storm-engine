@@ -61,7 +61,7 @@ The recent history shows several recurring maintenance themes:
 - Keep `VDX9RENDER` and `DX9RENDER` compatibility while adding backend-neutral seams. Rename only after callers no longer depend on the old surface.
 - Treat textures and render resources as data-dependent. Check formats and resource availability before locking, reading, or rendering them.
 - Keep shader/effect assets under `src/techniques`; CMake copies them into the runtime output through the `engine_techniques` target.
-- For rendering migration changes, update the relevant docs: `docs/architecture.md`, `docs/project-structure.md`, and `docs/renderer-backend-abstraction-plan.md`.
+- For rendering migration changes, update the relevant docs: `docs/architecture.md`, `docs/project-structure.md`, and `docs/plans/renderer-backend-abstraction-plan.md`.
 
 ## Commit and PR hygiene
 
