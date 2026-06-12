@@ -1,8 +1,8 @@
 # Architecture overview
 
-Storm Engine is a C++20 game engine organized around a small executable and many statically linked engine modules. Runtime systems are exposed through a global `Core` API, entities, services, script-visible functions, and layered frame processing.
+Storm Engine is a game engine organized around a small executable and many statically linked engine modules. Runtime systems are exposed through a global `Core` API, entities, services, script-visible functions, and layered frame processing.
 
-This document summarizes the current architecture as it exists in the codebase. It is intended as a starting point for contributors and for larger refactors such as renderer backend migration. For the detailed renderer migration plan, see `docs/renderer-backend-abstraction-plan.md`.
+This document summarizes the current architecture as it exists in the codebase. It is intended as a starting point for contributors and for larger refactors.
 
 ## Runtime entry point
 
@@ -31,7 +31,7 @@ extern Core &core;
 
 Major responsibilities exposed by `Core`:
 
-- service lookup through `GetService(...)` and `GetServiceX<T>()`
+- service lookup through `GetServiceX<T>()`
 - entity creation, lookup, deletion, attributes, and message dispatch
 - layer management for execute/realize processing
 - event dispatch and posted events
@@ -208,4 +208,4 @@ When changing architecture-level code:
 - Keep old behavior compiling while introducing a new abstraction.
 - Do not expose backend-specific API types from generic headers.
 - Keep `core`, entity, service, and module registration behavior intact unless the change explicitly targets them.
-- For renderer work, update both this document and `docs/project-structure.md` when files, modules, or ownership boundaries move.
+- Update both this document and `docs/project-structure.md` when files, modules, or ownership boundaries move.

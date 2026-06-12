@@ -32,6 +32,7 @@ You will also need assets from one of the supported games.
 - [Project structure](docs/project-structure.md): repository layout, build organization, modules, resources, and documentation map.
 - [Architecture overview](docs/architecture.md): runtime entry point, core/entity/service model, module registration, current renderer architecture, and migration notes.
 - [Renderer backend abstraction plan](docs/renderer-backend-abstraction-plan.md): staged plan for moving DirectX 9 behind a backend-neutral renderer API so OpenGL/WebGPU backends can be added later.
+- [Coding guidelines](docs/coding-guidelines.md): conventions inferred from repository history for style, safety, services, build/test work, configuration, and renderer changes.
 - [Services](docs/services.md): service registration convention and known service overview.
 
 ## Roadmap
@@ -40,13 +41,10 @@ For this reason, we decided to rely on the C++ standard library or third-party l
 
 Some things that we are going to do:
 - Replace a custom math library with a third-party one, e.g. [glm](https://github.com/g-truc/glm).
-- Replace custom rendering code with a [bgfx](https://github.com/bkaradzic/bgfx) library.
 - Replace custom input handling code with a third-party library (see the [discussion](https://github.com/storm-devs/storm-engine/discussions/19)).
 - Replace custom data structures with C++ standard types.
-- Replace a custom scripting language with Lua.
 - Replace ini config files with a standard format (see the [discussion](https://github.com/storm-devs/storm-engine/discussions/26)).
-- Replace custom binary asset formats with standard ones.
-- Update code using the latest C++ standard
+- Update code using the C++20 standard
 
 ## Contributing
 If you'd like to get involved, please check [CONTRIBUTING.md](https://github.com/storm-devs/storm-engine/blob/develop/CONTRIBUTING.md).
