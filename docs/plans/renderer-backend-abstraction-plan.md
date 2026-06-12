@@ -277,6 +277,70 @@ Validation:
 - Existing renderer still initializes with D3D9.
 - No code changes beyond docs/diagnostics in this phase.
 
+#### Phase 0 baseline snapshot - 2026-06-12
+
+Scope: repository root on branch `feature/rendering`, source searches under `src/` unless otherwise noted. Local machine: macOS on Apple Silicon, CMake 3.31.4, Debug `build-blaze` tree.
+
+Working tree at capture time:
+
+- `git status --short` showed only local `.DS_Store` noise.
+- No source-code changes are part of Phase 0.
+
+Coupling counts:
+
+| Metric | Count | Command |
+| --- | ---: | --- |
+| `VDX9RENDER` occurrences in `src/` | 528 | `rg -o '\bVDX9RENDER\b' src \| wc -l` |
+| Files with `VDX9RENDER` in `src/` | 370 | `rg -l '\bVDX9RENDER\b' src \| wc -l` |
+| Concrete `DX9RENDER` occurrences in `src/` | 206 | `rg -o '\bDX9RENDER\b' src \| wc -l` |
+| Files with concrete `DX9RENDER` in `src/` | 2 | `rg -l '\bDX9RENDER\b' src \| wc -l` |
+| `IDirect3D` occurrences in `src/` | 338 | `rg -o 'IDirect3D' src \| wc -l` |
+| Files with `IDirect3D` in `src/` | 66 | `rg -l 'IDirect3D' src \| wc -l` |
+| `GetD3DDevice` occurrences in `src/` | 3 | `rg -o 'GetD3DDevice' src \| wc -l` |
+| Raw `d3d9->` calls in `src/libs/renderer/` | 119 | `rg -o 'd3d9->' src/libs/renderer \| wc -l` |
+| D3D-style tokens in `src/` | 2654 | `rg -o '\b(D3D[A-Z0-9_]*\|D3DFMT_[A-Z0-9_]+\|D3DPT_[A-Z0-9_]+\|D3DTS_[A-Z0-9_]+\|D3DPOOL_[A-Z0-9_]+\|D3DUSAGE_[A-Z0-9_]+\|D3DCLEAR_[A-Z0-9_]+\|D3DFVF_[A-Z0-9_]+)\b' src \| wc -l` |
+| D3D-style tokens outside `src/libs/renderer/` | 1613 | same D3D-token search piped through `rg -v '^src/libs/renderer/' \| wc -l` |
+| Files with D3D-style tokens outside `src/libs/renderer/` | 173 | `rg -l '<same D3D-token pattern>' src \| rg -v '^src/libs/renderer/' \| wc -l` |
+| Public renderer resource APIs still exposing raw IDs/pointers | 13 | `rg -n 'virtual (int32_t\|bool\|void\|IDirect3D[^ ]+ \*) (TextureCreate\|TextureSet\|TextureRelease\|TextureIncReference\|CreateVertexBuffer\|CreateIndexBuffer\|GetVertexBuffer\|GetVertexBufferFVF\|LockVertexBuffer\|UnLockVertexBuffer\|GetVertexBufferSize\|LockIndexBuffer\|UnLockIndexBuffer\|ReleaseVertexBuffer\|ReleaseIndexBuffer\|GetBaseTexture\|GetTextureFromID\|ImageBlt)\(' src/libs/renderer/include/dx9render.h \| wc -l` |
+| Non-renderer direct D3D include sites | 6 | `rg -n 'd3d9\|d3dx9\|d3d9types\|d3dx9tex' src \| rg '#\s*include' \| rg -v '^src/libs/renderer/' \| wc -l` |
+
+Known coupling anchors:
+
+- Public renderer service: `src/libs/renderer/include/dx9render.h` defines `VDX9RENDER` and exposes both high-level renderer calls and raw D3D-like device operations.
+- Concrete renderer implementation: `src/libs/renderer/src/s_device.h` and `src/libs/renderer/src/s_device.cpp` own the current D3D9 device, texture table, buffer tables, render targets, post-process resources, and compatibility operations.
+- Non-Windows D3D compatibility setup: `CMakeLists.txt` exposes `STORM_MESA_NINE`, and `cmake/linux.cmake` selects Gallium Nine or DXVK Native while still presenting a D3D9-shaped API to the renderer.
+
+Build and verification commands:
+
+| Purpose | Command | Phase 0 result |
+| --- | --- | --- |
+| Configure local non-Windows tree | `cmake -S . -B build-blaze` | Passed on macOS. Conan dependencies resolved from cache; default non-Windows path selected DXVK Native. |
+| Build/run focused unit tests | `cmake --build build-blaze --target util-test -- -j2` | Passed: `All tests passed (74 assertions in 6 test cases)`. |
+| Build DXVK Native dependency target | `cmake --build build-blaze --target dependencies -- -j2` | Blocked locally: `meson: command not found`. Install/activate Meson or use Conan's Meson executable before using this as a full renderer baseline. |
+| Build renderer target locally | `cmake --build build-blaze --target renderer -- -j2` | Blocked locally after dependency headers were absent: `fatal error: 'd3d9.h' file not found`. This is expected while DXVK Native/Gallium Nine headers are not built/available. |
+| Windows build path | Open the repo root as a CMake project in Visual Studio 2019 and select `engine.exe` as startup item. | Documented in `README.md`; not verified on this macOS machine. |
+
+Runtime smoke-test baseline:
+
+- Minimal Windows smoke path is currently the documented `engine.exe` launch from Visual Studio with DirectX 9 runtime libraries installed.
+- Runtime launch also requires assets from one of the supported games, so Phase 0 cannot define a repo-only renderer smoke test yet.
+- The first practical smoke target should be documented before Phase 2 caller migrations: launch `engine.exe` with a known supported game resource tree, confirm `DX9RENDER::InitDevice` succeeds, render at least one frame, and close cleanly.
+- On non-Windows, a comparable renderer smoke test requires the D3D9 compatibility layer headers/libraries to build successfully first.
+
+Documentation link check:
+
+- `README.md` links this renderer backend abstraction plan.
+- `docs/architecture.md` links this renderer backend abstraction plan.
+- `docs/project-structure.md` links this renderer backend abstraction plan.
+- `docs/dependencies.md` also links this renderer backend abstraction plan for dependency/migration context.
+
+Phase 0 status:
+
+- Baseline counts are recorded and reproducible.
+- Local configure and a focused test target are verified.
+- Full local renderer build and runtime smoke are not green on this macOS machine because the non-Windows D3D9 compatibility dependency is not currently built/available.
+- Do not start Phase 1 by editing renderer APIs until the team accepts this baseline or refreshes it on a machine with a working D3D9 renderer build/runtime setup.
+
 ### Phase 1: Add neutral renderer vocabulary
 
 Purpose: create shared language without changing behavior.
