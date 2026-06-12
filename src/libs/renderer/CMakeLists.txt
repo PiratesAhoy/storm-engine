@@ -8,4 +8,5 @@ STORM_SETUP(
     TARGET_NAME renderer
     TYPE storm_module
     DEPENDENCIES core config directx::directx util ${SYSTEM_DEPS}
+    TEST_DEPENDENCIES Catch2::Catch2WithMain
 )

@@ -96,8 +96,8 @@ A possible future directory shape:
 ```text
 src/libs/renderer/include/render/
   render_service.h
-  render_types.h
-  render_handles.h
+  render_types.hpp
+  render_handles.hpp
   render_backend.h
   render_pipeline.h
 
@@ -128,7 +128,7 @@ This exact shape can change, but the ownership boundary should remain: engine-fa
 
 Start with small types that can map directly to D3D9 without behavior changes.
 
-Suggested initial header: `src/libs/renderer/include/renderer/render_types.h`.
+Suggested initial header: `src/libs/renderer/include/renderer/render_types.hpp`.
 
 Initial enums/value types:
 
@@ -184,7 +184,7 @@ Initial handle types:
 - `ShaderHandle` / `ProgramHandle` later
 - `FontHandle` can remain higher-level if font rendering stays in the frontend
 
-Handles should use the existing strongly typed integer-compatible handle template from `src/libs/util/include/handle.hpp` rather than raw integers or ad-hoc typedefs. Suggested aliases in `src/libs/renderer/include/renderer/render_handles.h`:
+Handles should use the existing strongly typed integer-compatible handle template from `src/libs/util/include/handle.hpp` rather than raw integers or ad-hoc typedefs. Suggested aliases in `src/libs/renderer/include/renderer/render_handles.hpp`:
 
 ```cpp
 namespace storm::render
@@ -348,7 +348,7 @@ Purpose: create shared language without changing behavior.
 Tasks:
 
 - Add neutral renderer type headers under `src/libs/renderer/include/renderer/`.
-- Add `src/libs/renderer/include/renderer/render_handles.h` with typed aliases over `storm::Handle<Tag>`.
+- Add `src/libs/renderer/include/renderer/render_handles.hpp` with typed aliases over `storm::Handle<Tag>`.
 - Add D3D9 conversion helpers under `src/libs/renderer/src/backends/d3d9/` or a temporary internal file.
 - Add unit tests for pure conversion functions where practical.
 - Add compile-time checks that renderer handle domains cannot be mixed and that default handles are invalid while `0` remains a valid value.
@@ -611,8 +611,8 @@ Plan for these before claiming backend parity:
 
 Files likely touched:
 
-- add `src/libs/renderer/include/renderer/render_types.h`
-- add `src/libs/renderer/include/renderer/render_handles.h`
+- add `src/libs/renderer/include/renderer/render_types.hpp`
+- add `src/libs/renderer/include/renderer/render_handles.hpp`
 - use `src/libs/util/include/handle.hpp` for all neutral renderer handle aliases
 - add internal D3D9 conversion helpers under `src/libs/renderer/src/`
 - add small conversion tests if the test structure supports it
