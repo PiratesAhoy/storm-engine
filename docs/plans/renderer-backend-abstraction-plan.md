@@ -4,6 +4,45 @@ This document describes a staged plan for abstracting the current DirectX 9 rend
 
 The goal is not to replace the renderer in one large rewrite. The goal is to first create an API-neutral renderer boundary while keeping the current D3D9 renderer working, then move implementation details behind backend interfaces, and only then add new backends.
 
+## Quick progress checklist
+
+Legend: `[x]` complete, `[~]` in progress, `[ ]` not started.
+
+- [x] Phase 0 - baseline and safety checks
+  - [x] Captured renderer coupling counts and D3D leakage metrics.
+  - [x] Documented build/smoke-test baseline and current platform blockers.
+  - [x] Linked this plan from the main architecture/project documentation.
+- [x] Phase 1 - neutral renderer vocabulary
+  - [x] Added D3D-free `renderer/render_handles.hpp`.
+  - [x] Added D3D-free `renderer/render_types.hpp`.
+  - [x] Added renderer handle tests for type safety, invalid/default semantics, and slot `0` validity.
+  - [x] Verified the neutral headers do not pull in D3D headers.
+  - [x] Verified the Windows build still works. Note: Windows verification currently requires the human user because this agent environment is macOS-only.
+- [~] Phase 2 - neutral resource/draw APIs beside legacy APIs
+  - [x] Added typed vertex/index buffer overloads beside legacy `int32_t` APIs.
+  - [x] Added legacy signed-ID bridge helpers (`-1` invalid, slot `0` valid).
+  - [x] Migrated `IVBufferManager` to typed vertex/index buffer handles.
+  - [x] Fixed the `IVBufferManager` slot-0 release hazard by using `.IsValid()` instead of truthiness.
+  - [ ] Add typed `TextureHandle` wrappers around the existing texture table.
+  - [ ] Migrate one contained texture owner to typed texture handles.
+  - [ ] Add neutral clear/viewport/draw-UP overloads after resource-handle seams are stable.
+- [ ] Phase 3 - convert low-risk call sites to neutral APIs
+  - [ ] Move simple debug/UI/helper paths away from D3D constants and raw resource IDs.
+  - [ ] Track remaining D3D usage outside `src/libs/renderer` after each slice.
+- [ ] Phase 4 - isolate raw D3D access behind compatibility wrappers
+  - [ ] Audit non-renderer callers of raw D3D pointer APIs.
+  - [ ] Move raw D3D access into compatibility-only interfaces or renderer-internal headers.
+- [ ] Phase 5 - split `DX9RENDER` into frontend and D3D9 backend
+  - [ ] Introduce a backend-neutral interface for already-neutralized paths.
+  - [ ] Move D3D9 resource/device ownership behind a D3D9 backend implementation.
+- [ ] Phase 6 - abstract shader and technique execution
+  - [ ] Define the shader/effect migration strategy before adding non-D3D backends.
+- [ ] Phase 7 - backend selection and first non-D3D backend
+  - [ ] Add explicit backend selection once the D3D9 seam is proven.
+  - [ ] Start OpenGL/WebGPU only after D3D9 works behind the neutral frontend.
+
+Current blocker: macOS can configure and run focused tests, but full renderer targets still hit legacy `d3d9.h` includes in `dx9render.h` and `platform/d3dx9.hpp`. Windows remains the full-renderer verification path for now, and that verification can only be performed by the human user until a Windows CI/agent environment is available.
+
 ## Current state
 
 The current renderer is centered on the `VDX9RENDER` service interface and `DX9RENDER` implementation.
@@ -24,8 +63,31 @@ Known coupling points from codebase inspection:
 - The public renderer header exposes D3D9 concepts directly: `D3DMATRIX`, `D3DLIGHT9`, `D3DMATERIAL9`, `D3DPRIMITIVETYPE`, `D3DFORMAT`, `D3DPOOL`, `D3DVIEWPORT9`, `IDirect3DTexture9`, `IDirect3DSurface9`, vertex/pixel shader interfaces, and other D3D types.
 - `src/libs/renderer/include/dx9render.h` has a large public `D3D SECTION` that gives callers direct access to D3D-like device operations.
 - `DX9RENDER::InitDevice` creates the D3D9 object/device in `src/libs/renderer/src/s_device.cpp` and owns presentation, render target, texture, buffer, shader, and state lifetime.
-- Renderer resources are currently exposed as plain `int32_t` table indexes. Textures, vertex buffers, and index buffers are stored in fixed arrays in `src/libs/renderer/src/s_device.h`, and legacy APIs use `-1` as an invalid value in some places while slot `0` is a valid resource. This is a good early target for the strongly typed `storm::Handle<Tag>` template in `src/libs/util/include/handle.hpp`.
-- Non-Windows builds still rely on native D3D9-compatible APIs through Gallium Nine or DXVK Native (`cmake/linux.cmake`) rather than an API-neutral renderer.
+- Renderer resources are still mostly exposed as plain `int32_t` table indexes. Textures, vertex buffers, and index buffers are stored in fixed arrays in `src/libs/renderer/src/s_device.h`, and legacy APIs use `-1` as an invalid value in some places while slot `0` is a valid resource. The first buffer seam now has typed `VertexBufferHandle` and `IndexBufferHandle` wrappers beside the legacy APIs, with `IVBufferManager` migrated to the typed path.
+- macOS no longer tries to build native D3D9 compatibility layers. `cmake/linux.cmake` treats Gallium Nine and DXVK Native as Linux-only and creates a no-op `dependencies` target on macOS. Non-Windows renderer builds still require further D3D header isolation before a real macOS renderer target can build.
+
+## Current implementation status - 2026-06-13
+
+Completed foundation:
+
+- `src/libs/util/include/handle.hpp` provides the strongly typed integer-compatible `storm::Handle<Tag, HandleType = uint32_t>` template.
+- `src/libs/renderer/include/renderer/render_handles.hpp` defines neutral renderer resource handles for textures, vertex buffers, index buffers, unified buffers, render targets, shaders, and programs.
+- `src/libs/renderer/include/renderer/render_types.hpp` defines the initial D3D-free renderer vocabulary for backend type, primitive/index/texture/buffer concepts, transforms, clear flags, rectangles, viewports, and colors.
+- `src/libs/renderer/testsuite/render_handles.cpp` verifies handle layout/type-safety, default-invalid semantics, slot `0` validity, independent handle domains, and legacy signed-ID bridging.
+- `src/libs/renderer/include/dx9render.h`, `src/libs/renderer/src/s_device.h`, and `src/libs/renderer/src/s_device.cpp` now expose typed vertex/index buffer overloads beside the legacy `int32_t` methods.
+- `src/libs/renderer/src/iv_buffer_manager.cpp` creates, locks, unlocks, draws, and releases vertex/index buffers through typed handles. Its destructor now uses `.IsValid()` instead of truthiness, fixing the slot-0 release hazard.
+
+Current verification:
+
+- Direct renderer handle syntax check passed on macOS.
+- Direct renderer handle test binary passed on macOS: `All tests passed (19 assertions in 3 test cases)`.
+- `cmake -S . -B build-blaze -DCMAKE_BUILD_TYPE=Debug` passed on macOS.
+- `cmake --build build-blaze --target util-test && build-blaze/Debug/util-test` passed on macOS: `All tests passed (74 assertions in 6 test cases)`.
+- `cmake --build build-blaze --target dependencies` is a no-op/pass on macOS after disabling native D3D9 compatibility layers there.
+- Full `renderer-test` on macOS remains blocked by legacy D3D headers in `src/libs/renderer/include/dx9render.h` and `src/libs/util/include/platform/d3dx9.hpp` (`fatal error: 'd3d9.h' file not found`).
+- The Windows build has been verified by the user after the typed buffer-handle slice. This is currently a human-only verification step because the available agent environment is macOS-only.
+
+Next recommended slice: continue Phase 2 with typed texture handle wrappers around the existing texture table, then migrate one small local texture owner before broad draw/state migration.
 
 ## Goals
 
@@ -308,24 +370,24 @@ Known coupling anchors:
 
 - Public renderer service: `src/libs/renderer/include/dx9render.h` defines `VDX9RENDER` and exposes both high-level renderer calls and raw D3D-like device operations.
 - Concrete renderer implementation: `src/libs/renderer/src/s_device.h` and `src/libs/renderer/src/s_device.cpp` own the current D3D9 device, texture table, buffer tables, render targets, post-process resources, and compatibility operations.
-- Non-Windows D3D compatibility setup: `CMakeLists.txt` exposes `STORM_MESA_NINE`, and `cmake/linux.cmake` selects Gallium Nine or DXVK Native while still presenting a D3D9-shaped API to the renderer.
+- Non-Windows D3D compatibility setup: `CMakeLists.txt` exposes `STORM_MESA_NINE`. `cmake/linux.cmake` selects Gallium Nine or DXVK Native on Linux while still presenting a D3D9-shaped API to the renderer; on macOS those native D3D9 compatibility layers are intentionally disabled.
 
 Build and verification commands:
 
 | Purpose | Command | Phase 0 result |
 | --- | --- | --- |
-| Configure local non-Windows tree | `cmake -S . -B build-blaze` | Passed on macOS. Conan dependencies resolved from cache; default non-Windows path selected DXVK Native. |
+| Configure local non-Windows tree | `cmake -S . -B build-blaze` | Passed on macOS. Conan dependencies resolved from cache; macOS skips native D3D9 compatibility layers. |
 | Build/run focused unit tests | `cmake --build build-blaze --target util-test -- -j2` | Passed: `All tests passed (74 assertions in 6 test cases)`. |
-| Build DXVK Native dependency target | `cmake --build build-blaze --target dependencies -- -j2` | Blocked locally: `meson: command not found`. Install/activate Meson or use Conan's Meson executable before using this as a full renderer baseline. |
-| Build renderer target locally | `cmake --build build-blaze --target renderer -- -j2` | Blocked locally after dependency headers were absent: `fatal error: 'd3d9.h' file not found`. This is expected while DXVK Native/Gallium Nine headers are not built/available. |
-| Windows build path | Open the repo root as a CMake project in Visual Studio 2019 and select `engine.exe` as startup item. | Documented in `README.md`; not verified on this macOS machine. |
+| Build DXVK Native dependency target | `cmake --build build-blaze --target dependencies -- -j2` | Passed/no-op on macOS after native D3D9 compatibility layers were disabled there. Linux still uses the Gallium Nine/DXVK Native paths. |
+| Build renderer target locally | `cmake --build build-blaze --target renderer -- -j2` | Still blocked on macOS by direct legacy D3D headers: `fatal error: 'd3d9.h' file not found` from `dx9render.h` and `platform/d3dx9.hpp`. |
+| Windows build path | Open the repo root as a CMake project in Visual Studio 2019 and select `engine.exe` as startup item. | Verified by the user after Phase 1 scaffolding and after the first Phase 2 typed buffer-handle slice. This is human-only until Windows CI/agent access exists. |
 
 Runtime smoke-test baseline:
 
 - Minimal Windows smoke path is currently the documented `engine.exe` launch from Visual Studio with DirectX 9 runtime libraries installed.
 - Runtime launch also requires assets from one of the supported games, so Phase 0 cannot define a repo-only renderer smoke test yet.
 - The first practical smoke target should be documented before Phase 2 caller migrations: launch `engine.exe` with a known supported game resource tree, confirm `DX9RENDER::InitDevice` succeeds, render at least one frame, and close cleanly.
-- On non-Windows, a comparable renderer smoke test requires the D3D9 compatibility layer headers/libraries to build successfully first.
+- On macOS, a comparable renderer smoke test requires isolating the remaining legacy D3D headers or adding a real non-D3D backend first. Linux still depends on a working Gallium Nine/DXVK Native setup for the current renderer path.
 
 Documentation link check:
 
@@ -338,10 +400,12 @@ Phase 0 status:
 
 - Baseline counts are recorded and reproducible.
 - Local configure and a focused test target are verified.
-- Full local renderer build and runtime smoke are not green on this macOS machine because the non-Windows D3D9 compatibility dependency is not currently built/available.
-- Do not start Phase 1 by editing renderer APIs until the team accepts this baseline or refreshes it on a machine with a working D3D9 renderer build/runtime setup.
+- Full local renderer build and runtime smoke are not green on this macOS machine because legacy public headers still include D3D9 headers directly.
+- Phase 1 is complete and Phase 2 has started. Windows build verification is the authoritative full-renderer check until the remaining macOS D3D header blockers are isolated, but this currently requires the human user to run it.
 
 ### Phase 1: Add neutral renderer vocabulary
+
+Status: complete for the initial scaffold.
 
 Purpose: create shared language without changing behavior.
 
@@ -364,10 +428,18 @@ Suggested first conversions:
 
 Validation:
 
-- Include neutral headers from a non-renderer module without pulling in `<d3d9.h>`.
-- Existing D3D9 renderer build still passes.
+- Include neutral headers from a non-renderer module without pulling in `<d3d9.h>`: verified with a D3D-free header probe on macOS.
+- Existing D3D9 renderer build still passes: verified by the user on Windows.
+
+Implemented:
+
+- `src/libs/renderer/include/renderer/render_handles.hpp`
+- `src/libs/renderer/include/renderer/render_types.hpp`
+- `src/libs/renderer/testsuite/render_handles.cpp`
 
 ### Phase 2: Add neutral draw/resource APIs beside legacy APIs
+
+Status: in progress. The first buffer-handle seam is complete; texture/resource seams remain.
 
 Purpose: prove neutral types can drive the current renderer.
 
@@ -403,6 +475,19 @@ Validation:
 - Existing code path still uses legacy methods unless explicitly migrated.
 - At least one small caller can use the neutral overload without behavior change.
 
+Completed first slice:
+
+- Added typed `VertexBufferHandle` and `IndexBufferHandle` overloads for create, lock, unlock, release, and draw-buffer calls while preserving the legacy `int32_t` API.
+- Added `HandleFromLegacyId` and `HandleToLegacyId` bridging helpers. Legacy `-1` maps to typed invalid handles, and legacy slot `0` remains a valid typed handle.
+- Migrated `IVBufferManager` from `renderer_handle` fields to typed vertex/index buffer handles.
+- Replaced `IVBufferManager` truthiness-based release checks with `.IsValid()`.
+
+Remaining recommended Phase 2 work:
+
+- Add typed `TextureHandle` wrappers around `TextureCreate`, `TextureSet`, `TextureRelease`, `TextureIncReference`, `GetBaseTexture`, `GetTextureFromID`, and small compatibility helpers.
+- Migrate one contained texture owner to typed texture handles before broader caller migration.
+- Add neutral clear/viewport/draw-UP overloads only after the resource-handle seams are stable.
+
 ### Phase 3: Convert low-risk call sites to neutral APIs
 
 Purpose: reduce D3D9 leakage outside the renderer without changing the backend.
@@ -415,7 +500,7 @@ Candidate areas:
 - simple sprite/rect drawing
 - small UI helpers in `battle_interface` or `xinterface`
 - isolated helper functions that currently pass `D3DPT_*`, `D3DFVF_*`, or clear flags
-- isolated renderer helpers that store texture or buffer IDs as `int32_t`, such as font/BMFont texture handles and `IVBufferManager` vertex/index buffer IDs
+- isolated renderer helpers that store texture or buffer IDs as `int32_t`, such as font/BMFont texture handles. `IVBufferManager` vertex/index buffer IDs have already moved to typed handles.
 
 Tasks:
 
@@ -609,6 +694,8 @@ Plan for these before claiming backend parity:
 
 ### PR 1: Neutral render type scaffolding
 
+Status: complete for the initial scaffold.
+
 Files likely touched:
 
 - add `src/libs/renderer/include/renderer/render_types.hpp`
@@ -616,6 +703,8 @@ Files likely touched:
 - use `src/libs/util/include/handle.hpp` for all neutral renderer handle aliases
 - add internal D3D9 conversion helpers under `src/libs/renderer/src/`
 - add small conversion tests if the test structure supports it
+
+Implemented note: the initial D3D-free vocabulary and handle aliases live in `src/libs/renderer/include/renderer/`. D3D9 enum conversion helpers are still deferred; the first implemented bridge is the legacy signed resource-ID bridge in `render_handles.hpp`.
 
 Acceptance criteria:
 
@@ -627,6 +716,8 @@ Acceptance criteria:
 
 ### PR 1b: First typed resource-handle wrappers
 
+Status: complete for vertex/index buffers; texture handles remain the next resource wrapper slice.
+
 Files likely touched:
 
 - `src/libs/renderer/include/dx9render.h` or a new neutral service header
@@ -636,10 +727,29 @@ Files likely touched:
 
 Acceptance criteria:
 
-- Neutral overloads accept `TextureHandle`, `VertexBufferHandle`, and/or `IndexBufferHandle` while legacy `int32_t` methods remain available.
+- Neutral overloads accept `VertexBufferHandle` and `IndexBufferHandle` while legacy `int32_t` methods remain available. `TextureHandle` overloads are next.
 - Compatibility wrappers validate handles with `IsValid()` and convert to raw slot indexes only inside renderer implementation code.
-- At least one local owner stops using truthiness/`-1` checks for a migrated resource and invalidates the handle after release.
-- Existing D3D9 behavior remains unchanged.
+- `IVBufferManager` stops using truthiness checks for migrated vertex/index buffers and releases them only when `.IsValid()`.
+- Existing D3D9 behavior remains unchanged; Windows build was verified by the user and cannot currently be run by the macOS-only agent environment.
+
+Implemented files:
+
+- `src/libs/renderer/include/dx9render.h`
+- `src/libs/renderer/src/s_device.h`
+- `src/libs/renderer/src/s_device.cpp`
+- `src/libs/renderer/include/iv_buffer_manager.h`
+- `src/libs/renderer/src/iv_buffer_manager.cpp`
+- `src/libs/renderer/include/renderer/render_handles.hpp`
+- `src/libs/renderer/testsuite/render_handles.cpp`
+
+Validation:
+
+- Direct renderer handle syntax check passed on macOS.
+- Direct renderer handle tests passed on macOS: `All tests passed (19 assertions in 3 test cases)`.
+- macOS configure passed.
+- macOS `util-test` passed: `All tests passed (74 assertions in 6 test cases)`.
+- Windows build passed per user verification; this remains a human-only check until Windows CI/agent access exists.
+- macOS `renderer-test` remains blocked by legacy D3D header includes, not by this slice.
 
 ### PR 2: Neutral clear/viewport/draw-UP path
 
