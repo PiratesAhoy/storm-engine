@@ -2212,6 +2212,13 @@ int32_t DX9RENDER::CreateVertexBuffer(int32_t type, size_t size, uint32_t dwUsag
     return b;
 }
 
+storm::render::VertexBufferHandle DX9RENDER::CreateVertexBufferHandle(int32_t type, size_t size, uint32_t dwUsage,
+                                                                      uint32_t dwPool)
+{
+    return storm::render::HandleFromLegacyId<storm::render::VertexBufferHandle>(
+        CreateVertexBuffer(type, size, dwUsage, dwPool));
+}
+
 IDirect3DVertexBuffer9 *DX9RENDER::GetVertexBuffer(int32_t id)
 {
     if (id < 0 || id >= MAX_BUFFERS)
@@ -2248,6 +2255,11 @@ int32_t DX9RENDER::CreateIndexBuffer(size_t size, uint32_t dwUsage)
     return b;
 }
 
+storm::render::IndexBufferHandle DX9RENDER::CreateIndexBufferHandle(size_t size, uint32_t dwUsage)
+{
+    return storm::render::HandleFromLegacyId<storm::render::IndexBufferHandle>(CreateIndexBuffer(size, dwUsage));
+}
+
 //################################################################################
 void DX9RENDER::DrawBuffer(int32_t vbuff, int32_t stride, int32_t ibuff, int32_t minv, size_t numv, size_t startidx, size_t numtrg,
                            const char *cBlockName)
@@ -2276,6 +2288,16 @@ void DX9RENDER::DrawBuffer(int32_t vbuff, int32_t stride, int32_t ibuff, int32_t
             dwNumDrawPrimitive++;
             CHECKD3DERR(d3d9->DrawIndexedPrimitive(D3DPT_TRIANGLELIST, minv, 0, numv, startidx, numtrg));
         } while (cBlockName && cBlockName[0] && TechniqueExecuteNext());
+}
+
+void DX9RENDER::DrawBuffer(storm::render::VertexBufferHandle vbuff, int32_t stride, storm::render::IndexBufferHandle ibuff,
+                           int32_t minv, size_t numv, size_t startidx, size_t numtrg, const char *cBlockName)
+{
+    if (!ibuff.IsValid())
+        return;
+
+    DrawBuffer(storm::render::HandleToLegacyId(vbuff), stride, storm::render::HandleToLegacyId(ibuff), minv, numv,
+               startidx, numtrg, cBlockName);
 }
 
 void DX9RENDER::DrawIndexedPrimitiveNoVShader(D3DPRIMITIVETYPE dwPrimitiveType, int32_t iVBuff, int32_t iStride, int32_t iIBuff,
@@ -2417,11 +2439,27 @@ void *DX9RENDER::LockVertexBuffer(int32_t id, uint32_t dwFlags)
     return ptr;
 }
 
+void *DX9RENDER::LockVertexBuffer(storm::render::VertexBufferHandle id, uint32_t dwFlags)
+{
+    if (!id.IsValid())
+        return nullptr;
+
+    return LockVertexBuffer(storm::render::HandleToLegacyId(id), dwFlags);
+}
+
 //################################################################################
 void DX9RENDER::UnLockVertexBuffer(int32_t id)
 {
         VertexBuffers[id].dwNumLocks--;
         CHECKD3DERR(VertexBuffers[id].buff->Unlock());
+}
+
+void DX9RENDER::UnLockVertexBuffer(storm::render::VertexBufferHandle id)
+{
+    if (!id.IsValid())
+        return;
+
+    UnLockVertexBuffer(storm::render::HandleToLegacyId(id));
 }
 
 int32_t DX9RENDER::GetVertexBufferSize(int32_t id)
@@ -2440,10 +2478,26 @@ void *DX9RENDER::LockIndexBuffer(int32_t id, uint32_t dwFlags)
     return ptr;
 }
 
+void *DX9RENDER::LockIndexBuffer(storm::render::IndexBufferHandle id, uint32_t dwFlags)
+{
+    if (!id.IsValid())
+        return nullptr;
+
+    return LockIndexBuffer(storm::render::HandleToLegacyId(id), dwFlags);
+}
+
 void DX9RENDER::UnLockIndexBuffer(int32_t id)
 {
         IndexBuffers[id].dwNumLocks--;
         CHECKD3DERR(IndexBuffers[id].buff->Unlock());
+}
+
+void DX9RENDER::UnLockIndexBuffer(storm::render::IndexBufferHandle id)
+{
+    if (!id.IsValid())
+        return;
+
+    UnLockIndexBuffer(storm::render::HandleToLegacyId(id));
 }
 
 //################################################################################
@@ -2456,6 +2510,14 @@ void DX9RENDER::ReleaseVertexBuffer(int32_t id)
     VertexBuffers[id].dwNumLocks = 0;
 }
 
+void DX9RENDER::ReleaseVertexBuffer(storm::render::VertexBufferHandle id)
+{
+    if (!id.IsValid())
+        return;
+
+    ReleaseVertexBuffer(storm::render::HandleToLegacyId(id));
+}
+
 //################################################################################
 void DX9RENDER::ReleaseIndexBuffer(int32_t id)
 {
@@ -2464,6 +2526,14 @@ void DX9RENDER::ReleaseIndexBuffer(int32_t id)
     CHECKD3DERR(IndexBuffers[id].buff->Release());
     IndexBuffers[id].buff = nullptr;
     IndexBuffers[id].dwNumLocks = 0;
+}
+
+void DX9RENDER::ReleaseIndexBuffer(storm::render::IndexBufferHandle id)
+{
+    if (!id.IsValid())
+        return;
+
+    ReleaseIndexBuffer(storm::render::HandleToLegacyId(id));
 }
 
 void DX9RENDER::SetTransform(int32_t type, D3DMATRIX *mtx)

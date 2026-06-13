@@ -59,6 +59,11 @@ static_assert(storm::render::TextureHandle::FromValue(0).IsValid());
 static_assert(storm::render::TextureHandle::FromValue(42).IsValid());
 static_assert(storm::render::TextureHandle::InvalidValue() == std::numeric_limits<uint32_t>::max());
 static_assert(!storm::render::TextureHandle::Invalid().IsValid());
+static_assert(storm::render::HandleFromLegacyId<storm::render::TextureHandle>(-1) == storm::render::TextureHandle::Invalid());
+static_assert(storm::render::HandleFromLegacyId<storm::render::TextureHandle>(0).IsValid());
+static_assert(storm::render::HandleFromLegacyId<storm::render::TextureHandle>(0).Value() == 0);
+static_assert(storm::render::HandleToLegacyId(storm::render::TextureHandle::Invalid()) == -1);
+static_assert(storm::render::HandleToLegacyId(storm::render::TextureHandle::FromValue(0)) == 0);
 
 } // namespace
 
@@ -91,4 +96,21 @@ TEST_CASE("Renderer handle domains have independent invalid sentinels", "[render
     CHECK_FALSE(render_target.IsValid());
     CHECK_FALSE(shader.IsValid());
     CHECK_FALSE(program.IsValid());
+}
+
+TEST_CASE("Renderer handles bridge legacy signed ids without losing slot zero", "[renderer]")
+{
+    const auto invalid_vertex_buffer = storm::render::HandleFromLegacyId<storm::render::VertexBufferHandle>(-1);
+    const auto slot_zero_vertex_buffer = storm::render::HandleFromLegacyId<storm::render::VertexBufferHandle>(0);
+    const auto slot_seven_index_buffer = storm::render::HandleFromLegacyId<storm::render::IndexBufferHandle>(7);
+
+    CHECK_FALSE(invalid_vertex_buffer.IsValid());
+    CHECK(slot_zero_vertex_buffer.IsValid());
+    CHECK(slot_zero_vertex_buffer.Value() == 0);
+    CHECK(slot_seven_index_buffer.IsValid());
+    CHECK(slot_seven_index_buffer.Value() == 7);
+
+    CHECK(storm::render::HandleToLegacyId(invalid_vertex_buffer) == -1);
+    CHECK(storm::render::HandleToLegacyId(slot_zero_vertex_buffer) == 0);
+    CHECK(storm::render::HandleToLegacyId(slot_seven_index_buffer) == 7);
 }

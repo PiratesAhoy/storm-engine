@@ -9,6 +9,7 @@
 
 #include "entity.h"
 #include "matrix.h"
+#include "renderer/render_handles.hpp"
 #include "service.h"
 #include "storm_assert.h"
 #include "types3d.h"
@@ -263,6 +264,9 @@ class VDX9RENDER : public SERVICE
 
     virtual void DrawBuffer(int32_t vbuff, int32_t stride, int32_t ibuff, int32_t minv, size_t numv, size_t startidx, size_t numtrg,
                             const char *cBlockName = nullptr) = 0;
+    virtual void DrawBuffer(storm::render::VertexBufferHandle vbuff, int32_t stride,
+                            storm::render::IndexBufferHandle ibuff, int32_t minv, size_t numv, size_t startidx,
+                            size_t numtrg, const char *cBlockName = nullptr) = 0;
     virtual void DrawIndexedPrimitiveNoVShader(D3DPRIMITIVETYPE dwPrimitiveType, int32_t iVBuff, int32_t iStride, int32_t iIBuff,
                                                int32_t iMinV, int32_t iNumV, int32_t iStartIdx, int32_t iNumTrg,
                                                const char *cBlockName = nullptr) = 0;
@@ -284,16 +288,26 @@ class VDX9RENDER : public SERVICE
     virtual int32_t CreateVertexBuffer(int32_t type, size_t nverts, uint32_t usage,
                                        uint32_t dwPool = D3DPOOL_DEFAULT) = 0;
     virtual int32_t CreateIndexBuffer(size_t ntrgs, uint32_t dwUsage = D3DUSAGE_WRITEONLY) = 0;
+    virtual storm::render::VertexBufferHandle CreateVertexBufferHandle(int32_t type, size_t nverts, uint32_t usage,
+                                                                       uint32_t dwPool = D3DPOOL_DEFAULT) = 0;
+    virtual storm::render::IndexBufferHandle CreateIndexBufferHandle(size_t ntrgs,
+                                                                     uint32_t dwUsage = D3DUSAGE_WRITEONLY) = 0;
 
     virtual IDirect3DVertexBuffer9 *GetVertexBuffer(int32_t id) = 0;
     virtual int32_t GetVertexBufferFVF(int32_t id) = 0;
     virtual void *LockVertexBuffer(int32_t id, uint32_t dwFlags = 0) = 0;
+    virtual void *LockVertexBuffer(storm::render::VertexBufferHandle id, uint32_t dwFlags = 0) = 0;
     virtual void UnLockVertexBuffer(int32_t id) = 0;
+    virtual void UnLockVertexBuffer(storm::render::VertexBufferHandle id) = 0;
     virtual int32_t GetVertexBufferSize(int32_t id) = 0;
     virtual void *LockIndexBuffer(int32_t id, uint32_t dwFlags = 0) = 0;
+    virtual void *LockIndexBuffer(storm::render::IndexBufferHandle id, uint32_t dwFlags = 0) = 0;
     virtual void UnLockIndexBuffer(int32_t id) = 0;
+    virtual void UnLockIndexBuffer(storm::render::IndexBufferHandle id) = 0;
     virtual void ReleaseVertexBuffer(int32_t id) = 0;
+    virtual void ReleaseVertexBuffer(storm::render::VertexBufferHandle id) = 0;
     virtual void ReleaseIndexBuffer(int32_t id) = 0;
+    virtual void ReleaseIndexBuffer(storm::render::IndexBufferHandle id) = 0;
 
     // DX9Render: Render/Texture States Section
     virtual uint32_t SetRenderState(uint32_t State, uint32_t Value) = 0;

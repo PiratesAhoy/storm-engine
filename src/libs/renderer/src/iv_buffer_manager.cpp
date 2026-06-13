@@ -6,9 +6,9 @@
 IVBufferManager::IVBufferManager(VDX9RENDER *renderer_, int32_t vertex_type, int vertex_size, size_t index_count,
                                  size_t vertex_count, size_t max_size)
     : renderer_(renderer_), max_size_(max_size),
-      index_buffer_(renderer_->CreateIndexBuffer(max_size * index_count * sizeof(uint16_t))),
+      index_buffer_(renderer_->CreateIndexBufferHandle(max_size * index_count * sizeof(uint16_t))),
       vertex_buffer_(
-          renderer_->CreateVertexBuffer(vertex_type, max_size * vertex_count * vertex_size, D3DUSAGE_WRITEONLY)),
+          renderer_->CreateVertexBufferHandle(vertex_type, max_size * vertex_count * vertex_size, D3DUSAGE_WRITEONLY)),
       vertex_type_(vertex_type), vertex_size_(vertex_size), index_count_(index_count), vertex_count_(vertex_count),
       actual_size_(0), locked_(false), indexes_(nullptr), vertices_(nullptr)
 {
@@ -18,11 +18,11 @@ IVBufferManager::IVBufferManager(VDX9RENDER *renderer_, int32_t vertex_type, int
 //--------------------------------------------------------------------
 IVBufferManager::~IVBufferManager()
 {
-    if (vertex_buffer_)
+    if (vertex_buffer_.IsValid())
     {
         renderer_->ReleaseVertexBuffer(vertex_buffer_);
     }
-    if (index_buffer_)
+    if (index_buffer_.IsValid())
     {
         renderer_->ReleaseIndexBuffer(index_buffer_);
     }
