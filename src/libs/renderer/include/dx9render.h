@@ -224,9 +224,15 @@ class VDX9RENDER : public SERVICE
     // DX9Render: Textures Section
     virtual int32_t TextureCreate(const char *fname) = 0;
     virtual int32_t TextureCreate(UINT width, UINT height, UINT levels, uint32_t usage, D3DFORMAT format, D3DPOOL pool) = 0;
+    virtual storm::render::TextureHandle TextureCreateHandle(const char *fname) = 0;
+    virtual storm::render::TextureHandle TextureCreateHandle(UINT width, UINT height, UINT levels, uint32_t usage,
+                                                             D3DFORMAT format, D3DPOOL pool) = 0;
     virtual bool TextureSet(int32_t stage, int32_t texid) = 0;
+    virtual bool TextureSet(int32_t stage, storm::render::TextureHandle texid) = 0;
     virtual bool TextureRelease(int32_t texid) = 0;
+    virtual bool TextureRelease(storm::render::TextureHandle texid) = 0;
     virtual bool TextureIncReference(int32_t texid) = 0;
+    virtual bool TextureIncReference(storm::render::TextureHandle texid) = 0;
 
     // DX9Render: Fonts Section
     virtual int32_t Print(int32_t x, int32_t y, const char *format, ...) = 0;
@@ -402,6 +408,8 @@ class VDX9RENDER : public SERVICE
 
     virtual HRESULT ImageBlt(const char *pName, RECT *pDstRect = nullptr, RECT *pSrcRect = nullptr) = 0;
     virtual HRESULT ImageBlt(int32_t nTextureId, RECT *pDstRect = nullptr, RECT *pSrcRect = nullptr) = 0;
+    virtual HRESULT ImageBlt(storm::render::TextureHandle nTextureId, RECT *pDstRect = nullptr,
+                             RECT *pSrcRect = nullptr) = 0;
 
     virtual void SetProgressImage(const char *image) = 0;
     virtual void SetProgressBackImage(const char *image) = 0;
@@ -422,6 +430,7 @@ class VDX9RENDER : public SERVICE
 
     virtual void SetLoadTextureEnable(bool bEnable = true) = 0;
     virtual IDirect3DBaseTexture9 *GetBaseTexture(int32_t iTexture) = 0;
+    virtual IDirect3DBaseTexture9 *GetBaseTexture(storm::render::TextureHandle iTexture) = 0;
 
     virtual bool PushRenderTarget() = 0;
     virtual bool PopRenderTarget() = 0;
@@ -442,6 +451,7 @@ class VDX9RENDER : public SERVICE
     virtual void SetGLOWParams(float _fBlurBrushSize, int32_t _GlowIntensity, int32_t _GlowPasses) = 0;
 
     virtual IDirect3DBaseTexture9 *GetTextureFromID(int32_t nTextureID) = 0;
+    virtual IDirect3DBaseTexture9 *GetTextureFromID(storm::render::TextureHandle nTextureID) = 0;
 
     virtual bool GetRenderTargetAsTexture(IDirect3DTexture9 **tex) = 0;
 };

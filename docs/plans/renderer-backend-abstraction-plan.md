@@ -23,7 +23,7 @@ Legend: `[x]` complete, `[~]` in progress, `[ ]` not started.
   - [x] Added legacy signed-ID bridge helpers (`-1` invalid, slot `0` valid).
   - [x] Migrated `IVBufferManager` to typed vertex/index buffer handles.
   - [x] Fixed the `IVBufferManager` slot-0 release hazard by using `.IsValid()` instead of truthiness.
-  - [ ] Add typed `TextureHandle` wrappers around the existing texture table.
+  - [x] Add typed `TextureHandle` wrappers around the existing texture table.
   - [ ] Migrate one contained texture owner to typed texture handles.
   - [ ] Add neutral clear/viewport/draw-UP overloads after resource-handle seams are stable.
 - [ ] Phase 3 - convert low-risk call sites to neutral APIs
@@ -87,7 +87,7 @@ Current verification:
 - Full `renderer-test` on macOS remains blocked by legacy D3D headers in `src/libs/renderer/include/dx9render.h` and `src/libs/util/include/platform/d3dx9.hpp` (`fatal error: 'd3d9.h' file not found`).
 - The Windows build has been verified by the user after the typed buffer-handle slice. This is currently a human-only verification step because the available agent environment is macOS-only.
 
-Next recommended slice: continue Phase 2 with typed texture handle wrappers around the existing texture table, then migrate one small local texture owner before broad draw/state migration.
+Next recommended slice: migrate one small local texture owner to typed `TextureHandle` overloads before broad draw/state migration.
 
 ## Goals
 
@@ -481,10 +481,10 @@ Completed first slice:
 - Added `HandleFromLegacyId` and `HandleToLegacyId` bridging helpers. Legacy `-1` maps to typed invalid handles, and legacy slot `0` remains a valid typed handle.
 - Migrated `IVBufferManager` from `renderer_handle` fields to typed vertex/index buffer handles.
 - Replaced `IVBufferManager` truthiness-based release checks with `.IsValid()`.
+- Added typed `TextureHandle` overloads around the existing texture table for create, set, release, reference increment, image blit, and base-texture lookup while preserving legacy `int32_t` methods.
 
 Remaining recommended Phase 2 work:
 
-- Add typed `TextureHandle` wrappers around `TextureCreate`, `TextureSet`, `TextureRelease`, `TextureIncReference`, `GetBaseTexture`, `GetTextureFromID`, and small compatibility helpers.
 - Migrate one contained texture owner to typed texture handles before broader caller migration.
 - Add neutral clear/viewport/draw-UP overloads only after the resource-handle seams are stable.
 

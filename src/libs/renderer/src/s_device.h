@@ -157,9 +157,15 @@ class DX9RENDER : public VDX9RENDER
     // DX9Render: Textures Section
     int32_t TextureCreate(const char *fname) override;
     int32_t TextureCreate(UINT width, UINT height, UINT levels, uint32_t usage, D3DFORMAT format, D3DPOOL pool) override;
+    storm::render::TextureHandle TextureCreateHandle(const char *fname) override;
+    storm::render::TextureHandle TextureCreateHandle(UINT width, UINT height, UINT levels, uint32_t usage,
+                                                     D3DFORMAT format, D3DPOOL pool) override;
     bool TextureSet(int32_t stage, int32_t texid) override;
+    bool TextureSet(int32_t stage, storm::render::TextureHandle texid) override;
     bool TextureRelease(int32_t texid) override;
+    bool TextureRelease(storm::render::TextureHandle texid) override;
     bool TextureIncReference(int32_t texid) override;
+    bool TextureIncReference(storm::render::TextureHandle texid) override;
 
     // DX9Render: Fonts Section
     int32_t Print(int32_t x, int32_t y, const char *format, ...) override;
@@ -335,6 +341,7 @@ class DX9RENDER : public VDX9RENDER
 
     HRESULT ImageBlt(const char *pName, RECT *pDstRect, RECT *pSrcRect) override;
     HRESULT ImageBlt(int32_t nTextureId, RECT *pDstRect, RECT *pSrcRect) override;
+    HRESULT ImageBlt(storm::render::TextureHandle nTextureId, RECT *pDstRect, RECT *pSrcRect) override;
 
     void MakeScreenShot();
     bool LoadTextureSurface(std::fstream &fileS, IDirect3DSurface9 *suface, uint32_t mipSize, uint32_t width,
@@ -428,6 +435,7 @@ class DX9RENDER : public VDX9RENDER
     void DrawVector(const CVECTOR &v1, const CVECTOR &v2, uint32_t dwColor,
                     const char *pTechniqueName = "DXVector") override;
     IDirect3DBaseTexture9 *GetBaseTexture(int32_t iTexture) override;
+    IDirect3DBaseTexture9 *GetBaseTexture(storm::render::TextureHandle iTexture) override;
 
     bool PushRenderTarget() override;
     bool PopRenderTarget() override;
@@ -447,6 +455,7 @@ class DX9RENDER : public VDX9RENDER
     void SetGLOWParams(float _fBlurBrushSize, int32_t _GlowIntensity, int32_t _GlowPasses) override;
 
     IDirect3DBaseTexture9 *GetTextureFromID(int32_t nTextureID) override;
+    IDirect3DBaseTexture9 *GetTextureFromID(storm::render::TextureHandle nTextureID) override;
 
     bool GetRenderTargetAsTexture(IDirect3DTexture9 **tex) override;
 

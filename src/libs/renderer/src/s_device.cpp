@@ -1426,10 +1426,32 @@ int32_t DX9RENDER::TextureCreate(UINT width, UINT height, UINT levels, uint32_t 
     return t;
 }
 
+storm::render::TextureHandle DX9RENDER::TextureCreateHandle(const char *fname)
+{
+    return storm::render::HandleFromLegacyId<storm::render::TextureHandle>(TextureCreate(fname));
+}
+
+storm::render::TextureHandle DX9RENDER::TextureCreateHandle(UINT width, UINT height, UINT levels, uint32_t usage,
+                                                            D3DFORMAT format, D3DPOOL pool)
+{
+    return storm::render::HandleFromLegacyId<storm::render::TextureHandle>(
+        TextureCreate(width, height, levels, usage, format, pool));
+}
+
 bool DX9RENDER::TextureIncReference(int32_t texid)
 {
     ++Textures[texid].ref;
     return true;
+}
+
+bool DX9RENDER::TextureIncReference(storm::render::TextureHandle texid)
+{
+    if (!texid.IsValid())
+    {
+        return false;
+    }
+
+    return TextureIncReference(storm::render::HandleToLegacyId(texid));
 }
 
 bool DX9RENDER::TextureLoad(int32_t t)
@@ -1810,6 +1832,16 @@ IDirect3DBaseTexture9 *DX9RENDER::GetBaseTexture(int32_t iTexture)
     return (iTexture >= 0) ? Textures[iTexture].d3dtex : nullptr;
 }
 
+IDirect3DBaseTexture9 *DX9RENDER::GetBaseTexture(storm::render::TextureHandle iTexture)
+{
+    if (!iTexture.IsValid())
+    {
+        return nullptr;
+    }
+
+    return GetBaseTexture(storm::render::HandleToLegacyId(iTexture));
+}
+
 uint32_t DX9RENDER::LoadCubmapSide(std::fstream &fileS, IDirect3DCubeTexture9 *tex, D3DCUBEMAP_FACES face,
                                    uint32_t numMips, uint32_t mipSize, uint32_t size, bool isSwizzled)
 {
@@ -1928,6 +1960,11 @@ bool DX9RENDER::TextureSet(int32_t stage, int32_t texid)
     return true;
 }
 
+bool DX9RENDER::TextureSet(int32_t stage, storm::render::TextureHandle texid)
+{
+    return TextureSet(stage, storm::render::HandleToLegacyId(texid));
+}
+
 //################################################################################
 bool DX9RENDER::TextureRelease(int32_t texid)
 {
@@ -2000,6 +2037,16 @@ bool DX9RENDER::TextureRelease(int32_t texid)
     dwTotalSize -= Textures[texid].dwSize;
 
     return true;
+}
+
+bool DX9RENDER::TextureRelease(storm::render::TextureHandle texid)
+{
+    if (!texid.IsValid())
+    {
+        return true;
+    }
+
+    return TextureRelease(storm::render::HandleToLegacyId(texid));
 }
 
 //################################################################################
@@ -4153,6 +4200,11 @@ HRESULT DX9RENDER::ImageBlt(int32_t TextureID, RECT *pDstRect, RECT *pSrcRect)
     return hRes;
 }
 
+HRESULT DX9RENDER::ImageBlt(storm::render::TextureHandle TextureID, RECT *pDstRect, RECT *pSrcRect)
+{
+    return ImageBlt(storm::render::HandleToLegacyId(TextureID), pDstRect, pSrcRect);
+}
+
 HRESULT DX9RENDER::ImageBlt(const char *pName, RECT *pDstRect, RECT *pSrcRect)
 {
     int32_t TextureID;
@@ -4648,6 +4700,16 @@ IDirect3DBaseTexture9 *DX9RENDER::GetTextureFromID(int32_t nTextureID)
     if (nTextureID < 0)
         return nullptr;
     return Textures[nTextureID].d3dtex;
+}
+
+IDirect3DBaseTexture9 *DX9RENDER::GetTextureFromID(storm::render::TextureHandle nTextureID)
+{
+    if (!nTextureID.IsValid())
+    {
+        return nullptr;
+    }
+
+    return GetTextureFromID(storm::render::HandleToLegacyId(nTextureID));
 }
 
 bool DX9RENDER::GetRenderTargetAsTexture(IDirect3DTexture9 **tex)
