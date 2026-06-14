@@ -20,14 +20,12 @@ WdmWarringShip::WdmWarringShip()
     shipType = wdmest_warring;
     numRects = 0;
     brnTime = 5.0f;
-    texture = -1;
-    texture = wdmObjects->rs->TextureCreate("\\WorldMap\\csmoke.tga");
+    texture = wdmObjects->rs->TextureCreateHandle("\\WorldMap\\csmoke.tga");
 }
 
 WdmWarringShip::~WdmWarringShip()
 {
-    if (texture >= 0)
-        wdmObjects->rs->TextureRelease(texture);
+    wdmObjects->rs->TextureRelease(texture);
 }
 
 // Calculations

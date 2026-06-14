@@ -10,6 +10,7 @@
 
 #pragma once
 
+#include "renderer/render_handles.hpp"
 #include "wdm_enemy_ship.h"
 
 class WdmWarringShip : public WdmEnemyShip
@@ -48,5 +49,5 @@ class WdmWarringShip : public WdmEnemyShip
     MoveInfo move[24];
     int32_t numRects;
     float brnTime;
-    int32_t texture;
+    storm::render::TextureHandle texture;
 };

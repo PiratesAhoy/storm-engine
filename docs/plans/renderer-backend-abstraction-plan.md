@@ -504,7 +504,7 @@ Migration pattern for each owner:
 - Mark exactly one checklist item complete, run lightweight verification, then stop for manual review before continuing.
 
 - [x] `src/libs/sink_effect/src/t_sink.{h,cpp}` - `TSink::texture`
-- [ ] `src/libs/worldmap/src/wdm_warring_ship.{h,cpp}` - `WdmWarringShip::texture`
+- [x] `src/libs/worldmap/src/wdm_warring_ship.{h,cpp}` - `WdmWarringShip::texture`
 - [ ] `src/libs/worldmap/src/wdm_wind_rose.{h,cpp}` - `WdmWindRose::shadowTexture`
 - [ ] `src/libs/worldmap/src/wdm_icon.{h,cpp}` - `WdmIcon::texture`
 - [ ] `src/libs/animals/src/t_butterflies.{h,cpp}` - `TButterflies::texture`
