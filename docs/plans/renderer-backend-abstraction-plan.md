@@ -24,7 +24,7 @@ Legend: `[x]` complete, `[~]` in progress, `[ ]` not started.
   - [x] Migrated `IVBufferManager` to typed vertex/index buffer handles.
   - [x] Fixed the `IVBufferManager` slot-0 release hazard by using `.IsValid()` instead of truthiness.
   - [x] Add typed `TextureHandle` wrappers around the existing texture table.
-  - [ ] Migrate one contained texture owner to typed texture handles.
+  - [x] Migrate one contained texture owner to typed texture handles.
   - [ ] Add neutral clear/viewport/draw-UP overloads after resource-handle seams are stable.
 - [ ] Phase 3 - convert low-risk call sites to neutral APIs
   - [ ] Move simple debug/UI/helper paths away from D3D constants and raw resource IDs.
@@ -87,7 +87,7 @@ Current verification:
 - Full `renderer-test` on macOS remains blocked by legacy D3D headers in `src/libs/renderer/include/dx9render.h` and `src/libs/util/include/platform/d3dx9.hpp` (`fatal error: 'd3d9.h' file not found`).
 - The Windows build has been verified by the user after the typed buffer-handle slice. This is currently a human-only verification step because the available agent environment is macOS-only.
 
-Next recommended slice: migrate one small local texture owner to typed `TextureHandle` overloads before broad draw/state migration.
+Next recommended slice: continue migrating small local texture owners to typed `TextureHandle` overloads before broad draw/state migration.
 
 ## Goals
 
@@ -482,10 +482,11 @@ Completed first slice:
 - Migrated `IVBufferManager` from `renderer_handle` fields to typed vertex/index buffer handles.
 - Replaced `IVBufferManager` truthiness-based release checks with `.IsValid()`.
 - Added typed `TextureHandle` overloads around the existing texture table for create, set, release, reference increment, image blit, and base-texture lookup while preserving legacy `int32_t` methods.
+- Migrated `SEAFOAM::carcassTexture` to `storm::render::TextureHandle`, using `TextureCreateHandle`, typed `TextureSet` / `TextureRelease`, and `.IsValid()` for release.
 
 Remaining recommended Phase 2 work:
 
-- Migrate one contained texture owner to typed texture handles before broader caller migration.
+- Continue migrating small contained texture owners to typed texture handles before broader caller migration.
 - Add neutral clear/viewport/draw-UP overloads only after the resource-handle seams are stable.
 
 ### Phase 3: Convert low-risk call sites to neutral APIs

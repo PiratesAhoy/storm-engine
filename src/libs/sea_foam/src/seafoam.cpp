@@ -16,7 +16,11 @@ CREATE_CLASS(SEAFOAM)
 
 //--------------------------------------------------------------------
 SEAFOAM::SEAFOAM()
-    : seaID(0), sea(nullptr), shipsCount(0), carcassTexture(0), isStorm(false), soundService(nullptr)
+    : seaID(0)
+    , sea(nullptr)
+    , shipsCount(0)
+    , isStorm(false)
+    , soundService(nullptr)
 {
     psIni = nullptr;
     renderer = nullptr;
@@ -28,7 +32,7 @@ SEAFOAM::~SEAFOAM()
     // GUARD(SEAFOAM::~SEAFOAM)
 
     ReleaseShipFoam();
-    if (renderer && (carcassTexture >= 0))
+    if (renderer)
         renderer->TextureRelease(carcassTexture);
     // UNGUARD
 }
@@ -59,7 +63,7 @@ bool SEAFOAM::Init()
     // core.CreateEntity(&arrowModel,"MODELR");
     // core.Send_Message(arrowModel,"ls",MSG_MODEL_LOAD_GEO, "fish01");
 
-    carcassTexture = renderer->TextureCreate("seafoam_2.tga");
+    carcassTexture = renderer->TextureCreateHandle("seafoam_2.tga");
     return true;
     // UNGUARD
 }

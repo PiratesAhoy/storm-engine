@@ -81,7 +81,7 @@ class SEAFOAM : public Entity
     tShipFoamInfo shipFoamInfo[MAX_SHIPS]{};
     int shipsCount;
     std::unique_ptr<INIFILE> psIni;
-    int32_t carcassTexture;
+    storm::render::TextureHandle carcassTexture;
     bool isStorm;
     VSoundService *soundService;
 };
