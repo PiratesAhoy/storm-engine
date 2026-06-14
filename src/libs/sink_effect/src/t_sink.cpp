@@ -4,7 +4,7 @@
 #include "rands.h"
 
 //--------------------------------------------------------------------
-TSink::TSink() : enabled(false), texture(0), ivManager(nullptr), time(0)
+TSink::TSink() : enabled(false), renderer(nullptr), sea(nullptr), ivManager(nullptr), time(0)
 {
 }
 
@@ -23,7 +23,7 @@ void TSink::Initialize(INIFILE *_ini, IDirect3DDevice9 *_device, SEA_BASE *_sea,
     ivManager =
         new IVBufferManager(renderer, sink_effect::SINK_FVF, sizeof(SINK_VERTEX), 3 * sink_effect::TRIANGLES_COUNT,
                             sink_effect::GRID_STEPS * sink_effect::GRID_STEPS, sink_effect::MAX_SPLASHES);
-    texture = renderer->TextureCreate("explos.tga");
+    texture = renderer->TextureCreateHandle("explos.tga");
     for (auto i = 0; i < sink_effect::MAX_SPLASHES; ++i)
     {
         splashes[i].Initialize(_ini, sea);
@@ -44,11 +44,10 @@ void TSink::Release()
         delete ivManager;
         ivManager = nullptr;
     }
-    if (texture)
-    {
+
+    if (renderer)
         renderer->TextureRelease(texture);
-        texture = 0;
-    }
+    texture.Invalidate();
 }
 
 //--------------------------------------------------------------------

@@ -28,7 +28,7 @@ class TSink
 
     VDX9RENDER *renderer;
     SEA_BASE *sea;
-    int32_t texture;
+    storm::render::TextureHandle texture;
     IVBufferManager *ivManager;
     uint32_t time;
 

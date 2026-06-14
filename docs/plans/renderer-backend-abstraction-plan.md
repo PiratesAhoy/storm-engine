@@ -489,6 +489,44 @@ Remaining recommended Phase 2 work:
 - Continue migrating small contained texture owners to typed texture handles before broader caller migration.
 - Add neutral clear/viewport/draw-UP overloads only after the resource-handle seams are stable.
 
+Contained one-texture owners that are good candidates for the next typed `TextureHandle` slices:
+
+Migration pattern for each owner:
+
+- Read the owning header and implementation first; confirm the texture is a local owner field and not shared externally.
+- Change only that one field from `int32_t` / `uint32_t` to `storm::render::TextureHandle`.
+- Use default invalid construction where possible. If the constructor previously relied on `0`/`-1` to keep `Release()` safe before `Initialize()`, also initialize nullable service pointers such as `renderer` to `nullptr`.
+- Replace `TextureCreate(...)` with `TextureCreateHandle(...)`.
+- Leave existing `TextureSet(stage, texture)` calls structurally unchanged; overload resolution should select the typed path.
+- Prefer release through the typed overload without a handle validity guard because `TextureRelease(TextureHandle)` is an invalid-handle no-op. Keep guards for nullable renderer/service pointers.
+- After release, reset the handle with `handle.Invalidate()` or `handle = {}` if the owner can be released more than once or reinitialized.
+- Do not migrate neighbouring particle systems, texture arrays, or unrelated resource IDs in the same slice.
+- Mark exactly one checklist item complete, run lightweight verification, then stop for manual review before continuing.
+
+- [x] `src/libs/sink_effect/src/t_sink.{h,cpp}` - `TSink::texture`
+- [ ] `src/libs/worldmap/src/wdm_warring_ship.{h,cpp}` - `WdmWarringShip::texture`
+- [ ] `src/libs/worldmap/src/wdm_wind_rose.{h,cpp}` - `WdmWindRose::shadowTexture`
+- [ ] `src/libs/worldmap/src/wdm_icon.{h,cpp}` - `WdmIcon::texture`
+- [ ] `src/libs/animals/src/t_butterflies.{h,cpp}` - `TButterflies::texture`
+- [ ] `src/libs/water_rings/src/water_rings.{h,cpp}` - `WATER_RINGS::ringTexture`
+- [ ] `src/libs/location/src/blood.{h,cpp}` - `BLOOD::texID`
+- [ ] `src/libs/blot/src/blots.{h,cpp}` - `BLOTS::textureID`
+- [ ] `src/libs/sea_ai/src/ai_ship_camera_controller.{h,cpp}` - `AIShipCameraController::iCrosshairTex`
+- [ ] `src/libs/worldmap/src/wdm_storm.{h,cpp}` - `WdmStorm::rainTexture`
+- [ ] `src/libs/worldmap/src/wdm_ship.{h,cpp}` - `WdmShip::wmtexture`
+- [ ] `src/libs/rigging/src/rope.{h,cpp}` - `ROPE::texl`
+- [ ] `src/libs/battle_interface/src/image/material.{h,cpp}` - `BIImageMaterial::m_nTextureID`
+- [ ] `src/libs/weather/src/water_flare.{h,cpp}` - `WATERFLARE::iFlareTex`; this currently has a slot-0 release hazard (`iFlareTex > 0`).
+- [ ] `src/libs/sea_creatures/src/sharks.{h,cpp}` - `SHARKS::trackTx`
+- [ ] `src/libs/sea_ai/src/ai_balls.{h,cpp}` - `AI_BALLS::dwTextureIndex`; this currently uses `uint32_t`, so migrate carefully from unsigned legacy storage.
+- [ ] `src/libs/rigging/src/flag.{h,cpp}` - `FLAG::texl`; one texture with reload paths.
+- [ ] `src/libs/rigging/src/vant.{h,cpp}` - `VANT::texl`; one texture with several recreate paths.
+- [ ] `src/libs/location/src/grass.{h,cpp}` - `GRASS::texture`; one owned texture plus explicit texture-stage clears that should remain legacy `-1` or use invalid handles deliberately.
+- [ ] `src/libs/dialog/src/legacy_dialog.{h,cpp}` - `LegacyDialog::interfaceTexture_`; one texture with dialog resource reload behavior.
+- [ ] `src/libs/renderer/src/font.cpp` - `storm::Font::textureHandle_`; one texture inside renderer font code with reload paths.
+
+Do not fold texture arrays or multi-texture systems into these slices. Deferred areas include `seafoam_ps`, `seps`, weather sun/rain/sky, worldmap sea/wind UI, rigging sail, and xinterface nodes; migrate those as separate subsystem-specific passes.
+
 ### Phase 3: Convert low-risk call sites to neutral APIs
 
 Purpose: reduce D3D9 leakage outside the renderer without changing the backend.
