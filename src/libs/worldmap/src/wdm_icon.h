@@ -10,6 +10,7 @@
 
 #pragma once
 
+#include "renderer/render_handles.hpp"
 #include "wdm_interface_object.h"
 
 class WdmEnemyShip;
@@ -39,7 +40,7 @@ class WdmIcon : public WdmInterfaceObject
     // --------------------------------------------------------------------------------------------
   private:
     WdmEnemyShip *lastShip;
-    int32_t texture;
+    storm::render::TextureHandle texture;
     Icon icon[2];
     float islandAlpha;
     float skipAlpha;

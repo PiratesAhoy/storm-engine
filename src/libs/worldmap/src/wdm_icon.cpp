@@ -20,7 +20,7 @@ WdmIcon::WdmIcon()
     lastShip = nullptr;
     icon[0].u = -1.0f;
     icon[1].u = -1.0f;
-    texture = wdmObjects->rs->TextureCreate("WorldMap\\Interfaces\\BigIcons.tga");
+    texture = wdmObjects->rs->TextureCreateHandle("WorldMap\\Interfaces\\BigIcons.tga");
     islandAlpha = 0.0f;
     skipAlpha = 0.0f;
     stormAlpha = 0.0f;
@@ -28,8 +28,7 @@ WdmIcon::WdmIcon()
 
 WdmIcon::~WdmIcon()
 {
-    if (texture >= 0)
-        wdmObjects->rs->TextureRelease(texture);
+    wdmObjects->rs->TextureRelease(texture);
 }
 
 // Calculations
