@@ -10,6 +10,7 @@
 
 #pragma once
 
+#include "renderer/render_handles.hpp"
 #include "wdm_render_model.h"
 
 class WdmWindRose : public WdmRenderModel
@@ -40,5 +41,5 @@ class WdmWindRose : public WdmRenderModel
     // Encapsulation
     // --------------------------------------------------------------------------------------------
   private:
-    int32_t shadowTexture;
+    storm::render::TextureHandle shadowTexture;
 };

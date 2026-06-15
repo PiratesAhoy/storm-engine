@@ -16,19 +16,17 @@
 
 WdmWindRose::WdmWindRose()
 {
-    shadowTexture = -1;
     CMatrix mscale, mrot(0.0f, 3.1415926536f, 0.0f);
     mscale.m[0][0] = 0.028f;
     mscale.m[1][1] = 0.028f;
     mscale.m[2][2] = 0.028f;
     mtx.EqMultiply(mrot, mscale);
-    shadowTexture = wdmObjects->rs->TextureCreate("WorldMap\\Geometry\\compass_shadow.tga");
+    shadowTexture = wdmObjects->rs->TextureCreateHandle("WorldMap\\Geometry\\compass_shadow.tga");
 }
 
 WdmWindRose::~WdmWindRose()
 {
-    if (shadowTexture >= 0)
-        wdmObjects->rs->TextureRelease(shadowTexture);
+    wdmObjects->rs->TextureRelease(shadowTexture);
 }
 
 // Calculations
