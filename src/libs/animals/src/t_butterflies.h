@@ -4,6 +4,7 @@
 #include "animation.h"
 #include "iv_buffer_manager.h"
 #include "matrix.h"
+#include "renderer/render_handles.hpp"
 #include "t_butterfly.h"
 #include "collide.h"
 #include "dx9render.h"
@@ -39,5 +40,5 @@ class TButterflies
 
     bool enabled;
     int32_t yDefineTime;
-    int32_t texture;
+    storm::render::TextureHandle texture;
 };

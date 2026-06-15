@@ -507,7 +507,7 @@ Migration pattern for each owner:
 - [x] `src/libs/worldmap/src/wdm_warring_ship.{h,cpp}` - `WdmWarringShip::texture`
 - [x] `src/libs/worldmap/src/wdm_wind_rose.{h,cpp}` - `WdmWindRose::shadowTexture`
 - [x] `src/libs/worldmap/src/wdm_icon.{h,cpp}` - `WdmIcon::texture`
-- [ ] `src/libs/animals/src/t_butterflies.{h,cpp}` - `TButterflies::texture`
+- [x] `src/libs/animals/src/t_butterflies.{h,cpp}` - `TButterflies::texture`
 - [ ] `src/libs/water_rings/src/water_rings.{h,cpp}` - `WATER_RINGS::ringTexture`
 - [ ] `src/libs/location/src/blood.{h,cpp}` - `BLOOD::texID`
 - [ ] `src/libs/blot/src/blots.{h,cpp}` - `BLOTS::textureID`

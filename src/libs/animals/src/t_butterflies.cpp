@@ -53,7 +53,7 @@ void TButterflies::Init()
         butterflies[i].Initialize(CVECTOR(0.0f, 0.0f, 0.0f), maxDistance, ivManager->ReserveElement(), rand() % 4,
                                   rand() % 4);
 
-    texture = renderService->TextureCreate("butter.tga");
+    texture = renderService->TextureCreateHandle("butter.tga");
 }
 
 //--------------------------------------------------------------------
