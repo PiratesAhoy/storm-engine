@@ -3,6 +3,7 @@
 #include "collide.h"
 #include "dx9render.h"
 #include "model.h"
+#include "renderer/render_handles.hpp"
 #include "sea_base.h"
 #include "vma.hpp"
 //#include "..\geom_lib\geos.h"
@@ -77,6 +78,6 @@ class WaterRings : public Entity
     VDX9RENDER *renderService;
     SEA_BASE *sea;
     IVBufferManager *ivManager;
-    int32_t ringTexture;
+    storm::render::TextureHandle ringTexture;
     tRing rings[waterrings::MAX_RINGS];
 };

@@ -39,7 +39,7 @@ bool WaterRings::Init()
         new IVBufferManager(renderService, waterrings::RING_FVF, sizeof(RING_VERTEX), waterrings::TRIANGLES_COUNT * 3,
                             waterrings::GRID_STEPS_COUNT * waterrings::GRID_STEPS_COUNT, waterrings::MAX_RINGS);
 
-    ringTexture = renderService->TextureCreate("ring.tga");
+    ringTexture = renderService->TextureCreateHandle("ring.tga");
 
     for (auto i = 0; i < waterrings::MAX_RINGS; i++)
     {
