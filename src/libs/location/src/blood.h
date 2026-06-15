@@ -2,6 +2,7 @@
 
 #include "collide.h"
 #include "dx9render.h"
+#include "renderer/render_handles.hpp"
 #include "vma.hpp"
 #include <vector>
 
@@ -73,7 +74,7 @@ class Blood : public Entity
   protected:
     VDX9RENDER *pRS;
     COLLIDE *pCol;
-    int32_t texID;
+    storm::render::TextureHandle texID;
 
     BloodTriangle pvBloodT[MAX_BLOOD_TRIANGLES];
     int32_t nStartT;

@@ -15,16 +15,15 @@ CVECTOR Blood::normal;
 Blood::Blood()
     : pRS(nullptr), pCol(nullptr), pvBloodT{}
 {
-    texID = -1;
     nStartT = 0;
     nUsedTQ = 0;
 }
 
 Blood::~Blood()
 {
-    if (texID != -1)
+    if (pRS)
         pRS->TextureRelease(texID);
-    texID = -1;
+    texID.Invalidate();
 }
 
 // Initialization
@@ -36,7 +35,7 @@ bool Blood::Init()
     pCol = core.GetServiceX<COLLIDE>();
     Assert(pCol);
 
-    texID = pRS->TextureCreate("blood.tga");
+    texID = pRS->TextureCreateHandle("blood.tga");
 
     return true;
 }
