@@ -12,6 +12,7 @@
 
 #include "dx9render.h"
 #include "model.h"
+#include "renderer/render_handles.hpp"
 #include "vma.hpp"
 
 #define BLOTS_NTRGS 32    // Triangles in 1 blot
@@ -92,7 +93,7 @@ class Blots : public Entity
   private:
     VDX9RENDER *rs;
     entid_t model;
-    int32_t textureID;
+    storm::render::TextureHandle textureID;
     ATTRIBUTES *blotsInfo;
     ATTRIBUTES *pCharAttributeRoot;
 

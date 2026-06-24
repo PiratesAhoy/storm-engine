@@ -35,7 +35,6 @@ Blots::Blots()
     for (int32_t i = 0; i < BLOTS_MAX; i++)
         blot[i].isUsed = 0;
     rs = nullptr;
-    textureID = -1;
     useVrt = 0;
     blotsInfo = nullptr;
     pCharAttributeRoot = nullptr;
@@ -44,7 +43,7 @@ Blots::Blots()
 
 Blots::~Blots()
 {
-    if (rs && textureID >= 0)
+    if (rs)
         rs->TextureRelease(textureID);
 }
 
@@ -60,7 +59,7 @@ bool Blots::Init()
     ////core.LayerCreate("realize", true, false);
     // core.SetLayerType(realize, layer_type_t::realize);
     // core.AddToLayer(realize, GetId(), 1000);
-    textureID = rs->TextureCreate("blot.tga");
+    textureID = rs->TextureCreateHandle("blot.tga");
     return true;
     // UNGUARD
 }
