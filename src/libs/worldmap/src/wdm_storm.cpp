@@ -124,14 +124,14 @@ WdmStorm::WdmStorm()
     }
     // add to objects
     wdmObjects->AddStorm(this);
-    rainTexture = wdmObjects->rs->TextureCreate("\\WorldMap\\rain.tga");
+    rainTexture = wdmObjects->rs->TextureCreateHandle("\\WorldMap\\rain.tga");
 }
 
 WdmStorm::~WdmStorm()
 {
-    if (rainTexture >= 0)
+    if (rainTexture.IsValid())
         wdmObjects->rs->TextureRelease(rainTexture);
-    rainTexture = -1;
+    rainTexture.Invalidate();
     for (int32_t i = 0; i < num; i++)
     {
         wdmObjects->wm->DeleteObject(cloud[i]);

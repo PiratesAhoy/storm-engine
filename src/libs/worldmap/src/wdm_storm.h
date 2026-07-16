@@ -10,6 +10,7 @@
 
 #pragma once
 
+#include "renderer/render_handles.hpp"
 #include "wdm_render_object.h"
 
 class ATTRIBUTES;
@@ -68,7 +69,7 @@ class WdmStorm : public WdmRenderObject
     ATTRIBUTES *saveAttribute;
 
     // Rain
-    int32_t rainTexture;
+    storm::render::TextureHandle rainTexture;
     RS_RECT rainRect[48 * 8];
 
     static char cloudPosName[16];
