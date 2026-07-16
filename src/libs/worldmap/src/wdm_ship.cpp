@@ -44,10 +44,9 @@ WdmShip::WdmShip()
         lines[i].ay = 0.0f;
         lines[i].size = 0.0f;
     }
-    wmtexture = -1;
     wdmObjects->AddShip(this);
     kMaxSpeed = 1.0f;
-    wmtexture = wdmObjects->rs->TextureCreate("WorldMap\\watermark.tga");
+    wmtexture = wdmObjects->rs->TextureCreateHandle("WorldMap\\watermark.tga");
     isLive = true;
     isSelect = false;
     collisionCounter = 0;
@@ -247,7 +246,7 @@ void WdmShip::ShipUpdate(float dltTime)
 
 void WdmShip::LRender(VDX9RENDER *rs)
 {
-    if (wmtexture >= 0 && isWMRender)
+    if (wmtexture.IsValid() && isWMRender)
     {
         isWMRender = false;
         // draw trail

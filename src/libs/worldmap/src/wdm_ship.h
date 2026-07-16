@@ -10,6 +10,7 @@
 
 #pragma once
 
+#include "renderer/render_handles.hpp"
 #include "wdm_render_model.h"
 
 // #define WDM_SHIP_MODELL 6.0f // Half the length of the ship
@@ -86,7 +87,7 @@ class WdmShip : public WdmRenderModel
     CVECTOR rspeed;
     int32_t collisionCounter;
     float slope;
-    int32_t wmtexture;
+    storm::render::TextureHandle wmtexture;
     bool isWMRender;
 
     Line lines[8];

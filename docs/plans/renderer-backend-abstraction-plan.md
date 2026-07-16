@@ -513,7 +513,7 @@ Migration pattern for each owner:
 - [x] `src/libs/blot/src/blots.{h,cpp}` - `Blots::textureID`
 - [x] `src/libs/sea_ai/src/ai_ship_camera_controller.{h,cpp}` - `AIShipCameraController::iCrosshairTex`
 - [x] `src/libs/worldmap/src/wdm_storm.{h,cpp}` - `WdmStorm::rainTexture`
-- [ ] `src/libs/worldmap/src/wdm_ship.{h,cpp}` - `WdmShip::wmtexture`
+- [x] `src/libs/worldmap/src/wdm_ship.{h,cpp}` - `WdmShip::wmtexture`
 - [ ] `src/libs/rigging/src/rope.{h,cpp}` - `ROPE::texl`
 - [ ] `src/libs/battle_interface/src/image/material.{h,cpp}` - `BIImageMaterial::m_nTextureID`
 - [ ] `src/libs/weather/src/water_flare.{h,cpp}` - `WATERFLARE::iFlareTex`; this currently has a slot-0 release hazard (`iFlareTex > 0`).
