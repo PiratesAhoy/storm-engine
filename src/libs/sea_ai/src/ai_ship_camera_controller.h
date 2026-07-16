@@ -1,5 +1,7 @@
 #pragma once
 
+#include "renderer/render_handles.hpp"
+
 class AIShip;
 
 class AIShipCameraController
@@ -8,7 +10,7 @@ class AIShipCameraController
     ATTRIBUTES *pTargetAPointer;
     uint32_t dwTarget;
     float fDelta;
-    int32_t iCrosshairTex;
+    storm::render::TextureHandle iCrosshairTex;
     bool bCameraOutside;
 
     uint32_t Colors[4];

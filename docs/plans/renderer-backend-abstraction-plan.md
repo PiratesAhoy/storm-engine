@@ -511,7 +511,7 @@ Migration pattern for each owner:
 - [x] `src/libs/water_rings/src/water_rings.{h,cpp}` - `WaterRings::ringTexture`
 - [x] `src/libs/location/src/blood.{h,cpp}` - `Blood::texID`
 - [x] `src/libs/blot/src/blots.{h,cpp}` - `Blots::textureID`
-- [ ] `src/libs/sea_ai/src/ai_ship_camera_controller.{h,cpp}` - `AIShipCameraController::iCrosshairTex`
+- [x] `src/libs/sea_ai/src/ai_ship_camera_controller.{h,cpp}` - `AIShipCameraController::iCrosshairTex`
 - [ ] `src/libs/worldmap/src/wdm_storm.{h,cpp}` - `WdmStorm::rainTexture`
 - [ ] `src/libs/worldmap/src/wdm_ship.{h,cpp}` - `WdmShip::wmtexture`
 - [ ] `src/libs/rigging/src/rope.{h,cpp}` - `ROPE::texl`

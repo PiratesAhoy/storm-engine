@@ -6,14 +6,13 @@ AIShipCameraController::AIShipCameraController(AIShip *_pAIShip)
     dwTarget = RELATION_UNKNOWN;
     pTargetAPointer = nullptr;
     fDelta = 0.0f;
-    iCrosshairTex = -1;
     pACrosshair = nullptr;
     SetAIShip(_pAIShip);
 }
 
 AIShipCameraController::~AIShipCameraController()
 {
-    if (iCrosshairTex >= 0)
+    if (iCrosshairTex.IsValid())
         AIHelper::pRS->TextureRelease(iCrosshairTex);
 }
 
@@ -25,7 +24,7 @@ bool AIShipCameraController::Init()
     }
     if (pACrosshair)
     {
-        iCrosshairTex = AIHelper::pRS->TextureCreate(pACrosshair->GetAttribute("Texture"));
+        iCrosshairTex = AIHelper::pRS->TextureCreateHandle(pACrosshair->GetAttribute("Texture"));
         dwSubTexturesX = pACrosshair->GetAttributeAsDword("SubTexX");
         dwSubTexturesY = pACrosshair->GetAttributeAsDword("SubTexY");
         auto *pAColors = pACrosshair->GetAttributeClass("colors");
