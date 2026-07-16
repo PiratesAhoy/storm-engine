@@ -3,6 +3,7 @@
 #include "dx9render.h"
 #include "geos.h"
 #include "matrix.h"
+#include "renderer/render_handles.hpp"
 #include "sail_base.h"
 
 class NODE;
@@ -45,7 +46,7 @@ class ROPE : public ROPE_BASE
     int wRopeLast;
 
     char *TextureName;
-    int32_t texl;
+    storm::render::TextureHandle texl;
 
     VDX9RENDER *RenderService;
 

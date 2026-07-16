@@ -19,7 +19,6 @@ ROPE::ROPE()
     ropeQuantity = 0;
 
     TextureName = nullptr;
-    texl = -1;
     bFirstRun = true;
     
     mat.Diffuse.r = 1.f;
@@ -52,7 +51,8 @@ ROPE::~ROPE()
         groupQuantity = 0;
     }
     // removing textures
-    TEXTURE_RELEASE(RenderService, texl);
+    if (RenderService)
+        RenderService->TextureRelease(texl);
     STORM_DELETE(TextureName);
 
     VERTEX_BUFFER_RELEASE(RenderService, vBuf);
@@ -79,7 +79,7 @@ void ROPE::SetDevice()
 
     LoadIni();
 
-    texl = RenderService->TextureCreate(TextureName);
+    texl = RenderService->TextureCreateHandle(TextureName);
 }
 
 bool ROPE::CreateState(ENTITY_STATE_GEN *state_gen)
@@ -798,7 +798,7 @@ void ROPE::LoadIni()
 
     // texture name
     ini->ReadString(section, "TextureName", param, sizeof(param) - 1, "sail_rope.tga");
-    if (texl != -1)
+    if (texl.IsValid())
     {
         if (strcmp(TextureName, param))
             if (RenderService)
@@ -808,7 +808,7 @@ void ROPE::LoadIni()
                 TextureName = new char[len];
                 memcpy(TextureName, param, len);
                 RenderService->TextureRelease(texl);
-                texl = RenderService->TextureCreate(TextureName);
+                texl = RenderService->TextureCreateHandle(TextureName);
             }
     }
     else
