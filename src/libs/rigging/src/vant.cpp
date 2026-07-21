@@ -13,7 +13,6 @@ VANT_BASE::VANT_BASE()
     bUse = false;
     RenderService = nullptr;
     TextureName = nullptr;
-    texl = -1;
     bRunFirstTime = true;
     bYesDeleted = false;
     wVantLast = 0;
@@ -28,7 +27,8 @@ VANT_BASE::VANT_BASE()
 
 VANT_BASE::~VANT_BASE()
 {
-    TEXTURE_RELEASE(RenderService, texl);
+    if (RenderService)
+        RenderService->TextureRelease(texl);
     STORM_DELETE(TextureName);
     while (groupQuantity > 0)
     {
@@ -66,8 +66,8 @@ void VANT_BASE::SetDevice()
 
     LoadIni();
 
-    if (texl == -1)
-        texl = RenderService->TextureCreate(TextureName);
+    if (!texl.IsValid())
+        texl = RenderService->TextureCreateHandle(TextureName);
 }
 
 bool VANT_BASE::CreateState(ENTITY_STATE_GEN *state_gen)
@@ -639,7 +639,7 @@ void VANT::LoadIni()
 
     // texture name
     ini->ReadString(section, "TextureName", param, sizeof(param) - 1, "vant.tga");
-    if (texl != -1)
+    if (texl.IsValid())
     {
         if (strcmp(TextureName, param))
             if (RenderService)
@@ -649,7 +649,7 @@ void VANT::LoadIni()
                 TextureName = new char[len];
                 memcpy(TextureName, param, len);
                 RenderService->TextureRelease(texl);
-                texl = RenderService->TextureCreate(TextureName);
+                texl = RenderService->TextureCreateHandle(TextureName);
             }
     }
     else
@@ -720,7 +720,7 @@ void VANTL::LoadIni()
 
     // texture name
     ini->ReadString(section, "TextureName", param, sizeof(param) - 1, "vant.tga");
-    if (texl != -1)
+    if (texl.IsValid())
     {
         if (strcmp(TextureName, param))
             if (RenderService)
@@ -730,7 +730,7 @@ void VANTL::LoadIni()
                 TextureName = new char[len];
                 memcpy(TextureName, param, len);
                 RenderService->TextureRelease(texl);
-                texl = RenderService->TextureCreate(TextureName);
+                texl = RenderService->TextureCreateHandle(TextureName);
             }
     }
     else
@@ -801,7 +801,7 @@ void VANTZ::LoadIni()
 
     // texture name
     ini->ReadString(section, "TextureName", param, sizeof(param) - 1, "vant.tga");
-    if (texl != -1)
+    if (texl.IsValid())
     {
         if (strcmp(TextureName, param))
             if (RenderService)
@@ -811,7 +811,7 @@ void VANTZ::LoadIni()
                 TextureName = new char[len];
                 memcpy(TextureName, param, len);
                 RenderService->TextureRelease(texl);
-                texl = RenderService->TextureCreate(TextureName);
+                texl = RenderService->TextureCreateHandle(TextureName);
             }
     }
     else

@@ -520,7 +520,7 @@ Migration pattern for each owner:
 - [x] `src/libs/sea_creatures/src/sharks.{h,cpp}` - `SHARKS::trackTx`
 - [x] `src/libs/sea_ai/src/ai_balls.{h,cpp}` - `AI_BALLS::dwTextureIndex`
 - [x] `src/libs/rigging/src/flag.{h,cpp}` - `FLAG::texl`
-- [ ] `src/libs/rigging/src/vant.{h,cpp}` - `VANT::texl`; one texture with several recreate paths.
+- [x] `src/libs/rigging/src/vant.{h,cpp}` - `VANT::texl`
 - [ ] `src/libs/location/src/grass.{h,cpp}` - `GRASS::texture`; one owned texture plus explicit texture-stage clears that should remain legacy `-1` or use invalid handles deliberately.
 - [ ] `src/libs/dialog/src/legacy_dialog.{h,cpp}` - `LegacyDialog::interfaceTexture_`; one texture with dialog resource reload behavior.
 - [ ] `src/libs/renderer/src/font.cpp` - `storm::Font::textureHandle_`; one texture inside renderer font code with reload paths.

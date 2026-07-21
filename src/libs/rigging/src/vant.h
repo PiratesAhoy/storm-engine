@@ -3,6 +3,7 @@
 #include "matrix.h"
 #include "dx9render.h"
 #include "geos.h"
+#include "renderer/render_handles.hpp"
 #include "vma.hpp"
 
 #include <filesystem>
@@ -84,7 +85,7 @@ class VANT_BASE : public Entity
     bool bYesDeleted;
     int wVantLast;
     char *TextureName;
-    int32_t texl;
+    storm::render::TextureHandle texl;
     int VantId;
 
     struct VANTDATA
