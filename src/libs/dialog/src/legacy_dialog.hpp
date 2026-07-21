@@ -1,6 +1,7 @@
 #pragma once
 
 #include "link_describe.hpp"
+#include "renderer/render_handles.hpp"
 
 #include <dx9render.h>
 #include <entity.h>
@@ -93,7 +94,7 @@ class LegacyDialog final : public Entity
     int32_t nameColor_{};
     int32_t subFont_{};
 
-    int32_t interfaceTexture_{};
+    storm::render::TextureHandle interfaceTexture_;
 
     int32_t backVertexBuffer_{};
     int32_t backIndexBuffer_{};

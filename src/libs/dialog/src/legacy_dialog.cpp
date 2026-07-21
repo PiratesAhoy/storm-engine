@@ -132,9 +132,10 @@ LegacyDialog::~LegacyDialog() noexcept
 {
     core.SetTimeScale(1.f);
 
-    if (interfaceTexture_)
+    if (interfaceTexture_.IsValid())
     {
         RenderService->TextureRelease(interfaceTexture_);
+        interfaceTexture_.Invalidate();
     }
 
     if (headModel_ != invalid_entity)
@@ -162,7 +163,7 @@ bool LegacyDialog::Init()
     {
         texture = DEFAULT_INTERFACE_TEXTURE;
     }
-    interfaceTexture_ = RenderService->TextureCreate(texture);
+    interfaceTexture_ = RenderService->TextureCreateHandle(texture);
 
     CreateBackBuffers();
 
@@ -252,7 +253,7 @@ uint32_t LegacyDialog::AttributeChanged(ATTRIBUTES *attributes)
     if (storm::iEquals(attributeName, "texture"))
     {
         RenderService->TextureRelease(interfaceTexture_);
-        interfaceTexture_ = RenderService->TextureCreate(attributes->GetThisAttr());
+        interfaceTexture_ = RenderService->TextureCreateHandle(attributes->GetThisAttr());
     }
     else if (storm::iEquals(attributeName, "headModel"))
     {
