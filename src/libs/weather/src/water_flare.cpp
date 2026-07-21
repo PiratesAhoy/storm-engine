@@ -10,7 +10,6 @@
 WATERFLARE::WATERFLARE()
 {
     // GUARD(WATERFLARE::WATERFLARE())
-    iFlareTex = -1;
     iFlaresNum = 0;
     RS = nullptr;
     pWeather = nullptr;
@@ -79,8 +78,8 @@ void WATERFLARE::Execute(uint32_t Delta_Time)
       char str[256];
       // create texture
       sprintf_s(str,"%swaterflare.tga",WATERFLARE_DIR);
-      if (iFlareTex>0) RS->TextureRelease(iFlareTex);
-      iFlareTex = RS->TextureCreate(str);
+      if (iFlareTex.IsValid()) RS->TextureRelease(iFlareTex);
+      iFlareTex = RS->TextureCreateHandle(str);
       GenerateFlares();
     }*/
 

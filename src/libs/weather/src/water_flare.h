@@ -1,5 +1,6 @@
 #pragma once
 
+#include "renderer/render_handles.hpp"
 #include "typedef.h"
 #include "weather_base.h"
 
@@ -7,7 +8,8 @@ class WATERFLARE : public Entity
 {
     RS_RECT *pRSRect;
     float *pfAlpha;
-    int32_t iFlareTex, iFlaresNum;
+    storm::render::TextureHandle iFlareTex;
+    int32_t iFlaresNum;
     WEATHER_BASE *pWeather;
     VDX9RENDER *RS;
 

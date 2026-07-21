@@ -516,7 +516,7 @@ Migration pattern for each owner:
 - [x] `src/libs/worldmap/src/wdm_ship.{h,cpp}` - `WdmShip::wmtexture`
 - [x] `src/libs/rigging/src/rope.{h,cpp}` - `ROPE::texl`
 - [x] `src/libs/battle_interface/src/image/material.{h,cpp}` - `BIImageMaterial::m_nTextureID`
-- [ ] `src/libs/weather/src/water_flare.{h,cpp}` - `WATERFLARE::iFlareTex`; this currently has a slot-0 release hazard (`iFlareTex > 0`).
+- [x] `src/libs/weather/src/water_flare.{h,cpp}` - `WATERFLARE::iFlareTex`
 - [ ] `src/libs/sea_creatures/src/sharks.{h,cpp}` - `SHARKS::trackTx`
 - [ ] `src/libs/sea_ai/src/ai_balls.{h,cpp}` - `AI_BALLS::dwTextureIndex`; this currently uses `uint32_t`, so migrate carefully from unsigned legacy storage.
 - [ ] `src/libs/rigging/src/flag.{h,cpp}` - `FLAG::texl`; one texture with reload paths.
