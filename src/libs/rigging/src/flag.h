@@ -4,6 +4,7 @@
 #include "geos.h"
 #include "matrix.h"
 #include "model.h"
+#include "renderer/render_handles.hpp"
 
 #include <filesystem>
 
@@ -48,7 +49,7 @@ class FLAG : public Entity
     bool verticesNeedUpdate_ = true;
     VDX9RENDER *RenderService;
     std::string textureName_;
-    int32_t texl;
+    storm::render::TextureHandle texl;
 
     struct WIND
     {

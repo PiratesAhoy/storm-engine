@@ -519,7 +519,7 @@ Migration pattern for each owner:
 - [x] `src/libs/weather/src/water_flare.{h,cpp}` - `WATERFLARE::iFlareTex`
 - [x] `src/libs/sea_creatures/src/sharks.{h,cpp}` - `SHARKS::trackTx`
 - [x] `src/libs/sea_ai/src/ai_balls.{h,cpp}` - `AI_BALLS::dwTextureIndex`
-- [ ] `src/libs/rigging/src/flag.{h,cpp}` - `FLAG::texl`; one texture with reload paths.
+- [x] `src/libs/rigging/src/flag.{h,cpp}` - `FLAG::texl`
 - [ ] `src/libs/rigging/src/vant.{h,cpp}` - `VANT::texl`; one texture with several recreate paths.
 - [ ] `src/libs/location/src/grass.{h,cpp}` - `GRASS::texture`; one owned texture plus explicit texture-stage clears that should remain legacy `-1` or use invalid handles deliberately.
 - [ ] `src/libs/dialog/src/legacy_dialog.{h,cpp}` - `LegacyDialog::interfaceTexture_`; one texture with dialog resource reload behavior.

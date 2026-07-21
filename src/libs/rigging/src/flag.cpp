@@ -15,7 +15,6 @@ FLAG::FLAG()
     bUse = false;
     RenderService = nullptr;
     bFirstRun = true;
-    texl = -1;
     flist = nullptr;
     flagQuantity = 0;
     gdata = nullptr;
@@ -28,7 +27,8 @@ FLAG::FLAG()
 
 FLAG::~FLAG()
 {
-    TEXTURE_RELEASE(RenderService, texl);
+    if (RenderService)
+        RenderService->TextureRelease(texl);
     STORM_DELETE(gdata);
     VERTEX_BUFFER_RELEASE(RenderService, vBuf);
     INDEX_BUFFER_RELEASE(RenderService, iBuf);
@@ -62,7 +62,7 @@ void FLAG::SetDevice()
     globalWind.ang.z = 1.f;
     globalWind.base = 1.f;
     LoadIni();
-    texl = RenderService->TextureCreate(textureName_.c_str());
+    texl = RenderService->TextureCreateHandle(textureName_.c_str());
 }
 
 bool FLAG::CreateState(ENTITY_STATE_GEN *state_gen)
@@ -981,6 +981,6 @@ void FLAG::UpdateTexture(const std::string_view &texturePath)
     {
         textureName_ = texturePath;
         RenderService->TextureRelease(texl);
-        texl = RenderService->TextureCreate(textureName_.c_str());
+        texl = RenderService->TextureCreateHandle(textureName_.c_str());
     }
 }
