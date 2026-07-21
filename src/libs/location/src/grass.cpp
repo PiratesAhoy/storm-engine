@@ -41,7 +41,6 @@ Grass::Grass()
     miniMap = nullptr;
     block = nullptr;
     numElements = 0;
-    texture = -1;
     phase[0] = 0.1f;
     phase[1] = 0.51f;
     phase[2] = 0.01f;
@@ -77,8 +76,11 @@ Grass::~Grass()
     delete block;
     if (rs)
     {
-        if (texture >= 0)
+        if (texture.IsValid())
+        {
             rs->TextureRelease(texture);
+            texture.Invalidate();
+        }
         if (vb >= 0)
         {
             if (vbuffer)
@@ -177,7 +179,7 @@ bool Grass::Init()
 bool Grass::LoadData(const char *patchName)
 {
     // Grass texture
-    texture = rs->TextureCreate(textureName);
+    texture = rs->TextureCreateHandle(textureName);
     // Delete old
     delete miniMap;
     miniMap = nullptr;

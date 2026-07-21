@@ -13,6 +13,7 @@
 #include "supervisor.h"
 #include "dx9render.h"
 #include "grs.h"
+#include "renderer/render_handles.hpp"
 #include "vma.hpp"
 
 #define MSG_GRASS_LOAD_DATA 40666
@@ -175,7 +176,7 @@ class Grass : public Entity
     int32_t vb, ib;
     int32_t numPoints;
     // Texture
-    int32_t texture;
+    storm::render::TextureHandle texture;
 
     // Minimap
     GRSMiniMapElement *miniMap;
