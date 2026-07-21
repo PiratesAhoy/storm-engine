@@ -9,7 +9,6 @@ BIImageMaterial::BIImageMaterial(VDX9RENDER *pRS, BIImageRender *pImgRender)
     m_pImageRender = pImgRender;
     m_sTechniqueName = "battle_tex_col_Rectangle";
 
-    m_nTextureID = -1;
     m_nVBufID = -1;
     m_nIBufID = -1;
     m_nVertexQuantity = 0;
@@ -37,7 +36,7 @@ void BIImageMaterial::Render(int32_t nBegPrior, int32_t nEndPrior)
     if (!GetOutputRangeByPriority(nBegPrior, nEndPrior, nStartIndex, nTriangleQuantity))
         return;
 
-    if (m_nTextureID >= 0 && m_nVBufID >= 0 && m_nIBufID >= 0)
+    if (m_nTextureID.IsValid() && m_nVBufID >= 0 && m_nIBufID >= 0)
     {
         m_pRS->TextureSet(0, m_nTextureID);
         m_pRS->DrawBuffer(m_nVBufID, sizeof(BI_IMAGE_VERTEX), m_nIBufID, 0, m_nVertexQuantity, nStartIndex,
@@ -82,7 +81,7 @@ void BIImageMaterial::SetTexture(const char *pcTextureName)
         return; // this texture is already there
     m_sTextureName = pcTextureName;
     m_pRS->TextureRelease(m_nTextureID);
-    m_nTextureID = m_pRS->TextureCreate(pcTextureName);
+    m_nTextureID = m_pRS->TextureCreateHandle(pcTextureName);
 }
 
 void BIImageMaterial::ReleaseAllImages()
@@ -103,7 +102,10 @@ void BIImageMaterial::Release()
     for (const auto &image : m_apImage)
         delete image;
     // m_apImage.DelAllWithPointers();
-    TEXTURE_RELEASE(m_pRS, m_nTextureID);
+    if (m_pRS)
+    {
+        m_pRS->TextureRelease(m_nTextureID);
+    }
     VERTEX_BUFFER_RELEASE(m_pRS, m_nVBufID);
     INDEX_BUFFER_RELEASE(m_pRS, m_nVBufID);
 

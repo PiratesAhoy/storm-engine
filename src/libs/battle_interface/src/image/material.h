@@ -1,6 +1,7 @@
 #pragma once
 
 #include "image_defines.h"
+#include "renderer/render_handles.hpp"
 #include <string>
 #include <vector>
 
@@ -78,7 +79,7 @@ class BIImageMaterial
     std::string m_sTextureName;
     std::string m_sTechniqueName;
 
-    int32_t m_nTextureID;
+    storm::render::TextureHandle m_nTextureID;
     int32_t m_nVBufID;
     int32_t m_nIBufID;
     size_t m_nVertexQuantity;
