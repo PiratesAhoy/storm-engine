@@ -62,8 +62,11 @@ FONT::~FONT()
 {
     if (vertexBuffer_)
         vertexBuffer_->Release();
-    if (textureHandle_ >= 0)
+    if (textureHandle_.IsValid())
+    {
         renderService_.TextureRelease(textureHandle_);
+        textureHandle_.Invalidate();
+    }
     // core.FreeService("dx9render");
 }
 
@@ -179,8 +182,8 @@ bool FONT::Init(const char *font_name, const char *iniName)
     }
     vertexBuffer_->Unlock();
 
-    textureHandle_ = renderService_.TextureCreate(textureName_.c_str());
-    if (textureHandle_ < 0)
+    textureHandle_ = renderService_.TextureCreateHandle(textureName_.c_str());
+    if (!textureHandle_.IsValid())
     {
         core.Trace("Not Found Texture: %s", textureName_.c_str());
         return false;
@@ -371,13 +374,15 @@ std::optional<size_t> FONT::Print(float x, float y, const std::string_view &text
 
 void FONT::TempUnload()
 {
-    if (textureHandle_ != -1L)
+    if (textureHandle_.IsValid())
+    {
         renderService_.TextureRelease(textureHandle_);
-    textureHandle_ = -1L;
+        textureHandle_.Invalidate();
+    }
 }
 
 void FONT::RepeatInit()
 {
-    if (textureHandle_ == -1L)
-        textureHandle_ = renderService_.TextureCreate(textureName_.c_str());
+    if (!textureHandle_.IsValid())
+        textureHandle_ = renderService_.TextureCreateHandle(textureName_.c_str());
 }

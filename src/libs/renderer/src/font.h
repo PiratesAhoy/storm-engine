@@ -1,6 +1,7 @@
 #pragma once
 
 #include "dx9render.h"
+#include "renderer/render_handles.hpp"
 
 #include <string_view>
 
@@ -81,7 +82,7 @@ class FONT final : public storm::VFont
 
     uint32_t color_ = 0xffffffff;
 
-    int32_t textureHandle_ = -1;
+    storm::render::TextureHandle textureHandle_;
     int32_t height_ = 0;
     int32_t textureSizeX_ = 1;
     int32_t textureSizeY_ = 1;

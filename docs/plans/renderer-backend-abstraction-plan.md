@@ -523,7 +523,7 @@ Migration pattern for each owner:
 - [x] `src/libs/rigging/src/vant.{h,cpp}` - `VANT::texl`
 - [x] `src/libs/location/src/grass.{h,cpp}` - `GRASS::texture`; texture-stage clears remain legacy `-1` by API design.
 - [x] `src/libs/dialog/src/legacy_dialog.{h,cpp}` - `LegacyDialog::interfaceTexture_`
-- [ ] `src/libs/renderer/src/font.cpp` - `storm::Font::textureHandle_`; one texture inside renderer font code with reload paths.
+- [x] `src/libs/renderer/src/font.{h,cpp}` - `FONT::textureHandle_`
 
 Do not fold texture arrays or multi-texture systems into these slices. Deferred areas include `seafoam_ps`, `seps`, weather sun/rain/sky, worldmap sea/wind UI, rigging sail, and xinterface nodes; migrate those as separate subsystem-specific passes.
 
