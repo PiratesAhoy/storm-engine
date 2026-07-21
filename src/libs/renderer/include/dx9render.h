@@ -10,6 +10,7 @@
 #include "entity.h"
 #include "matrix.h"
 #include "renderer/render_handles.hpp"
+#include "renderer/render_types.hpp"
 #include "service.h"
 #include "storm_assert.h"
 #include "types3d.h"
@@ -192,6 +193,8 @@ class VDX9RENDER : public SERVICE
 
     // DX9Render: Render Target/Begin/End/Clear
     virtual bool DX9Clear(int32_t type) = 0; // D3DCLEAR_STENCIL | D3DCLEAR_TARGET | D3DCLEAR_ZBUFFER
+    virtual bool Clear(storm::render::ClearFlags flags, storm::render::Color color = {}, float depth = 1.0f,
+                       uint32_t stencil = 0) = 0;
     virtual bool DX9BeginScene() = 0;
     virtual bool DX9EndScene() = 0;
 
@@ -280,8 +283,14 @@ class VDX9RENDER : public SERVICE
                                const char *cBlockName = nullptr) = 0;
     virtual void DrawPrimitiveUP(D3DPRIMITIVETYPE dwPrimitiveType, uint32_t dwVertexBufferFormat, uint32_t dwNumPT,
                                  const void *pVerts, uint32_t dwStride, const char *cBlockName = nullptr) = 0;
+    virtual void DrawPrimitiveUP(storm::render::PrimitiveType primitiveType, uint32_t dwVertexBufferFormat, uint32_t dwNumPT,
+                                 const void *pVerts, uint32_t dwStride, const char *cBlockName = nullptr) = 0;
     virtual void DrawIndexedPrimitiveUP(D3DPRIMITIVETYPE dwPrimitiveType, uint32_t dwMinIndex, uint32_t dwNumVertices,
                                         uint32_t dwPrimitiveCount, const void *pIndexData, D3DFORMAT IndexDataFormat,
+                                        const void *pVertexData, uint32_t dwVertexStride,
+                                        const char *cBlockName = nullptr) = 0;
+    virtual void DrawIndexedPrimitiveUP(storm::render::PrimitiveType primitiveType, uint32_t dwMinIndex, uint32_t dwNumVertices,
+                                        uint32_t dwPrimitiveCount, const void *pIndexData, storm::render::IndexFormat indexFormat,
                                         const void *pVertexData, uint32_t dwVertexStride,
                                         const char *cBlockName = nullptr) = 0;
 
@@ -333,6 +342,8 @@ class VDX9RENDER : public SERVICE
     // D3D Device/Viewport Section
     virtual HRESULT GetViewport(D3DVIEWPORT9 *pViewport) = 0;
     virtual HRESULT SetViewport(const D3DVIEWPORT9 *pViewport) = 0;
+    virtual HRESULT GetViewport(storm::render::Viewport &viewport) = 0;
+    virtual HRESULT SetViewport(const storm::render::Viewport &viewport) = 0;
     virtual HRESULT GetDeviceCaps(D3DCAPS9 *pCaps) = 0;
 
     // D3D

@@ -18,14 +18,14 @@ Legend: `[x]` complete, `[~]` in progress, `[ ]` not started.
   - [x] Added renderer handle tests for type safety, invalid/default semantics, and slot `0` validity.
   - [x] Verified the neutral headers do not pull in D3D headers.
   - [x] Verified the Windows build still works. Note: Windows verification currently requires the human user because this agent environment is macOS-only.
-- [~] Phase 2 - neutral resource/draw APIs beside legacy APIs
+- [x] Phase 2 - neutral resource/draw APIs beside legacy APIs
   - [x] Added typed vertex/index buffer overloads beside legacy `int32_t` APIs.
   - [x] Added legacy signed-ID bridge helpers (`-1` invalid, slot `0` valid).
   - [x] Migrated `IVBufferManager` to typed vertex/index buffer handles.
   - [x] Fixed the `IVBufferManager` slot-0 release hazard by using `.IsValid()` instead of truthiness.
   - [x] Add typed `TextureHandle` wrappers around the existing texture table.
   - [x] Migrate one contained texture owner to typed texture handles.
-  - [ ] Add neutral clear/viewport/draw-UP overloads after resource-handle seams are stable.
+  - [x] Add neutral clear/viewport/draw-UP overloads after resource-handle seams are stable.
 - [ ] Phase 3 - convert low-risk call sites to neutral APIs
   - [ ] Move simple debug/UI/helper paths away from D3D constants and raw resource IDs.
   - [ ] Track remaining D3D usage outside `src/libs/renderer` after each slice.
@@ -439,7 +439,7 @@ Implemented:
 
 ### Phase 2: Add neutral draw/resource APIs beside legacy APIs
 
-Status: in progress. The first buffer-handle seam is complete; texture/resource seams remain.
+Status: complete for the initial neutral resource/draw API slice.
 
 Purpose: prove neutral types can drive the current renderer.
 
@@ -486,8 +486,15 @@ Completed first slice:
 
 Remaining recommended Phase 2 work:
 
-- Continue migrating small contained texture owners to typed texture handles before broader caller migration.
-- Add neutral clear/viewport/draw-UP overloads only after the resource-handle seams are stable.
+- The initial Phase 2 resource/draw API slice is complete. Broader texture-array and multi-texture migrations remain deferred to subsystem-specific passes.
+- Begin Phase 3 with low-risk debug/UI/helper caller migrations.
+
+Completed neutral draw/state slice:
+
+- Added D3D9-backed neutral `ClearFlags`/`Color` clear overloads.
+- Added neutral `Viewport` get/set overloads.
+- Added neutral `PrimitiveType` and `IndexFormat` draw-UP overloads.
+- Migrated the main frame clear path to the neutral clear overload while preserving the legacy APIs.
 
 Contained one-texture owners that are good candidates for the next typed `TextureHandle` slices:
 

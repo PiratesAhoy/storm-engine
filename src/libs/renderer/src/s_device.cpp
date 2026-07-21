@@ -43,6 +43,56 @@ namespace
 {
 constexpr auto kKeyTakeScreenshot = "TakeScreenshot";
 
+D3DPRIMITIVETYPE ToD3DPrimitiveType(storm::render::PrimitiveType primitiveType)
+{
+    switch (primitiveType)
+    {
+    case storm::render::PrimitiveType::TriangleList:
+        return D3DPT_TRIANGLELIST;
+    case storm::render::PrimitiveType::TriangleStrip:
+        return D3DPT_TRIANGLESTRIP;
+    case storm::render::PrimitiveType::LineList:
+        return D3DPT_LINELIST;
+    case storm::render::PrimitiveType::LineStrip:
+        return D3DPT_LINESTRIP;
+    case storm::render::PrimitiveType::PointList:
+        return D3DPT_POINTLIST;
+    }
+    return D3DPT_TRIANGLELIST;
+}
+
+D3DFORMAT ToD3DIndexFormat(storm::render::IndexFormat indexFormat)
+{
+    switch (indexFormat)
+    {
+    case storm::render::IndexFormat::UInt16:
+        return D3DFMT_INDEX16;
+    case storm::render::IndexFormat::UInt32:
+        return D3DFMT_INDEX32;
+    }
+    return D3DFMT_INDEX16;
+}
+
+uint32_t ToD3DClearFlags(storm::render::ClearFlags flags)
+{
+    uint32_t result = 0;
+    if (flags & storm::render::ClearColor)
+        result |= D3DCLEAR_TARGET;
+    if (flags & storm::render::ClearDepth)
+        result |= D3DCLEAR_ZBUFFER;
+    if (flags & storm::render::ClearStencil)
+        result |= D3DCLEAR_STENCIL;
+    return result;
+}
+
+D3DCOLOR ToD3DColor(storm::render::Color color)
+{
+    const auto toByte = [](float value) {
+        return static_cast<uint32_t>(std::clamp(value, 0.0f, 1.0f) * 255.0f + 0.5f);
+    };
+    return D3DCOLOR_ARGB(toByte(color.a), toByte(color.r), toByte(color.g), toByte(color.b));
+}
+
 #ifdef _WIN32 // Screenshot
 D3DXIMAGE_FILEFORMAT GetScreenshotFormat(const std::string &fmt)
 {
@@ -2388,6 +2438,14 @@ void DX9RENDER::DrawIndexedPrimitiveUP(D3DPRIMITIVETYPE dwPrimitiveType, uint32_
         } while (cBlockName && TechniqueExecuteNext());
 }
 
+void DX9RENDER::DrawIndexedPrimitiveUP(storm::render::PrimitiveType primitiveType, uint32_t dwMinIndex, uint32_t dwNumVertices,
+                                       uint32_t dwPrimitiveCount, const void *pIndexData, storm::render::IndexFormat indexFormat,
+                                       const void *pVertexData, uint32_t dwVertexStride, const char *cBlockName)
+{
+    DrawIndexedPrimitiveUP(ToD3DPrimitiveType(primitiveType), dwMinIndex, dwNumVertices, dwPrimitiveCount, pIndexData,
+                           ToD3DIndexFormat(indexFormat), pVertexData, dwVertexStride, cBlockName);
+}
+
 void DX9RENDER::DrawPrimitiveUP(D3DPRIMITIVETYPE dwPrimitiveType, uint32_t dwVertexBufferFormat, uint32_t dwNumPT,
                                 const void *pVerts, uint32_t dwStride, const char *cBlockName)
 {
@@ -2404,6 +2462,12 @@ void DX9RENDER::DrawPrimitiveUP(D3DPRIMITIVETYPE dwPrimitiveType, uint32_t dwVer
             dwNumDrawPrimitive++;
             CHECKD3DERR(d3d9->DrawPrimitiveUP(dwPrimitiveType, dwNumPT, pVerts, dwStride));
         } while (cBlockName && TechniqueExecuteNext());
+}
+
+void DX9RENDER::DrawPrimitiveUP(storm::render::PrimitiveType primitiveType, uint32_t dwVertexBufferFormat, uint32_t dwNumPT,
+                                const void *pVerts, uint32_t dwStride, const char *cBlockName)
+{
+    DrawPrimitiveUP(ToD3DPrimitiveType(primitiveType), dwVertexBufferFormat, dwNumPT, pVerts, dwStride, cBlockName);
 }
 
 void DX9RENDER::DrawPrimitive(D3DPRIMITIVETYPE dwPrimitiveType, int32_t iVBuff, int32_t iStride, int32_t iStartV, int32_t iNumPT,
@@ -2863,7 +2927,8 @@ void DX9RENDER::RunStart()
         SetScreenAsRenderTarget();
     }
 
-    DX9Clear(D3DCLEAR_TARGET | D3DCLEAR_ZBUFFER | ((stencil_format == D3DFMT_D24S8) ? D3DCLEAR_STENCIL : 0));
+    Clear(static_cast<storm::render::ClearFlags>(storm::render::ClearColor | storm::render::ClearDepth |
+                                                   ((stencil_format == D3DFMT_D24S8) ? storm::render::ClearStencil : 0)));
 
     dwNumDrawPrimitive = 0;
     dwNumLV = 0;
@@ -3317,6 +3382,30 @@ HRESULT DX9RENDER::GetViewport(D3DVIEWPORT9 *pViewport)
 HRESULT DX9RENDER::SetViewport(const D3DVIEWPORT9 *pViewport)
 {
     return CHECKD3DERR(d3d9->SetViewport(pViewport));
+}
+
+HRESULT DX9RENDER::GetViewport(storm::render::Viewport &viewport)
+{
+    D3DVIEWPORT9 d3dViewport{};
+    const auto result = GetViewport(&d3dViewport);
+    if (result == D3D_OK)
+    {
+        viewport.x = static_cast<int32_t>(d3dViewport.X);
+        viewport.y = static_cast<int32_t>(d3dViewport.Y);
+        viewport.width = static_cast<int32_t>(d3dViewport.Width);
+        viewport.height = static_cast<int32_t>(d3dViewport.Height);
+        viewport.minDepth = d3dViewport.MinZ;
+        viewport.maxDepth = d3dViewport.MaxZ;
+    }
+    return result;
+}
+
+HRESULT DX9RENDER::SetViewport(const storm::render::Viewport &viewport)
+{
+    const D3DVIEWPORT9 d3dViewport{static_cast<DWORD>(viewport.x), static_cast<DWORD>(viewport.y),
+                                   static_cast<DWORD>(viewport.width), static_cast<DWORD>(viewport.height),
+                                   viewport.minDepth, viewport.maxDepth};
+    return SetViewport(&d3dViewport);
 }
 
 uint32_t DX9RENDER::SetRenderState(uint32_t State, uint32_t Value)
@@ -3777,6 +3866,11 @@ HRESULT DX9RENDER::Clear(uint32_t Count, const D3DRECT *pRects, uint32_t Flags, 
                          uint32_t Stencil)
 {
     return CHECKD3DERR(d3d9->Clear(Count, pRects, Flags, Color, Z, Stencil));
+}
+
+bool DX9RENDER::Clear(storm::render::ClearFlags flags, storm::render::Color color, float depth, uint32_t stencil)
+{
+    return !CHECKD3DERR(Clear(0, nullptr, ToD3DClearFlags(flags), ToD3DColor(color), depth, stencil));
 }
 
 static bool isInScene = false;

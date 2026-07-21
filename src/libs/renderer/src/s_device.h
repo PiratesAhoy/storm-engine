@@ -125,6 +125,8 @@ class DX9RENDER : public VDX9RENDER
 
     // DX9Render: Render Target/Begin/End/Clear
     bool DX9Clear(int32_t type) override; // D3DCLEAR_STENCIL | D3DCLEAR_TARGET | D3DCLEAR_ZBUFFER
+    bool Clear(storm::render::ClearFlags flags, storm::render::Color color = {}, float depth = 1.0f,
+               uint32_t stencil = 0) override;
     bool DX9BeginScene() override;
     bool DX9EndScene() override;
 
@@ -209,8 +211,14 @@ class DX9RENDER : public VDX9RENDER
                        const char *cBlockName = nullptr) override;
     void DrawPrimitiveUP(D3DPRIMITIVETYPE dwPrimitiveType, uint32_t dwVertexBufferFormat, uint32_t dwNumPT,
                          const void *pVerts, uint32_t dwStride, const char *cBlockName = nullptr) override;
+    void DrawPrimitiveUP(storm::render::PrimitiveType primitiveType, uint32_t dwVertexBufferFormat, uint32_t dwNumPT,
+                         const void *pVerts, uint32_t dwStride, const char *cBlockName = nullptr) override;
     void DrawIndexedPrimitiveUP(D3DPRIMITIVETYPE dwPrimitiveType, uint32_t dwMinIndex, uint32_t dwNumVertices,
                                 uint32_t dwPrimitiveCount, const void *pIndexData, D3DFORMAT IndexDataFormat,
+                                const void *pVertexData, uint32_t dwVertexStride,
+                                const char *cBlockName = nullptr) override;
+    void DrawIndexedPrimitiveUP(storm::render::PrimitiveType primitiveType, uint32_t dwMinIndex, uint32_t dwNumVertices,
+                                uint32_t dwPrimitiveCount, const void *pIndexData, storm::render::IndexFormat indexFormat,
                                 const void *pVertexData, uint32_t dwVertexStride,
                                 const char *cBlockName = nullptr) override;
 
@@ -268,6 +276,8 @@ class DX9RENDER : public VDX9RENDER
     // D3D Device/Viewport Section
     HRESULT GetViewport(D3DVIEWPORT9 *pViewport) override;
     HRESULT SetViewport(const D3DVIEWPORT9 *pViewport) override;
+    HRESULT GetViewport(storm::render::Viewport &viewport) override;
+    HRESULT SetViewport(const storm::render::Viewport &viewport) override;
     HRESULT GetDeviceCaps(D3DCAPS9 *pCaps) override;
 
     // D3D

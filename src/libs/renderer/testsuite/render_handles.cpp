@@ -1,4 +1,5 @@
 #include <renderer/render_handles.hpp>
+#include <renderer/render_types.hpp>
 
 #include <catch2/catch_all.hpp>
 
@@ -64,6 +65,9 @@ static_assert(storm::render::HandleFromLegacyId<storm::render::TextureHandle>(0)
 static_assert(storm::render::HandleFromLegacyId<storm::render::TextureHandle>(0).Value() == 0);
 static_assert(storm::render::HandleToLegacyId(storm::render::TextureHandle::Invalid()) == -1);
 static_assert(storm::render::HandleToLegacyId(storm::render::TextureHandle::FromValue(0)) == 0);
+static_assert(static_cast<uint32_t>(storm::render::PrimitiveType::TriangleList) == 0);
+static_assert(static_cast<uint32_t>(storm::render::IndexFormat::UInt32) == 1);
+static_assert(storm::render::ClearColor != storm::render::ClearDepth);
 
 } // namespace
 
