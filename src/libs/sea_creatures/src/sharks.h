@@ -14,6 +14,7 @@
 #include "island_base.h"
 #include "matrix.h"
 #include "dx9render.h"
+#include "renderer/render_handles.hpp"
 #include "sea_base.h"
 #include "ship_base.h"
 
@@ -124,7 +125,7 @@ class Sharks : public Entity
     CVECTOR camPos;
     entid_t sea;
     entid_t island;
-    int32_t trackTx;
+    storm::render::TextureHandle trackTx;
     uint16_t indeces[7 * 10 * 3];
     Vertex vrt[7 * 10];
 };

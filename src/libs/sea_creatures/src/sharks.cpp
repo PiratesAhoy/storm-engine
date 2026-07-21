@@ -515,7 +515,6 @@ Sharks::Sharks() : sea(0), island(0), indeces{}, vrt{}
     rs = nullptr;
     camPos = 0.0f;
     numShakes = 3 + (SDL_GetTicks() & 3);
-    trackTx = -1;
     periscope.time = -1.0;
     waitPTime = -1.0f;
 }
@@ -550,7 +549,7 @@ bool Sharks::Init()
         core.AddToLayer(SEA_REALIZE, shark[i].model, rmdl);
     }
     // Load the texture
-    trackTx = rs->TextureCreate("Animals\\SharkTrack.tga");
+    trackTx = rs->TextureCreateHandle("Animals\\SharkTrack.tga");
     // Analyzing the possibility of creating a periscope
     auto *v = static_cast<VDATA *>(core.GetScriptVariable("Environment"));
     if (v)
