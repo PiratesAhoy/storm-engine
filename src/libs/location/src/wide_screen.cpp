@@ -11,6 +11,7 @@
 #include "wide_screen.h"
 #include "entity.h"
 #include "core.h"
+#include "renderer/render_types.hpp"
 
 // ============================================================================================
 // Construction, destruction
@@ -36,10 +37,10 @@ bool WideScreen::Init()
     rs = core.GetServiceX<VDX9RENDER>();
     if (!rs)
         throw std::runtime_error("No service: dx9render");
-    D3DVIEWPORT9 vp;
-    rs->GetViewport(&vp);
-    w = static_cast<float>(vp.Width);
-    h = static_cast<float>(vp.Height);
+    storm::render::Viewport vp;
+    rs->GetViewport(vp);
+    w = static_cast<float>(vp.width);
+    h = static_cast<float>(vp.height);
     if (w <= 0 || h <= 0)
         return false;
     return true;
@@ -121,5 +122,5 @@ void WideScreen::Realize(uint32_t delta_time)
     buf[11].y = h;
     buf[11].z = 0.5f;
     buf[11].rhw = 2.0f;
-    rs->DrawPrimitiveUP(D3DPT_TRIANGLELIST, D3DFVF_XYZRHW, 4, buf, sizeof(buf[0]), "WideScreen");
+    rs->DrawPrimitiveUP(storm::render::PrimitiveType::TriangleList, D3DFVF_XYZRHW, 4, buf, sizeof(buf[0]), "WideScreen");
 }

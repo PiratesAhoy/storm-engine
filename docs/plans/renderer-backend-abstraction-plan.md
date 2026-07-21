@@ -564,6 +564,7 @@ Validation:
 Progress:
 
 - [x] `src/libs/lighter/src/l_geometry.cpp` - migrate `LGeometry::DrawNormals` to the neutral `LineList` primitive type; retain the legacy FVF bitmask until vertex-layout vocabulary is introduced.
+- [x] `src/libs/location/src/wide_screen.cpp` - migrate viewport access and the `TriangleList` primitive type; retain the legacy FVF bitmask until vertex-layout vocabulary is introduced.
 
 ### Phase 4: Isolate raw D3D access behind compatibility wrappers
 
