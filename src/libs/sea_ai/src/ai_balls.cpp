@@ -383,7 +383,7 @@ uint32_t AIBalls::AttributeChanged(ATTRIBUTES *pAttributeChanged)
         dwSubTexX = AttributesPointer->GetAttributeAsDword("SubTexX");
         dwSubTexY = AttributesPointer->GetAttributeAsDword("SubTexY");
 
-        dwTextureIndex = AIHelper::pRS->TextureCreate(sTextureName.c_str());
+        dwTextureIndex = AIHelper::pRS->TextureCreateHandle(sTextureName.c_str());
 
         // install balls
         ATTRIBUTES *pAPBalls = AttributesPointer->GetAttributeClass("Balls");

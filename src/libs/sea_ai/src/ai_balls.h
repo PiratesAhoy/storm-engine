@@ -2,6 +2,7 @@
 
 #include "ai_helper.h"
 #include "cannon_trace.h"
+#include "renderer/render_handles.hpp"
 #include <v_particle_system.h>
 
 struct BALL_PARAMS
@@ -59,7 +60,7 @@ class AIBalls : public Entity
     float fBallFlySoundStereoMultiplier{};
 
     std::string sTextureName;          // texture name
-    uint32_t dwTextureIndex{};         // texture index
+    storm::render::TextureHandle dwTextureIndex; // texture index
     uint32_t dwSubTexX{}, dwSubTexY{}; // all balls must be in one texture
     uint32_t dwFireBallFromCameraTime;
 
