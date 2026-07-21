@@ -561,6 +561,10 @@ Validation:
 - Run any available UI/render smoke test.
 - Track remaining D3D usages outside `src/libs/renderer`.
 
+Progress:
+
+- [x] `src/libs/lighter/src/l_geometry.cpp` - migrate `LGeometry::DrawNormals` to the neutral `LineList` primitive type; retain the legacy FVF bitmask until vertex-layout vocabulary is introduced.
+
 ### Phase 4: Isolate raw D3D access behind compatibility wrappers
 
 Purpose: stop non-renderer modules from owning D3D objects directly.

@@ -12,6 +12,7 @@
 #include "dx9render.h"
 #include "entity.h"
 #include "core.h"
+#include "renderer/render_types.hpp"
 
 #ifdef _WIN32
 #include <corecrt_io.h>
@@ -385,13 +386,15 @@ void LGeometry::DrawNormals(VDX9RENDER *rs)
         p += 2;
         if (p >= 1024)
         {
-            rs->DrawPrimitiveUP(D3DPT_LINELIST, D3DFVF_XYZ, 512, drawbuf, sizeof(CVECTOR), "DbgDrawLines");
+            rs->DrawPrimitiveUP(storm::render::PrimitiveType::LineList, D3DFVF_XYZ, 512, drawbuf, sizeof(CVECTOR),
+                                "DbgDrawLines");
             p = 0;
         }
     }
     if (p > 1)
     {
-        rs->DrawPrimitiveUP(D3DPT_LINELIST, D3DFVF_XYZ, p / 2, drawbuf, sizeof(CVECTOR), "DbgDrawLines");
+        rs->DrawPrimitiveUP(storm::render::PrimitiveType::LineList, D3DFVF_XYZ, p / 2, drawbuf, sizeof(CVECTOR),
+                            "DbgDrawLines");
     }
 }
 
