@@ -14,6 +14,7 @@
 
 #include "core.h"
 #include "dx9render.h"
+#include "renderer/render_types.hpp"
 #include "storm_assert.h"
 #include "file_service.h"
 
@@ -894,8 +895,8 @@ void PtcData::DebugDraw(VDX9RENDER *rs, float dltTime)
     }
     auto tech = "DbgPatchViewZ";
     rs->SetTransform(D3DTS_WORLD, CMatrix());
-    rs->DrawPrimitiveUP(D3DPT_TRIANGLELIST, D3DFVF_XYZ | D3DFVF_DIFFUSE, numTriangles, dbgTriangles, sizeof(DbgVertex),
-                        tech);
-    rs->DrawPrimitiveUP(D3DPT_LINELIST, D3DFVF_XYZ | D3DFVF_DIFFUSE, numTriangles * 3, dbgEdges, sizeof(DbgVertex),
-                        tech);
+    rs->DrawPrimitiveUP(storm::render::PrimitiveType::TriangleList, D3DFVF_XYZ | D3DFVF_DIFFUSE, numTriangles, dbgTriangles,
+                        sizeof(DbgVertex), tech);
+    rs->DrawPrimitiveUP(storm::render::PrimitiveType::LineList, D3DFVF_XYZ | D3DFVF_DIFFUSE, numTriangles * 3, dbgEdges,
+                        sizeof(DbgVertex), tech);
 }
