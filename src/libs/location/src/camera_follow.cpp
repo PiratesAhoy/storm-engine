@@ -11,10 +11,71 @@
 #include "camera_follow.h"
 #include "character.h"
 #include "location_camera.h"
+#include "location.h"
+#include "renderer/render_types.hpp"
 
 //============================================================================================
 
-//#define LFC_DEBUG
+namespace
+{
+
+constexpr bool EnableFollowCameraDebug = false;
+
+template <bool Enabled> struct FollowCameraDebugStorage;
+
+template <> struct FollowCameraDebugStorage<true>
+{
+    CVECTOR fndv[4096 * 3];
+    int32_t numTrg = 0;
+    bool isFndTrg = false;
+    CVECTOR fndvP1[4096];
+    int32_t numP1 = 0;
+    CVECTOR fndvP2[4096];
+    int32_t numP2 = 0;
+    CVECTOR fndvP3[4096 * 10];
+    int32_t numP3 = 0;
+
+    CVECTOR fndvN[4096 * 10];
+    int32_t numN = 0;
+    CVECTOR fndvE[4096 * 10];
+    int32_t numE = 0;
+
+    CVECTOR fndvU[4096 * 10];
+    int32_t numU = 0;
+
+    int32_t numPoly1 = 0;
+
+    int camSteps = 0;
+};
+
+template <> struct FollowCameraDebugStorage<false>
+{
+    CVECTOR *fndv = nullptr;
+    int32_t numTrg = 0;
+    bool isFndTrg = false;
+    CVECTOR *fndvP1 = nullptr;
+    int32_t numP1 = 0;
+    CVECTOR *fndvP2 = nullptr;
+    int32_t numP2 = 0;
+    CVECTOR *fndvP3 = nullptr;
+    int32_t numP3 = 0;
+
+    CVECTOR *fndvN = nullptr;
+    int32_t numN = 0;
+    CVECTOR *fndvE = nullptr;
+    int32_t numE = 0;
+
+    CVECTOR *fndvU = nullptr;
+    int32_t numU = 0;
+
+    int32_t numPoly1 = 0;
+
+    int camSteps = 0;
+};
+
+FollowCameraDebugStorage<EnableFollowCameraDebug> CameraDebugStorage;
+
+}
 
 #define LCF_RADIUS 0.25f
 
@@ -195,52 +256,35 @@ void CameraFollow::CalcPosition(float ang, float radius, float dax, CVECTOR &pos
     pos.z = lc->pos.z - radius * cosf(ax) * cosf(ang);
 }
 
-#ifdef LFC_DEBUG
-
-CVECTOR fndv[4096 * 3];
-int32_t numTrg = 0;
-bool isFndTrg = false;
-CVECTOR fndvP1[4096];
-int32_t numP1 = 0;
-CVECTOR fndvP2[4096];
-int32_t numP2 = 0;
-CVECTOR fndvP3[4096 * 10];
-int32_t numP3 = 0;
-
-CVECTOR fndvN[4096 * 10];
-int32_t numN = 0;
-CVECTOR fndvE[4096 * 10];
-int32_t numE = 0;
-
-CVECTOR fndvU[4096 * 10];
-int32_t numU = 0;
-
-int32_t numPoly1 = 0;
-
-int camSteps = 0;
-
-#endif
-
 void CameraFollow::DrawDebug()
 {
-#ifdef LFC_DEBUG
-    lc->location->GetRS()->SetTransform(D3DTS_WORLD, CMatrix());
-    lc->location->GetRS()->SetRenderState(D3DRS_TEXTUREFACTOR, 0xff00ff00);
-    lc->location->GetRS()->DrawPrimitiveUP(D3DPT_TRIANGLELIST, D3DFVF_XYZ, numTrg, fndv, sizeof(CVECTOR), "DebugTrs");
-    lc->location->GetRS()->SetRenderState(D3DRS_TEXTUREFACTOR, 0xffffff00);
-    lc->location->GetRS()->DrawPrimitiveUP(D3DPT_POINTLIST, D3DFVF_XYZ, numP1, fndvP1, sizeof(CVECTOR), "DebugTrs");
-    lc->location->GetRS()->SetRenderState(D3DRS_TEXTUREFACTOR, 0xffffffff);
-    lc->location->GetRS()->DrawPrimitiveUP(D3DPT_POINTLIST, D3DFVF_XYZ, numP2, fndvP2, sizeof(CVECTOR), "DebugTrs");
-    lc->location->GetRS()->SetRenderState(D3DRS_TEXTUREFACTOR, 0xffff0000);
-    lc->location->GetRS()->DrawPrimitiveUP(D3DPT_LINELIST, D3DFVF_XYZ, numP3 / 2, fndvP3, sizeof(CVECTOR), "DebugTrs");
-    lc->location->GetRS()->SetRenderState(D3DRS_TEXTUREFACTOR, 0xffff00ff);
-    lc->location->GetRS()->DrawPrimitiveUP(D3DPT_LINELIST, D3DFVF_XYZ, numN / 2, fndvN, sizeof(CVECTOR), "DebugTrs");
-    lc->location->GetRS()->SetRenderState(D3DRS_TEXTUREFACTOR, 0xff0000ff);
-    lc->location->GetRS()->DrawPrimitiveUP(D3DPT_LINELIST, D3DFVF_XYZ, numE / 2, fndvE, sizeof(CVECTOR), "DebugTrs");
-    lc->location->GetRS()->SetRenderState(D3DRS_TEXTUREFACTOR, 0xff00ffff);
-    lc->location->GetRS()->DrawPrimitiveUP(D3DPT_LINELIST, D3DFVF_XYZ, numU / 2, fndvU, sizeof(CVECTOR), "DebugTrs");
-    lc->location->GetRS()->Print(10, 90, "NumEdges: %i, NumU %i", numE / 2, numU / 2);
-#endif
+    if constexpr (EnableFollowCameraDebug)
+    {
+        lc->location->GetRS()->SetTransform(D3DTS_WORLD, CMatrix());
+        lc->location->GetRS()->SetRenderState(D3DRS_TEXTUREFACTOR, 0xff00ff00);
+        lc->location->GetRS()->DrawPrimitiveUP(storm::render::PrimitiveType::TriangleList, D3DFVF_XYZ,
+                                               CameraDebugStorage.numTrg, CameraDebugStorage.fndv, sizeof(CVECTOR), "DebugTrs");
+        lc->location->GetRS()->SetRenderState(D3DRS_TEXTUREFACTOR, 0xffffff00);
+        lc->location->GetRS()->DrawPrimitiveUP(storm::render::PrimitiveType::PointList, D3DFVF_XYZ,
+                                               CameraDebugStorage.numP1, CameraDebugStorage.fndvP1, sizeof(CVECTOR), "DebugTrs");
+        lc->location->GetRS()->SetRenderState(D3DRS_TEXTUREFACTOR, 0xffffffff);
+        lc->location->GetRS()->DrawPrimitiveUP(storm::render::PrimitiveType::PointList, D3DFVF_XYZ,
+                                               CameraDebugStorage.numP2, CameraDebugStorage.fndvP2, sizeof(CVECTOR), "DebugTrs");
+        lc->location->GetRS()->SetRenderState(D3DRS_TEXTUREFACTOR, 0xffff0000);
+        lc->location->GetRS()->DrawPrimitiveUP(storm::render::PrimitiveType::LineList, D3DFVF_XYZ,
+                                               CameraDebugStorage.numP3 / 2, CameraDebugStorage.fndvP3, sizeof(CVECTOR), "DebugTrs");
+        lc->location->GetRS()->SetRenderState(D3DRS_TEXTUREFACTOR, 0xffff00ff);
+        lc->location->GetRS()->DrawPrimitiveUP(storm::render::PrimitiveType::LineList, D3DFVF_XYZ,
+                                               CameraDebugStorage.numN / 2, CameraDebugStorage.fndvN, sizeof(CVECTOR), "DebugTrs");
+        lc->location->GetRS()->SetRenderState(D3DRS_TEXTUREFACTOR, 0xff0000ff);
+        lc->location->GetRS()->DrawPrimitiveUP(storm::render::PrimitiveType::LineList, D3DFVF_XYZ,
+                                               CameraDebugStorage.numE / 2, CameraDebugStorage.fndvE, sizeof(CVECTOR), "DebugTrs");
+        lc->location->GetRS()->SetRenderState(D3DRS_TEXTUREFACTOR, 0xff00ffff);
+        lc->location->GetRS()->DrawPrimitiveUP(storm::render::PrimitiveType::LineList, D3DFVF_XYZ,
+                                               CameraDebugStorage.numU / 2, CameraDebugStorage.fndvU, sizeof(CVECTOR), "DebugTrs");
+        lc->location->GetRS()->Print(10, 90, "NumEdges: %i, NumU %i", CameraDebugStorage.numE / 2,
+                                     CameraDebugStorage.numU / 2);
+    }
 }
 
 //
@@ -250,63 +294,63 @@ float CameraFollow::FindRadius(float curAng) const
     static const auto day = pi * 0.25f; // Vertical deviation
     static const auto dax = pi * 0.16f; // Vertical deviation
 
-#ifdef LFC_DEBUG
-    struct Vrt
+    if constexpr (EnableFollowCameraDebug)
     {
-        CVECTOR p;
-        float rhw;
-    } vrt[64];
+        struct Vrt
+        {
+            CVECTOR p;
+            float rhw;
+        } vrt[64];
 
-    for (int32_t ii = 0; ii < 32; ii++)
-    {
-        float x = day * ii / 31.0f;
-        vrt[ii * 2 + 0].p.x = 300.0f;
-        vrt[ii * 2 + 0].p.y = 400.0f;
-        vrt[ii * 2 + 0].p.z = 0.5f;
-        vrt[ii * 2 + 0].rhw = 2.0f;
-        vrt[ii * 2 + 1].p.x = vrt[ii * 2 + 0].p.x + 200.0f * sinf(x);
-        vrt[ii * 2 + 1].p.y = vrt[ii * 2 + 0].p.y - 200.0f * cosf(x);
-        vrt[ii * 2 + 1].p.z = 0.5f;
-        vrt[ii * 2 + 1].rhw = 2.0f;
+        for (int32_t ii = 0; ii < 32; ii++)
+        {
+            float x = day * ii / 31.0f;
+            vrt[ii * 2 + 0].p.x = 300.0f;
+            vrt[ii * 2 + 0].p.y = 400.0f;
+            vrt[ii * 2 + 0].p.z = 0.5f;
+            vrt[ii * 2 + 0].rhw = 2.0f;
+            vrt[ii * 2 + 1].p.x = vrt[ii * 2 + 0].p.x + 200.0f * sinf(x);
+            vrt[ii * 2 + 1].p.y = vrt[ii * 2 + 0].p.y - 200.0f * cosf(x);
+            vrt[ii * 2 + 1].p.z = 0.5f;
+            vrt[ii * 2 + 1].rhw = 2.0f;
+        }
+        lc->location->GetRS()->SetRenderState(D3DRS_TEXTUREFACTOR, 0xffff0000);
+        lc->location->GetRS()->DrawPrimitiveUP(storm::render::PrimitiveType::LineList, D3DFVF_XYZRHW, 32, vrt, sizeof(Vrt), "DebugTrs");
+
+        for (ii = 0; ii < 32; ii++)
+        {
+            float x = day * ii / 31.0f;
+            float y = (cosf(x) - cosf(day)) / (1.0f - cosf(day));
+
+            y = 200.0f + (100.0f - 200.0f) * (1.0f - powf(1.0f - y, 1.5f));
+
+            vrt[ii * 2 + 0].p.x = 300.0f;
+            vrt[ii * 2 + 0].p.y = 400.0f;
+            vrt[ii * 2 + 0].p.z = 0.5f;
+            vrt[ii * 2 + 0].rhw = 2.0f;
+            vrt[ii * 2 + 1].p.x = vrt[ii * 2 + 0].p.x + y * sinf(x);
+            vrt[ii * 2 + 1].p.y = vrt[ii * 2 + 0].p.y - y * cosf(x);
+            vrt[ii * 2 + 1].p.z = 0.5f;
+            vrt[ii * 2 + 1].rhw = 2.0f;
+        }
+        lc->location->GetRS()->SetRenderState(D3DRS_TEXTUREFACTOR, 0xff00ff00);
+        lc->location->GetRS()->DrawPrimitiveUP(storm::render::PrimitiveType::LineList, D3DFVF_XYZRHW, 32, vrt, sizeof(Vrt), "DebugTrs");
+
+        for (ii = 0; ii < 32; ii++)
+        {
+            float x = day * ii / 31.0f;
+            vrt[ii * 2 + 0].p.x = 300.0f;
+            vrt[ii * 2 + 0].p.y = 400.0f;
+            vrt[ii * 2 + 0].p.z = 0.5f;
+            vrt[ii * 2 + 0].rhw = 2.0f;
+            vrt[ii * 2 + 1].p.x = vrt[ii * 2 + 0].p.x + 100.0f * sinf(x);
+            vrt[ii * 2 + 1].p.y = vrt[ii * 2 + 0].p.y - 100.0f * cosf(x);
+            vrt[ii * 2 + 1].p.z = 0.5f;
+            vrt[ii * 2 + 1].rhw = 2.0f;
+        }
+        lc->location->GetRS()->SetRenderState(D3DRS_TEXTUREFACTOR, 0xff0000ff);
+        lc->location->GetRS()->DrawPrimitiveUP(storm::render::PrimitiveType::LineList, D3DFVF_XYZRHW, 32, vrt, sizeof(Vrt), "DebugTrs");
     }
-    lc->location->GetRS()->SetRenderState(D3DRS_TEXTUREFACTOR, 0xffff0000);
-    lc->location->GetRS()->DrawPrimitiveUP(D3DPT_LINELIST, D3DFVF_XYZRHW, 32, vrt, sizeof(Vrt), "DebugTrs");
-
-    for (ii = 0; ii < 32; ii++)
-    {
-        float x = day * ii / 31.0f;
-        float y = (cosf(x) - cosf(day)) / (1.0f - cosf(day));
-
-        y = 200.0f + (100.0f - 200.0f) * (1.0f - powf(1.0f - y, 1.5f));
-
-        vrt[ii * 2 + 0].p.x = 300.0f;
-        vrt[ii * 2 + 0].p.y = 400.0f;
-        vrt[ii * 2 + 0].p.z = 0.5f;
-        vrt[ii * 2 + 0].rhw = 2.0f;
-        vrt[ii * 2 + 1].p.x = vrt[ii * 2 + 0].p.x + y * sinf(x);
-        vrt[ii * 2 + 1].p.y = vrt[ii * 2 + 0].p.y - y * cosf(x);
-        vrt[ii * 2 + 1].p.z = 0.5f;
-        vrt[ii * 2 + 1].rhw = 2.0f;
-    }
-    lc->location->GetRS()->SetRenderState(D3DRS_TEXTUREFACTOR, 0xff00ff00);
-    lc->location->GetRS()->DrawPrimitiveUP(D3DPT_LINELIST, D3DFVF_XYZRHW, 32, vrt, sizeof(Vrt), "DebugTrs");
-
-    for (ii = 0; ii < 32; ii++)
-    {
-        float x = day * ii / 31.0f;
-        vrt[ii * 2 + 0].p.x = 300.0f;
-        vrt[ii * 2 + 0].p.y = 400.0f;
-        vrt[ii * 2 + 0].p.z = 0.5f;
-        vrt[ii * 2 + 0].rhw = 2.0f;
-        vrt[ii * 2 + 1].p.x = vrt[ii * 2 + 0].p.x + 100.0f * sinf(x);
-        vrt[ii * 2 + 1].p.y = vrt[ii * 2 + 0].p.y - 100.0f * cosf(x);
-        vrt[ii * 2 + 1].p.z = 0.5f;
-        vrt[ii * 2 + 1].rhw = 2.0f;
-    }
-    lc->location->GetRS()->SetRenderState(D3DRS_TEXTUREFACTOR, 0xff0000ff);
-    lc->location->GetRS()->DrawPrimitiveUP(D3DPT_LINELIST, D3DFVF_XYZRHW, 32, vrt, sizeof(Vrt), "DebugTrs");
-
-#endif
 
     // The point we are looking at
     CVECTOR pos(lc->pos.x, lc->pos.y + lc->lheight, lc->pos.z);
@@ -359,62 +403,65 @@ float CameraFollow::FindRadius(float curAng) const
     p[4].Nz = fndCamDir.z;
     p[4].D = fndCamDir | (pos + fndCamDir * lc->radius);
 
-#ifdef LFC_DEBUG
-    numPoly1 = 0;
-    camSteps = 0;
-    //!!!
-    if (core.Controls->GetDebugAsyncKeyState('8') < 0)
+    if constexpr (EnableFollowCameraDebug)
     {
-        isFndTrg = true;
-        numTrg = 0;
-        numP1 = 0;
-        numP2 = 0;
-        numP3 = 0;
-        numN = 0;
-        numE = 0;
-        numU = 0;
+        CameraDebugStorage.numPoly1 = 0;
+        CameraDebugStorage.camSteps = 0;
+        //!!!
+        if (core.Controls->GetDebugAsyncKeyState('8') < 0)
+        {
+            CameraDebugStorage.isFndTrg = true;
+            CameraDebugStorage.numTrg = 0;
+            CameraDebugStorage.numP1 = 0;
+            CameraDebugStorage.numP2 = 0;
+            CameraDebugStorage.numP3 = 0;
+            CameraDebugStorage.numN = 0;
+            CameraDebugStorage.numE = 0;
+            CameraDebugStorage.numU = 0;
+        }
     }
-#endif
 
     // looking for a radius
     lc->Clip(p, 5, pos, lc->radius, ApplyPoly);
 
-#ifdef LFC_DEBUG
-    lc->location->GetRS()->Print(10, 10, "NumPoly: %i, steps: %i", numPoly1, camSteps);
-    lc->location->GetRS()->Print(10, 30, "pos: %f, %f, %f", pos.x, pos.y, pos.z);
-    lc->location->GetRS()->Print(10, 50, "curAng: %f, ax: %f rad = %f", curAng, ax, lc->radius);
-
-#endif
+    if constexpr (EnableFollowCameraDebug)
+    {
+        lc->location->GetRS()->Print(10, 10, "NumPoly: %i, steps: %i", CameraDebugStorage.numPoly1,
+                                     CameraDebugStorage.camSteps);
+        lc->location->GetRS()->Print(10, 30, "pos: %f, %f, %f", pos.x, pos.y, pos.z);
+        lc->location->GetRS()->Print(10, 50, "curAng: %f, ax: %f rad = %f", curAng, ax, lc->radius);
+    }
 
     // isFndTrg = false;
 
-#ifdef LFC_DEBUG
-    /////////////////////
-    static CVECTOR ps(0.0f);
-    static CVECTOR vv[5];
-    if (core.Controls->GetDebugAsyncKeyState('8') < 0)
+    if constexpr (EnableFollowCameraDebug)
     {
-        ps = pos;
-        CVECTOR vvv;
-        CalcPosition(curAng, 2.0f, 0.0f, vvv);
+        /////////////////////
+        static CVECTOR ps(0.0f);
+        static CVECTOR vv[5];
+        if (core.Controls->GetDebugAsyncKeyState('8') < 0)
+        {
+            ps = pos;
+            CVECTOR vvv;
+            CalcPosition(curAng, 2.0f, 0.0f, vvv);
 
-        vv[0] = ps + CVECTOR(p[0].Nx, p[0].Ny, p[0].Nz);
-        vv[1] = ps + CVECTOR(p[1].Nx, p[1].Ny, p[1].Nz);
-        vv[2] = ps + CVECTOR(p[2].Nx, p[2].Ny, p[2].Nz);
-        vv[3] = ps + CVECTOR(p[3].Nx, p[3].Ny, p[3].Nz);
-        vv[4] = ps + (vvv - pos);
+            vv[0] = ps + CVECTOR(p[0].Nx, p[0].Ny, p[0].Nz);
+            vv[1] = ps + CVECTOR(p[1].Nx, p[1].Ny, p[1].Nz);
+            vv[2] = ps + CVECTOR(p[2].Nx, p[2].Ny, p[2].Nz);
+            vv[3] = ps + CVECTOR(p[3].Nx, p[3].Ny, p[3].Nz);
+            vv[4] = ps + (vvv - pos);
+        }
+
+        lc->location->DrawLine(ps, 0xffff0000, vv[0], 0xffffff00);
+        lc->location->DrawLine(ps, 0xff00ff00, vv[1], 0xffffff00);
+        lc->location->DrawLine(ps, 0xff0000ff, vv[2], 0xffffff00);
+        lc->location->DrawLine(ps, 0xffff00ff, vv[3], 0xffffff00);
+        lc->location->DrawLine(ps, 0xffff00ff, vv[4], 0xffffff00);
+
+        Assert(p[0].Ny == 0.0f);
+        Assert(p[1].Ny == 0.0f);
+        /////////////////////
     }
-
-    lc->location->DrawLine(ps, 0xffff0000, vv[0], 0xffffff00);
-    lc->location->DrawLine(ps, 0xff00ff00, vv[1], 0xffffff00);
-    lc->location->DrawLine(ps, 0xff0000ff, vv[2], 0xffffff00);
-    lc->location->DrawLine(ps, 0xffff00ff, vv[3], 0xffffff00);
-    lc->location->DrawLine(ps, 0xffff00ff, vv[4], 0xffffff00);
-
-    Assert(p[0].Ny == 0.0f);
-    Assert(p[1].Ny == 0.0f);
-    /////////////////////
-#endif
 
     fndRadius -= LCF_RADIUS;
     if (fndRadius < 0.1f)
@@ -425,9 +472,10 @@ float CameraFollow::FindRadius(float curAng) const
 // Consider polygon in radius search
 bool CameraFollow::ApplyPoly(const CVECTOR *v, int32_t n)
 {
-#ifdef LFC_DEBUG
-    numPoly1++;
-#endif
+    if constexpr (EnableFollowCameraDebug)
+    {
+        CameraDebugStorage.numPoly1++;
+    }
     if (n < 3)
         return true;
     // Plane normal
@@ -483,10 +531,11 @@ bool CameraFollow::ApplyPoly(const CVECTOR *v, int32_t n)
                 step = static_cast<float>(static_cast<int>(step));
                 if (step < 1.0f)
                     step = 1.0f;
-#ifdef LFC_DEBUG
-                if (camSteps < int(step))
-                    camSteps = int(step);
-#endif
+                if constexpr (EnableFollowCameraDebug)
+                {
+                    if (CameraDebugStorage.camSteps < int(step))
+                        CameraDebugStorage.camSteps = int(step);
+                }
                 step = 1.0f / step;
                 for (auto k = 0.0f; k <= 1.0f; k += step)
                 {

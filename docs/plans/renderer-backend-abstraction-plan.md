@@ -566,6 +566,7 @@ Progress:
 - [x] `src/libs/lighter/src/l_geometry.cpp` - migrate `LGeometry::DrawNormals` to the neutral `LineList` primitive type; retain the legacy FVF bitmask until vertex-layout vocabulary is introduced.
 - [x] `src/libs/location/src/wide_screen.cpp` - migrate viewport access and the `TriangleList` primitive type; retain the legacy FVF bitmask until vertex-layout vocabulary is introduced.
 - [x] `src/libs/location/src/ptc_data.cpp` - migrate debug triangle/edge primitive types; retain the legacy FVF and world-transform APIs for a later slice.
+- [x] `src/libs/location/src/camera_follow.cpp` - migrate debug triangle, point, and line primitive types; retain debug render-state, transform, and FVF APIs, with disabled debug buffers removed from static storage.
 
 ### Phase 4: Isolate raw D3D access behind compatibility wrappers
 
