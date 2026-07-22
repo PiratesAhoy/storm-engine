@@ -10,8 +10,9 @@
 
 #include "camera_follow.h"
 #include "character.h"
-#include "location_camera.h"
+#include "core.h"
 #include "location.h"
+#include "location_camera.h"
 #include "renderer/render_types.hpp"
 
 //============================================================================================
@@ -317,7 +318,7 @@ float CameraFollow::FindRadius(float curAng) const
         lc->location->GetRS()->SetRenderState(D3DRS_TEXTUREFACTOR, 0xffff0000);
         lc->location->GetRS()->DrawPrimitiveUP(storm::render::PrimitiveType::LineList, D3DFVF_XYZRHW, 32, vrt, sizeof(Vrt), "DebugTrs");
 
-        for (ii = 0; ii < 32; ii++)
+        for (int32_t ii = 0; ii < 32; ii++)
         {
             float x = day * ii / 31.0f;
             float y = (cosf(x) - cosf(day)) / (1.0f - cosf(day));
@@ -336,7 +337,7 @@ float CameraFollow::FindRadius(float curAng) const
         lc->location->GetRS()->SetRenderState(D3DRS_TEXTUREFACTOR, 0xff00ff00);
         lc->location->GetRS()->DrawPrimitiveUP(storm::render::PrimitiveType::LineList, D3DFVF_XYZRHW, 32, vrt, sizeof(Vrt), "DebugTrs");
 
-        for (ii = 0; ii < 32; ii++)
+        for (int32_t ii = 0; ii < 32; ii++)
         {
             float x = day * ii / 31.0f;
             vrt[ii * 2 + 0].p.x = 300.0f;
